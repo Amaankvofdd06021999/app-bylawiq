@@ -103,5 +103,15 @@ describe('Postgres scope and permissions',()=>{
   it('returns the replaced bylaw for a date before its replacement took effect',async()=>{const docs=await docsAsOf('2023-01-01');expect(docs).toContain(oldDoc);expect(docs).not.toContain(newDoc);});
   it('leaves out a replaced document when its replacement has no effective date',async()=>{expect(await docsAsOf('2023-01-01')).not.toContain(undatedOld);});
  });
+ describe('who can act on building updates',()=>{
+  const councillor='10000000-0000-4000-8000-000000000041',warning='80000000-0000-4000-8000-000000000041';
+  beforeAll(async()=>{await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${councillor}','councillor@example.test',now());
+   insert into public.building_members(building_id,user_id,role) values('${ba}','${councillor}','council_member');
+   insert into public.notifications(id,building_id,type,title,body,severity) values('${warning}','${ba}','unfiled_adoption','Filing record needed','Record the LTO filing.','warning');`);});
+  const stateOf=async()=>{await admin();return (await db.query<{state:string}>(`select state from public.notifications where id='${warning}'`)).rows[0].state;};
+  it('does not let a council member dismiss an update',async()=>{await identity(councillor);await expect(sql(`select public.update_notification('${warning}','dismissed','Not relevant to us')`)).rejects.toThrow('forbidden');expect(await stateOf()).toBe('new');});
+  it('lets a council member mark an update as viewed',async()=>{await identity(councillor);await sql(`select public.update_notification('${warning}','viewed')`);expect(await stateOf()).toBe('viewed');});
+  it('lets an owner dismiss an update with a reason',async()=>{await identity(a);await sql(`select public.update_notification('${warning}','dismissed','Filed on paper already')`);expect(await stateOf()).toBe('dismissed');});
+ });
  it('revokes access immediately without waiting for JWT refresh',async()=>{await admin();await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);await identity(assistant);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
 });
