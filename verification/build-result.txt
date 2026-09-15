@@ -1,0 +1,14 @@
+BylawIQ source export verification — 2026-09-14 (UTC)
+
+npm run typecheck: PASS
+npm run lint: PASS with 2 existing warnings, 0 errors
+npm test: PASS — 2 test files, 60 tests
+npm run build: PASS — Next.js 16.3.4 production build
+
+Database tests were rerun successfully after restoring the eighth migration and
+aligning migration filenames with the existing cloud history. No live database
+data or credentials were exported. The production build generated all expected
+application and API routes without build or TypeScript errors.
+
+Browser tests and live provider/authentication tests were not rerun for this
+export. See SNAPSHOT-STATUS.md for the recovery boundary and remaining work.

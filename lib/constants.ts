@@ -1,0 +1,4 @@
+export const DISCLAIMER = 'Legal information, not legal advice. All bylaws and notices should be reviewed by a licensed BC lawyer before adoption. CBA-BC Lawyer Referral: 1-800-663-1919';
+export const ROLE_LABELS = {org_owner:'Organization owner',org_admin:'Organization admin',portfolio_manager:'Portfolio manager',portfolio_assistant:'Assistant manager',building_manager:'Building manager',council_president:'Council president',council_member:'Council member',external_counsel:'External counsel',owner_resident:'Owner / resident',platform_admin:'Platform admin'} as const;
+export const DOCUMENT_TYPES = ['bylaws','rules','council_minutes','agm_minutes','strata_plan','depreciation_report','insurance','correspondence','other'] as const;
+export const pretty = (value:string) => value.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase());

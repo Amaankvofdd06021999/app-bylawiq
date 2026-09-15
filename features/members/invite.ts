@@ -1,0 +1,16 @@
+'use server';
+import {z} from 'zod';
+import {createHmac} from 'node:crypto';
+import {createClient} from '@supabase/supabase-js';
+import {requireUser} from '@/lib/auth/guards';
+import {adminDb} from '@/lib/supabase/admin';
+import {publicEnv,secret} from '@/lib/env';
+import {checkDb,errorMessage,AppError} from '@/lib/errors';
+import {rateLimit} from '@/lib/security/rate-limit';
+export async function linkAccountAction(raw:unknown){try{const user=await requireUser();const v=z.object({email:z.email(),password:z.string().min(1).max(128)}).parse(raw);await rateLimit(user.id,'auth');const env=publicEnv();const other=createClient(env.url,env.key,{auth:{persistSession:false,autoRefreshToken:false}});const login=await other.auth.signInWithPassword(v);if(login.error||!login.data.session)throw new AppError('verification_failed','The other account could not be verified.');const claims=await other.auth.getClaims();if(claims.error||!claims.data?.claims.sub)throw new AppError('verification_failed','The other account could not be verified.');const target=claims.data.claims.sub;const timestamp=Math.floor(Date.now()/1000);const signature=createHmac('sha256',secret('SERVER_SIGNING_SECRET')).update('link:'+user.id+':'+target+':'+timestamp).digest('hex');checkDb((await user.client.rpc('link_verified_account',{p_target:target,p_timestamp:timestamp,p_signature:signature})).error);await other.auth.signOut({scope:'local'});return {ok:true};}catch(e){return {ok:false,error:errorMessage(e)};}}
+export async function linkedAccountsAction(){const user=await requireUser();const {data,error}=await user.client.rpc('list_linked_accounts');checkDb(error);return z.array(z.object({id:z.uuid(),label:z.string(),expires_at:z.string()})).parse(data);}
+export async function switchAccountAction(raw:unknown){try{const user=await requireUser();const id=z.uuid().parse(raw);await rateLimit(user.id,'auth');const timestamp=Math.floor(Date.now()/1000);const signature=createHmac('sha256',secret('SERVER_SIGNING_SECRET')).update('switch:'+user.id+':'+id+':'+timestamp).digest('hex');const {data,error}=await user.client.rpc('authorize_account_switch',{p_link:id,p_timestamp:timestamp,p_signature:signature});checkDb(error);const email=z.email().parse(data);
+ // Privileged Auth token mint only, after an RLS-owned link and server attestation are validated.
+ // There is no service-role data query and no token is returned to the browser.
+ const generated=await adminDb().auth.admin.generateLink({type:'magiclink',email});if(generated.error)throw new AppError('switch_failed','Account switching is temporarily unavailable.');const verified=await user.client.auth.verifyOtp({type:'magiclink',token_hash:generated.data.properties.hashed_token});if(verified.error)throw new AppError('switch_failed','The account switch could not complete.');return {ok:true};}catch(e){return {ok:false,error:errorMessage(e)};}}
+export async function unlinkAccountAction(raw:unknown){const user=await requireUser();const id=z.uuid().parse(raw);checkDb((await user.client.rpc('revoke_account_link',{p_link:id})).error);return {ok:true};}
