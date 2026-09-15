@@ -119,5 +119,13 @@ describe('Postgres scope and permissions',()=>{
   it('requires legal review for a bylaw that sets a fine',async()=>{await expect(propose('Fines','A fine of $50 applies to each contravention.')).rejects.toThrow('legal_review_required');});
   it('requires legal review for a bylaw about rentals',async()=>{await expect(propose('Rentals','Rentals must be registered with council before occupancy.')).rejects.toThrow('legal_review_required');});
  });
+ describe('single-building conflicts when inviting',()=>{
+  const annexManager='10000000-0000-4000-8000-000000000051';
+  beforeAll(async()=>{await identity(a);const org=(await db.query<{org_id:string}>(`select org_id from public.buildings where id='${ba}'`)).rows[0].org_id;const annex=(await db.query<{id:string}>(`select public.create_building('${org}','Alpha annex',null,'',null) id`)).rows[0].id;
+   await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${annexManager}','annex@example.test',now());update public.profiles set account_type='single_building' where id='${annexManager}';insert into public.building_members(building_id,user_id,role) values('${annex}','${annexManager}','building_manager');`);});
+  it('does not reveal a single-building account that belongs to another organization',async()=>{await identity(a);await expect(sql(`select public.create_invitation('${ba}','beta@example.test','council_member','cross-org-hash',null)`)).resolves.toBeDefined();});
+  it('still stops that account from joining when they accept',async()=>{await identity(b);await expect(sql(`select public.accept_invitation('cross-org-hash')`)).rejects.toThrow('single_building_bound');});
+  it('warns about a single-building account in the inviter’s own organization',async()=>{await identity(a);await expect(sql(`select public.create_invitation('${ba}','annex@example.test','council_member','same-org-hash',null)`)).rejects.toThrow('single_building_conflict');});
+ });
  it('revokes access immediately without waiting for JWT refresh',async()=>{await admin();await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);await identity(assistant);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
 });
