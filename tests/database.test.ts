@@ -113,5 +113,11 @@ describe('Postgres scope and permissions',()=>{
   it('lets a council member mark an update as viewed',async()=>{await identity(councillor);await sql(`select public.update_notification('${warning}','viewed')`);expect(await stateOf()).toBe('viewed');});
   it('lets an owner dismiss an update with a reason',async()=>{await identity(a);await sql(`select public.update_notification('${warning}','dismissed','Filed on paper already')`);expect(await stateOf()).toBe('dismissed');});
  });
+ describe('legal review gate when proposing a bylaw',()=>{
+  const propose=async(title:string,body:string)=>{await identity(a);const v=(await db.query<{id:string}>(`select public.save_bylaw('${ba}',null,$1,'9.1',$2,'Test amendment') id`,[title,body])).rows[0].id;return sql(`select public.transition_bylaw('${v}','proposed','without_review')`);};
+  it('does not require legal review for words that merely contain a flagged term',async()=>{await expect(propose('Garage storage','Owners must keep the garage and storage lockers free of damage and current with the carpet cleaning schedule.')).resolves.toBeDefined();});
+  it('requires legal review for a bylaw that sets a fine',async()=>{await expect(propose('Fines','A fine of $50 applies to each contravention.')).rejects.toThrow('legal_review_required');});
+  it('requires legal review for a bylaw about rentals',async()=>{await expect(propose('Rentals','Rentals must be registered with council before occupancy.')).rejects.toThrow('legal_review_required');});
+ });
  it('revokes access immediately without waiting for JWT refresh',async()=>{await admin();await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);await identity(assistant);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
 });
