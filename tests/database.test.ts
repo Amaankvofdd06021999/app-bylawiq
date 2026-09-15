@@ -89,5 +89,19 @@ describe('Postgres scope and permissions',()=>{
   it('serves the stored file once the scan has cleared',async()=>{await admin();await sql(`update public.documents set scan_cleared_at=now() where id='${doc}'`);expect(await visible()).toBe(1);});
   it('does not let a member mark their own upload as scan-cleared',async()=>{await identity(a);await expect(sql(`insert into public.documents(building_id,title,uploaded_by,storage_path,scan_cleared_at) values('${ba}','Forged clearance','${a}','${ba}/forged/source.pdf',now())`)).rejects.toThrow();});
  });
+ describe('as-of retrieval of replaced documents',()=>{
+  const oldDoc='80000000-0000-4000-8000-000000000031',newDoc='80000000-0000-4000-8000-000000000032',undatedOld='80000000-0000-4000-8000-000000000033',undatedNew='80000000-0000-4000-8000-000000000034';
+  beforeAll(async()=>{await admin();await sql(`insert into public.documents(id,building_id,title,type,status,structure_confirmed,uploaded_by,effective_date) values
+   ('${newDoc}','${ba}','Pet bylaw 2024','bylaws','ready',true,'${a}','2024-06-01'),('${undatedNew}','${ba}','Parking rules, undated amendment','rules','ready',true,'${a}',null);
+   insert into public.documents(id,building_id,title,type,status,structure_confirmed,uploaded_by,effective_date,superseded_by) values
+   ('${oldDoc}','${ba}','Pet bylaw 2020','bylaws','ready',true,'${a}','2020-01-01','${newDoc}'),('${undatedOld}','${ba}','Parking rules 2019','rules','ready',true,'${a}','2019-01-01','${undatedNew}');
+   insert into public.document_chunks(document_id,building_id,chunk_index,content,embedding) values
+   ('${oldDoc}','${ba}',0,'Pets must be leashed in the lobby.','${embedding}'),('${newDoc}','${ba}',0,'Pets must be carried in the lobby.','${embedding}'),
+   ('${undatedOld}','${ba}',0,'Visitors may park for four hours.','${embedding}'),('${undatedNew}','${ba}',0,'Visitors may park for two hours.','${embedding}');`);});
+  const docsAsOf=async(asOf:string)=>{await identity(a);return (await db.query<{document_id:string}>(`select document_id from public.hybrid_search_building('${ba}','lobby park','${embedding}',null,'${asOf}')`)).rows.map(r=>r.document_id);};
+  it('leaves out a replaced bylaw for a date after its replacement took effect',async()=>{const docs=await docsAsOf('2025-03-01');expect(docs).toContain(newDoc);expect(docs).not.toContain(oldDoc);});
+  it('returns the replaced bylaw for a date before its replacement took effect',async()=>{const docs=await docsAsOf('2023-01-01');expect(docs).toContain(oldDoc);expect(docs).not.toContain(newDoc);});
+  it('leaves out a replaced document when its replacement has no effective date',async()=>{expect(await docsAsOf('2023-01-01')).not.toContain(undatedOld);});
+ });
  it('revokes access immediately without waiting for JWT refresh',async()=>{await admin();await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);await identity(assistant);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
 });
