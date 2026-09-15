@@ -138,5 +138,19 @@ describe('Postgres scope and permissions',()=>{
   it('does not let a member without adoption rights record the filing',async()=>{await identity(assistant);await expect(sql(`select public.record_registered_bylaw('${versions[1]}','CA1234567','2023-05-01')`)).rejects.toThrow('forbidden');expect((await versionRow(versions[1])).status).toBe('draft');});
   it('does not mark a registration in force before its effective date',async()=>{await identity(a);await expect(sql(`select public.record_registered_bylaw('${versions[1]}','CA1234567',current_date+30)`)).rejects.toThrow('invalid_transition');expect((await versionRow(versions[1])).status).toBe('draft');});
  });
+ describe('organization oversight of linked accounts',()=>{
+  const linker='10000000-0000-4000-8000-000000000071',outsider='10000000-0000-4000-8000-000000000072';let link:string;
+  beforeAll(async()=>{await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${linker}','linker@example.test',now()),('${outsider}','outsider@example.test',now());
+   update public.profiles set account_type='single_building' where id='${linker}';insert into public.building_members(building_id,user_id,role) values('${ba}','${linker}','building_manager');`);
+   await identity(outsider);await sql(`select public.bootstrap_workspace('Gamma','admin','Gamma building','Olive')`);
+   await admin();const secret=(await db.query<{value:string}>("select value from private.runtime_secrets where name='server_signing'")).rows[0].value;const ts=Math.floor(Date.now()/1000);
+   await identity(linker);link=(await db.query<{id:string}>('select public.link_verified_account($1,$2,$3) id',[b,ts,createHmac('sha256',secret).update('link:'+linker+':'+b+':'+ts).digest('hex')])).rows[0].id;});
+  it('shows an account link to an admin of either account’s organization',async()=>{await identity(a);expect((await db.query(`select id from public.linked_accounts where id='${link}'`)).rows).toHaveLength(1);});
+  it('records the link where organization admins can read it',async()=>{await identity(a);expect((await db.query(`select id from public.audit_log where action='account.link' and target_id='${link}'`)).rows.length).toBeGreaterThan(0);});
+  it('hides the link from an admin of an unrelated organization',async()=>{await identity(outsider);expect((await db.query(`select id from public.linked_accounts where id='${link}'`)).rows).toHaveLength(0);});
+  it('does not let an unrelated user revoke the link or record an unlink',async()=>{await identity(outsider);await expect(sql(`select public.revoke_account_link('${link}')`)).rejects.toThrow('forbidden');await admin();expect((await db.query(`select id from public.audit_log where action='account.unlink' and actor_id='${outsider}'`)).rows).toHaveLength(0);});
+  it('lists the link on the members page for the organization’s admins only',async()=>{await identity(a);expect((await db.query<{id:string}>(`select id from public.list_account_links_for_building('${ba}')`)).rows.map(r=>r.id)).toContain(link);await identity(outsider);expect((await db.query(`select id from public.list_account_links_for_building('${ba}')`)).rows).toHaveLength(0);});
+  it('lets an organization admin revoke the link',async()=>{await identity(a);await sql(`select public.revoke_account_link('${link}')`);await admin();expect((await db.query<{revoked:boolean}>(`select revoked_at is not null revoked from public.linked_accounts where id='${link}'`)).rows[0].revoked).toBe(true);});
+ });
  it('revokes access immediately without waiting for JWT refresh',async()=>{await admin();await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);await identity(assistant);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
 });
