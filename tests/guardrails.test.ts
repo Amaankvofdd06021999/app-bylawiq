@@ -2,6 +2,13 @@ import {describe,it,expect} from 'vitest';
 import {structuralChunks} from '@/lib/ai/chunking';
 import {validateCitations,type GroundedAnswer,type Source} from '@/lib/ai/citations';
 import {allowedUrl,publicAddress} from '@/lib/security/web-source';
+import {checkDb,AppError} from '@/lib/errors';
+describe('database error mapping',()=>{
+ it('reports an existing member as a conflict, not a failed save',()=>{
+  let thrown:unknown;try{checkDb({message:'already_member'});}catch(e){thrown=e;}
+  expect(thrown).toBeInstanceOf(AppError);expect((thrown as AppError).code).toBe('already_member');expect((thrown as AppError).status).toBe(409);
+ });
+});
 const source:Source={id:1,chunkId:'10000000-0000-4000-8000-000000000001',kind:'building',title:'Sample bylaws',content:'The shared garden closes at 8 pm. Visitors must leave through the south gate.',sectionRef:'3.1',effectiveDate:'2026-01-01',buildingId:'20000000-0000-4000-8000-000000000001',page:1,citation:null};
 const answer:GroundedAnswer={answer:[{text:'The garden closes at 8 pm.',evidence:[{source:1,quote:'The shared garden closes at 8 pm.'}]}],basis:[],nextSteps:[],limitations:''};
 describe('citation guard',()=>{
