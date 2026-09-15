@@ -81,5 +81,13 @@ describe('Postgres scope and permissions',()=>{
   it('does not let a lower-ranked member revive a suspended higher-ranked membership',async()=>{const former='10000000-0000-4000-8000-000000000014';await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${former}','former@example.test',now());update public.profiles set account_type='multi_building' where id='${former}';insert into public.building_members(building_id,user_id,role,status) values('${ba}','${former}','portfolio_manager','suspended');`);await identity(president);await expect(sql(`select public.create_invitation('${ba}','former@example.test','council_member','revive-hash',null)`)).rejects.toThrow('forbidden');});
   it('still admits a new person through an invitation',async()=>{await identity(president);await sql(`select public.create_invitation('${ba}','newcomer@example.test','council_member','newcomer-hash',null)`);await identity(newcomer);await sql(`select public.accept_invitation('newcomer-hash')`);expect(await roleOf(newcomer)).toBe('council_member');});
  });
+ describe('malware scan gate on stored files',()=>{
+  const doc='80000000-0000-4000-8000-000000000021';let path:string;
+  beforeAll(async()=>{path=`${ba}/${doc}/source.pdf`;await admin();await sql(`insert into public.documents(id,building_id,title,type,status,uploaded_by,storage_path) values('${doc}','${ba}','Unscanned upload','rules','scanning','${a}','${path}');insert into storage.objects(bucket_id,name) values('vault','${path}');`);});
+  const visible=async()=>{await identity(a);return (await db.query(`select id from storage.objects where bucket_id='vault' and name='${path}'`)).rows.length;};
+  it('does not serve a stored file before its malware scan clears',async()=>{expect(await visible()).toBe(0);});
+  it('serves the stored file once the scan has cleared',async()=>{await admin();await sql(`update public.documents set scan_cleared_at=now() where id='${doc}'`);expect(await visible()).toBe(1);});
+  it('does not let a member mark their own upload as scan-cleared',async()=>{await identity(a);await expect(sql(`insert into public.documents(building_id,title,uploaded_by,storage_path,scan_cleared_at) values('${ba}','Forged clearance','${a}','${ba}/forged/source.pdf',now())`)).rejects.toThrow();});
+ });
  it('revokes access immediately without waiting for JWT refresh',async()=>{await admin();await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);await identity(assistant);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
 });
