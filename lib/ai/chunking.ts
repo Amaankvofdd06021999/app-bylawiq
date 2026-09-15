@@ -3,8 +3,9 @@ export type Section={heading:string;sectionRef:string;content:string;page:number
 export function structuralChunks(text:string):Section[]{
  const normalized=text.replaceAll('\r\n','\n').replace(/\0/g,'').trim();if(!normalized)return [];
  const sections:Section[]=[];let current:Section={heading:'Document introduction',sectionRef:'',content:'',page:1};let page=1;
- for(const line of normalized.split('\n')){
-  if(line.includes('\f'))page++;
+ for(const raw of normalized.split('\n')){
+  if(raw.includes('\f'))page++;
+  const line=raw.replaceAll('\f','');
   const match=line.match(/^\s*(?:(?:Section|Bylaw|Rule|Part)\s+)?(\d+(?:\.\d+)*(?:\([a-z0-9]+\))?)\s*[.\-–—:]?\s+(.{0,140})$/i);
   if(match&&current.content.trim()){sections.push({...current,content:current.content.trim()});current={heading:line.trim(),sectionRef:match[1],content:'',page};}
   else if(match){current.heading=line.trim();current.sectionRef=match[1];current.page=page;}

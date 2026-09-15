@@ -1,7 +1,7 @@
 import 'server-only';
 import {z} from 'zod';
 import {createHash} from 'node:crypto';
-import {PDFParse} from 'pdf-parse';
+import {pdfText} from '@/lib/ai/pdf-text';
 import mammoth from 'mammoth';
 import {adminDb} from '@/lib/supabase/admin';
 import {embeddings} from '@/lib/ai/embeddings';
@@ -26,7 +26,7 @@ export const ingestDocument=inngest.createFunction({id:'ingest-document',retries
   // Storage only serves a vault file once this is set (clean scan, or scanning disabled outside production).
   checkDb((await db.from('documents').update({scan_cleared_at:new Date().toISOString()}).eq('id',document.id).is('deleted_at',null)).error);
   await status('parsing');const ext=document.storage_path.split('.').pop();if(ext==='txt'||ext==='md')return bytes.toString('utf8');if(ext==='docx')return (await mammoth.extractRawText({buffer:bytes})).value;
-  const parser=new PDFParse({data:new Uint8Array(bytes)});try{const parsed=await parser.getText();if(parsed.text.trim().length<100)throw new AppError('ocr_required','This PDF needs OCR. Upload a searchable PDF or connect the OCR integration.');return parsed.text;}finally{await parser.destroy();}
+  const text=await pdfText(new Uint8Array(bytes));if(text.trim().length<100)throw new AppError('ocr_required','This PDF needs OCR. Upload a searchable PDF or connect the OCR integration.');return text;
  });
  const sections=await step.run('detect-structure',async()=>{await status('chunking');const chunks=structuralChunks(parsed);if(!chunks.length)throw new AppError('empty_document','No readable text was found.');if(chunks.length>2000)throw new AppError('document_too_large','Split this document into smaller files.');return chunks;});
  await step.run('clear-retry-chunks',async()=>{checkDb((await db.from('document_chunks').delete().eq('document_id',document.id).eq('building_id',v.buildingId)).error);await status('embedding');});
