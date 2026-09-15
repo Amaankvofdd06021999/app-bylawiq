@@ -14,7 +14,7 @@ const resources={
  agents:['agents','id,building_id,name,description,instructions,status,knowledge_base_id,include_legal,top_k,created_at'],
  knowledge:['knowledge_bases','id,building_id,name,description,created_at'],
  bylaws:['bylaw_nodes','id,building_id,title,section_ref,set_id,created_at'],
- versions:['bylaw_versions','id,building_id,node_id,version,body,rationale,status,effective_date,filing_reference,created_by,review_choice,created_at'],
+ versions:['bylaw_versions','id,building_id,node_id,version,body,rationale,status,effective_date,filing_reference,created_by,review_choice,source_document_id,created_at'],
  notices:['generated_documents','id,building_id,kind,title,body_md,status,created_by,approved_by,approved_at,sent_at,dispute_id,created_at'],
  disputes:['disputes','id,building_id,title,reference,category,subject_unit,stage,created_at'],
  events:['dispute_events','id,building_id,dispute_id,stage,occurred_at,logged_at,summary,actor_id'],
