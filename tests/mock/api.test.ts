@@ -127,10 +127,21 @@ describe('mock api: resident Ask and credits',()=>{
   expect(w.credits).toBe(credits);expect(w.freeQuestionsUsed).toBe(2);
   expect(s.ledger.at(-1)).toMatchObject({delta:0,reason:'free_question'});
  });
+ it('refunds a paid or free question that ends with no grounding',async()=>{
+  await startDemo('resident');
+  const {s,id}=await residentChat();
+  const w=s.wallets.find(x=>x.userId===IDS.users.priya)!;const credits=w.credits,ledger=s.ledger.length;
+  const res=await ask(id,'asdkjf qwoeiru nonsense gibberish');
+  expect(res.status).toBe(200);await res.text();
+  expect(w.credits).toBe(credits);expect(s.ledger.length).toBe(ledger);
+  w.freeQuestionsUsed=1;
+  await (await ask(id,'asdkjf qwoeiru nonsense gibberish')).text();
+  expect(w.freeQuestionsUsed).toBe(1);expect(s.ledger.length).toBe(ledger);
+ });
  it('returns 402 paywall with no credits and saves nothing',async()=>{
   await startDemo('resident');
   const {s,id}=await residentChat();
-  s.wallets.find(x=>x.userId===IDS.users.priya)!.credits=0;
+  Object.assign(s.wallets.find(x=>x.userId===IDS.users.priya)!,{credits:0,freeQuestionsUsed:2});
   const count=s.messages.length;
   const res=await ask(id,'Can I have a dog?');
   expect(res.status).toBe(402);

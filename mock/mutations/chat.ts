@@ -55,14 +55,23 @@ export function branchChat(s:MockState,userId:string,raw:unknown):Result<{id:str
 /** A person who asks on this building as a paying resident: no staff `chat.use`, but `canResidentAsk`. */
 export function isResidentAsker(s:MockState,userId:string,buildingId:string):boolean{return !can(s,userId,'chat.use',buildingId)&&canResidentAsk(s,userId,buildingId);}
 export const FREE_QUESTIONS=2;
-/** Charges one resident question: a free question while any are left, otherwise 1 credit. Returns false (and
- * changes nothing) when the resident has neither, so the caller can show the paywall. */
-export function spendQuestion(s:MockState,userId:string,buildingId:string):boolean{
+/** Charges one resident question: a free question while any are left, otherwise 1 credit. Returns the ledger
+ * entry's id, or null (changing nothing) when the resident has neither, so the caller can show the paywall. */
+export function spendQuestion(s:MockState,userId:string,buildingId:string):string|null{
  let w=s.wallets.find(x=>x.userId===userId&&x.buildingId===buildingId);
  if(!w){w={userId,buildingId,credits:0,freeQuestionsUsed:0};s.wallets.push(w);}
  const free=w.freeQuestionsUsed<FREE_QUESTIONS;
- if(!free&&w.credits<1)return false;
+ if(!free&&w.credits<1)return null;
  if(free)w.freeQuestionsUsed++;else w.credits--;
- s.ledger.push({id:newId(),userId,buildingId,delta:free?0:-1,reason:free?'free_question':'question',at:now()});
- return true;
+ const id=newId();
+ s.ledger.push({id,userId,buildingId,delta:free?0:-1,reason:free?'free_question':'question',at:now()});
+ return id;
+}
+/** Reverses a question charge (the answer found no grounding): the credit or free question comes back and the
+ * ledger entry is removed, so the history only shows questions that were answered. */
+export function refundQuestion(s:MockState,entryId:string):void{
+ const i=s.ledger.findIndex(e=>e.id===entryId);if(i<0)return;
+ const e=s.ledger[i];const w=s.wallets.find(x=>x.userId===e.userId&&x.buildingId===e.buildingId);
+ if(w){if(e.reason==='free_question')w.freeQuestionsUsed=Math.max(0,w.freeQuestionsUsed-1);else w.credits-=e.delta;}
+ s.ledger.splice(i,1);
 }

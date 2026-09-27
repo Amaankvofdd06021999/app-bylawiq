@@ -11,7 +11,7 @@ import {demoSession} from './session';
 import {getStore,newId,audit,type MockState} from './store';
 import {visibleDocuments,linkedFirmId} from './rules';
 import {need,now} from './mutations/shared';
-import {canUseChat,isResidentAsker,spendQuestion} from './mutations/chat';
+import {canUseChat,isResidentAsker,refundQuestion,spendQuestion} from './mutations/chat';
 import {answer} from './answers';
 // Demo stand-ins for `app/api/*/route.ts`: same request/response contracts, but reading and writing the
 // session's own in-memory `MockState` instead of Postgres — the mock's RLS boundary is `mock/rules.ts`,
@@ -119,8 +119,9 @@ export async function chat(req:Request):Promise<Response>{
   if(!canUseChat(s,userId,chatRow.id))throw new ForbiddenError();
   const buildingId=chatRow.building_id?String(chatRow.building_id):'';
   // A resident pays per question (free questions first). Checked before anything is saved, so a paywalled
-  // question leaves no trace in the conversation.
-  if(buildingId&&isResidentAsker(s,userId,buildingId)&&!spendQuestion(s,userId,buildingId))return Response.json({error:'You’re out of credits.',code:'paywall'},{status:402});
+  // question leaves no trace in the conversation; a question that finds no grounding is refunded below.
+  let charge:string|null=null;
+  if(buildingId&&isResidentAsker(s,userId,buildingId)){charge=spendQuestion(s,userId,buildingId);if(!charge)return Response.json({error:'You’re out of credits.',code:'paywall'},{status:402});}
   const question=v.message.parts[0].text;
   s.messages.push({id:v.message.id,chatId:chatRow.id,role:'user',parts:v.message.parts});
   const assistantId=newId();
@@ -130,6 +131,7 @@ export async function chat(req:Request):Promise<Response>{
    const result=answer(s,userId,buildingId,question,v.layers);
    const parts:BylawMessage['parts']=[];
    if(!result.sources.length){
+    if(charge)refundQuestion(s,charge);
     const value=NO_GROUNDING+'\n\n'+DISCLAIMER;
     writer.write({type:'text-start',id:'answer'});writer.write({type:'text-delta',id:'answer',delta:value});writer.write({type:'text-end',id:'answer'});
     parts.push({type:'text',text:value});
