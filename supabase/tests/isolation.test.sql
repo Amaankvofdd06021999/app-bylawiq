@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path=public,extensions;
-select plan(8);
+select plan(10);
 insert into auth.users(id,email,email_confirmed_at) values
  ('90000000-0000-4000-8000-000000000001','rls-a@example.invalid',now()),
  ('90000000-0000-4000-8000-000000000002','rls-b@example.invalid',now());
@@ -17,6 +17,8 @@ select is((select count(*)::integer from public.building_members where building_
 select is(public.has_building_access(current_setting('test.building_b')::uuid),false,'foreign building access helper denies');
 select is(public.authorize('vault.read',current_setting('test.building_b')::uuid),false,'foreign vault permission denies');
 select is(public.authorize('chat.use',current_setting('test.building_b')::uuid),false,'foreign chat permission denies');
+select is((select count(*)::integer from public.firm_building_links where building_id=current_setting('test.building_b')::uuid),0,'foreign firm links are hidden');
+select is((select count(*)::integer from public.link_codes where building_id=current_setting('test.building_b')::uuid),0,'foreign link codes are hidden');
 reset role;
 select is((select count(*)::integer from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and not c.relrowsecurity),0,'all public tables enable RLS');
 select is((select count(*)::integer from pg_proc where proname in ('hybrid_search_building','hybrid_search_legal') and prosecdef),0,'retrieval is security invoker');
