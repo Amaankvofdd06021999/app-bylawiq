@@ -16,7 +16,11 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       # github reporter turns each failed test into a readable annotation; the HTML report is kept for failures.
+      # DEMO_MODE gates every /demo route (AGENTS.md); the build step doesn't need it since app/demo/layout.tsx
+      # is force-dynamic, so nothing under it is prerendered at build time.
       - run: npm run test:e2e -- --reporter=github,list,html
+        env:
+          DEMO_MODE: on
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
