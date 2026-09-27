@@ -1,7 +1,7 @@
 import {notFound,redirect} from 'next/navigation';
 import {demoSession} from '@/mock/session';
 import {getStore} from '@/mock/store';
-import {isPlatformAdmin,layersFor} from '@/mock/rules';
+import {isPlatformAdmin,layersFor,canResidentAsk} from '@/mock/rules';
 import {buildingWorkspace,listResource,firmLinkStatus,type Resource} from '@/mock/source';
 import {buildingManagerDashboard,hasBuildingHome} from '@/mock/dashboards';
 import {hasResidentHome,residentData} from '@/mock/residents';
@@ -51,6 +51,8 @@ export default async function DemoBuildingPage({params,searchParams}:{params:Pro
  if(firmTab&&tab==='firm')return <Shell {...shell}><KnowledgeTabs buildingId={buildingId} active="firm"/><FirmKnowledge data={firmKnowledgeView(s,userId)} initialCollection={collection}/></Shell>;
  const needed:Resource[]=section==='ask'?['documents','chats']:section==='bylaws'?['bylaws','versions']:section==='documents'||section==='agents'?['documents','knowledge','agents']:section==='knowledge'?['knowledge','documents']:section==='disputes'?['disputes','events']:section==='members'?['members',...(state.permissions.includes('member.invite')?['invitations' as const]:[])]:section==='settings'?[]:section==='notices'?['notices','comments']:[section as Resource];
  const related:Record<string,Row[]>=Object.fromEntries(needed.map(r=>[r,listResource(s,userId,r,buildingId)] as const));related.organizations=state.organizations;
+ // A resident's recent list leaves out conversations with no messages (a question that never went through).
+ const askChats=(related.chats||[]).filter(c=>!resident||s.messages.some(m=>m.chatId===c.id));
  const firm=(section==='settings'||section==='notices')&&state.permissions.includes('member.read')?firmLinkStatus(s,userId,buildingId):null;
- return <Shell {...shell}>{firmTab&&<KnowledgeTabs buildingId={buildingId} active="building"/>}{section==='ask'?<AskHome {...state} documents={related.documents||[]} chats={related.chats||[]} agentId={agent||null} availableLayers={layersFor(s,userId,buildingId)} initialScope={scope==='portfolio'?'portfolio':undefined}/>:<Resources section={section} {...state} rows={related[section]||[]} related={related} firmLinked={firm?.status==='active'}/>}{section==='settings'&&firm&&<div style={{marginTop:24}}><StrataManagementCard buildingId={buildingId} canManage={state.permissions.includes('building.link_firm')} status={firm}/></div>}</Shell>;
+ return <Shell {...shell}>{firmTab&&<KnowledgeTabs buildingId={buildingId} active="building"/>}{section==='ask'?<AskHome {...state} documents={related.documents||[]} chats={askChats} agentId={agent||null} availableLayers={layersFor(s,userId,buildingId)} initialScope={scope==='portfolio'?'portfolio':undefined} wallet={resident?residentData(s,userId,buildingId).wallet:undefined} askPaused={resident&&!canResidentAsk(s,userId,buildingId)}/>:<Resources section={section} {...state} rows={related[section]||[]} related={related} firmLinked={firm?.status==='active'}/>}{section==='settings'&&firm&&<div style={{marginTop:24}}><StrataManagementCard buildingId={buildingId} canManage={state.permissions.includes('building.link_firm')} status={firm}/></div>}</Shell>;
 }

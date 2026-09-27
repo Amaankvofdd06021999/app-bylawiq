@@ -9,10 +9,10 @@ import {exportPdf,exportDocx} from '@/lib/export';
 import type {BylawMessage} from '@/lib/chat-types';
 import {demoSession} from './session';
 import {getStore,newId,audit,type MockState} from './store';
-import {visibleDocuments,linkedFirmId} from './rules';
+import {can,visibleDocuments,linkedFirmId} from './rules';
 import {need,now} from './mutations/shared';
 import {canUseChat,isResidentAsker,refundQuestion,spendQuestion} from './mutations/chat';
-import {answer} from './answers';
+import {answer,answerPortfolio} from './answers';
 // Demo stand-ins for `app/api/*/route.ts`: same request/response contracts, but reading and writing the
 // session's own in-memory `MockState` instead of Postgres — the mock's RLS boundary is `mock/rules.ts`,
 // checked here the same way `requirePermission` is checked in the real routes (see AGENTS.md §0). Every
@@ -128,7 +128,10 @@ export async function chat(req:Request):Promise<Response>{
   const stream=createUIMessageStream<BylawMessage>({execute:async({writer})=>{
    writer.write({type:'start',messageId:assistantId});
    writer.write({type:'data-progress',id:'progress',data:{label:'Searching sample documents'},transient:true});
-   const result=answer(s,userId,buildingId,question,v.layers);
+   // A portfolio chat searches every building it names that the person may still use portfolio Ask on (the
+   // same `chat.use_portfolio` check `canUseChat` made), its own building first; each building's passages keep
+   // their own building id so the answer labels them separately.
+   const result=chatRow.scope==='portfolio'?answerPortfolio(s,userId,[buildingId,...chatRow.scope_building_ids].filter(b=>b&&can(s,userId,'chat.use_portfolio',b)),question,v.layers):answer(s,userId,buildingId,question,v.layers);
    const parts:BylawMessage['parts']=[];
    if(!result.sources.length){
     if(charge)refundQuestion(s,charge);

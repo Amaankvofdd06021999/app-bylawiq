@@ -17,6 +17,12 @@ describe('knowledge layers',()=>{
   expect(layersFor(s,IDS.users.priya,seaside)).toEqual(['building','legal']);
   expect(layersFor(s,IDS.users.grace,seaside)).toEqual(['building','legal']);// council president
  });
+ it('never gives council — president or member — the firm layer',()=>{
+  const s=seed();
+  expect(layersFor(s,IDS.users.grace,seaside)).not.toContain('firm');// council president
+  expect(layersFor(s,IDS.users.ben,seaside)).not.toContain('firm');// council member
+  expect(layersFor(s,IDS.users.ben,seaside)).toEqual(['building','legal']);
+ });
  it('gives nobody any layer on a building they are not a member of',()=>{
   const s=seed();
   expect(layersFor(s,IDS.users.sarah,parkside)).toEqual([]);

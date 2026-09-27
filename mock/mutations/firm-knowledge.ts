@@ -32,6 +32,7 @@ export function firmKnowledgeView(s:MockState,userId:string):FirmKnowledgeData{
 const docInput=z.object({id:z.uuid().optional(),collection:z.enum(['templates','policies','guidance','legal_tracker']),title:z.string().trim().min(3).max(160),body:z.string().trim().min(20).max(20000)});
 // Precedents are stored anonymised (spec §1): refuse a unit or strata lot number, or an email address. Square-
 // bracket placeholders such as "strata lot [number]" are what the seeded templates use instead.
+// TODO(legal): names and other buildings' facts are not detected automatically
 const IDENTIFYING=/\b(?:unit|suite|apartment|apt|strata lot|sl)\s*#?\s*\d+|[\w.+-]+@[\w-]+\.[\w.]+/i;
 export function saveFirmDoc(s:MockState,userId:string,raw:unknown):Result<{id:string}>{return run(()=>{
  const v=docInput.parse(raw);const orgId=firmFor(s,userId,true);

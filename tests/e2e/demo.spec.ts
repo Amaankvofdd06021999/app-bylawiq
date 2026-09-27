@@ -63,6 +63,10 @@ test('the platform admin turns resident AI off, and Ask disappears for the resid
  await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/home$'));
  await expect(page.getByRole('heading',{name:'AI help is paused'})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Draft a notice'})).toHaveCount(0);
+ // A direct visit to Ask shows it's paused rather than a question box that can only fail.
+ await page.goto('/demo/b/'+seaside+'/ask');
+ await expect(page.getByRole('heading',{name:'Ask is paused'})).toBeVisible();
+ await expect(page.getByRole('textbox',{name:'Ask BylawIQ'})).toHaveCount(0);
 });
 
 test('a resident drafts a notice to council from her owner bylaws, and it is saved to her drafts',async({page})=>{
@@ -137,7 +141,7 @@ async function ask(page:Page,question:string){
  await page.getByRole('textbox',{name:'Ask BylawIQ'}).fill(question);
  await page.getByRole('button',{name:'Send question'}).click();
  await expect(page).toHaveURL(/\/chat\//);
- await expect(page.getByRole('heading',{name:'What Seaside Towers’ bylaws say'}).first()).toBeVisible();
+ await expect(page.getByRole('heading',{name:'What Seaside Towers’ bylaws and documents say'}).first()).toBeVisible();
 }
 test('a strata manager\'s answer adds Coastline\'s internal practice, and a building manager\'s never does',async({page})=>{
  await page.goto('/demo/start/strata');
@@ -171,9 +175,21 @@ test('a resident out of credits buys more from the chat paywall and her question
  await expect(paywall).toContainText('Demo — no real charge');
  await paywall.getByRole('button',{name:'Buy 100 credits · $20 and ask'}).click();
  await expect(page.getByRole('dialog')).toHaveCount(0);
- await expect(page.getByRole('heading',{name:'What Seaside Towers’ bylaws say'})).toHaveCount(2);
+ await expect(page.getByRole('heading',{name:'What Seaside Towers’ bylaws and documents say'})).toHaveCount(2);
  await page.goto('/demo/b/'+seaside+'/credits');
  await expect(page.getByText('Bought 100 credits',{exact:true})).toHaveCount(2);// the seeded purchase and this one
+});
+test('a resident out of credits sees the paywall on Ask before any conversation is started',async({page})=>{
+ await spendCreditsTo(page,0);
+ await page.goto('/demo/b/'+seaside+'/ask');
+ const before=await page.locator('a.activity-row[href*="/chat/"]').count();
+ await page.getByRole('textbox',{name:'Ask BylawIQ'}).fill('What are the quiet hours?');
+ await page.getByRole('button',{name:'Send question'}).click();
+ await expect(page.getByRole('dialog',{name:'You’re out of credits'})).toBeVisible();
+ await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/ask$'));
+ await page.keyboard.press('Escape');
+ await page.reload();
+ await expect(page.locator('a.activity-row[href*="/chat/"]')).toHaveCount(before);
 });
 test('a resident short of credits buys more from the drafting paywall and her notice is drafted',async({page})=>{
  await spendCreditsTo(page,3);

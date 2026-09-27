@@ -169,6 +169,33 @@ describe('mock api: resident Ask and credits',()=>{
   expect(text).not.toContain('"kind":"firm"');
  });
 });
+describe('mock api: portfolio Ask',()=>{
+ it('answers Sarah’s portfolio noise question from at least two buildings, grouped separately',async()=>{
+  const {groupClaims}=await import('@/features/chat/group-claims');
+  const {text,buildings}=await as('strata',async()=>{
+   const {getStore}=await import('@/mock/store');const {demoSession}=await import('@/mock/session');const {createChat}=await import('@/mock/mutations');const {accessibleBuildings}=await import('@/mock/rules');
+   const s=getStore((await demoSession())!.sessionId);
+   const buildings=accessibleBuildings(s,IDS.users.sarah);
+   const r=createChat(s,IDS.users.sarah,{buildingId:seaside,scope:'portfolio',buildingIds:buildings.map(b=>b.id)});
+   if(!r.ok)throw new Error(r.error);
+   const res=await api.chat(new Request('http://x',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:r.id,message:{id:crypto.randomUUID(),role:'user',parts:[{type:'text',text:'What are the noise rules?'}]}})}));
+   expect(res.status).toBe(200);
+   return {text:await res.text(),buildings};
+  });
+  const line=text.split('\n').find(l=>l.includes('"type":"data-answer"'))!;
+  const {data}=JSON.parse(line.replace(/^data: /,''));
+  const own=data.sources.filter((x:{kind:string})=>x.kind==='building');
+  const ids=new Set(own.map((x:{buildingId:string})=>x.buildingId));
+  expect(ids.size).toBeGreaterThanOrEqual(2);
+  for(const id of ids)expect(buildings.some(b=>b.id===id)).toBe(true);
+  expect(data.sources.filter((x:{kind:string})=>x.kind==='legal').length).toBeLessThanOrEqual(1);
+  expect(data.answer.answer.length).toBeLessThanOrEqual(6);
+  const groups=groupClaims(data.answer.answer,data.sources,buildings,seaside).filter(g=>g.kind==='building');
+  expect(groups.length).toBe(ids.size);
+  expect(new Set(groups.map(g=>g.heading)).size).toBe(groups.length);
+  expect(groups[0].heading).toBe('What Seaside Towers’ bylaws and documents say');
+ });
+});
 describe('mock api: chat stop/stream',()=>{
  it('returns 204 for both',async()=>{
   const stop=await as('building',()=>api.chatStop(new Request('http://x',{method:'POST'}),{id:IDS.chats.jamesConversation}));

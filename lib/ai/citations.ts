@@ -1,7 +1,9 @@
 import {z} from 'zod';
 // `firm` (a firm's internal knowledge) is produced only by the demo today; the real retrieval emits building
 // and legal sources only, and `message_citations.kind` still allows just those two.
-export const sourceSchema=z.object({id:z.number().int().positive(),chunkId:z.uuid(),kind:z.enum(['building','firm','legal']),title:z.string(),content:z.string(),sectionRef:z.string().nullable(),effectiveDate:z.string().nullable(),buildingId:z.uuid().nullable(),page:z.number().nullable(),citation:z.string().nullable()});
+export const sourceSchema=z.object({id:z.number().int().positive(),chunkId:z.uuid(),kind:z.enum(['building','firm','legal']),title:z.string(),content:z.string(),sectionRef:z.string().nullable(),effectiveDate:z.string().nullable(),buildingId:z.uuid().nullable(),page:z.number().nullable(),citation:z.string().nullable(),
+ // Optional, so sources stored before it existed still parse: the firm's name on a `firm` source (demo only today).
+ firmName:z.string().max(200).nullable().optional()});
 export type Source=z.infer<typeof sourceSchema>;
 const claim=z.object({text:z.string().min(1).max(2000),evidence:z.array(z.object({source:z.number().int().positive(),quote:z.string().min(10).max(1200)})).min(1).max(5)});
 export const answerSchema=z.object({answer:z.array(claim).min(1).max(6),basis:z.array(claim).max(6),nextSteps:z.array(claim).max(5),limitations:z.string().max(600)});
