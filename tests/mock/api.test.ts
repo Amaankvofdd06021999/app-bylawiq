@@ -12,7 +12,7 @@ const {startDemo}=await import('@/mock/session');
 const {IDS}=await import('@/mock/data');
 const {seed}=await import('@/mock/store');
 const api=await import('@/mock/api');
-type PersonaId='admin'|'strata'|'building'|'resident';
+type PersonaId='platform'|'owner'|'strata'|'building'|'resident';
 async function as<T>(persona:PersonaId,run:()=>Promise<T>):Promise<T>{await startDemo(persona);return run();}
 const seaside=IDS.buildings.seaside;
 beforeAll(()=>{process.env.DEMO_MODE='on';});

@@ -1,6 +1,6 @@
 import {describe,it,expect,beforeEach,afterAll,vi} from 'vitest';
 // A forged demo cookie jar, as an attacker would send alongside a Next-Action POST.
-const jar=new Map<string,string>([['demo_session','forged-session'],['demo_persona','admin']]);
+const jar=new Map<string,string>([['demo_session','forged-session'],['demo_persona','owner']]);
 vi.mock('next/headers',()=>({cookies:async()=>({
  get:(name:string)=>jar.has(name)?{name,value:jar.get(name)!}:undefined,
  set:(name:string,value:string)=>{jar.set(name,value);},
@@ -19,13 +19,13 @@ describe('demo gate',()=>{
  });
  it('404s the demo start route when DEMO_MODE is unset',async()=>{
   const {GET}=await import('@/app/demo/start/[persona]/route');
-  const res=await GET(new Request('http://x/demo/start/admin'),{params:Promise.resolve({persona:'admin'})});
+  const res=await GET(new Request('http://x/demo/start/owner'),{params:Promise.resolve({persona:'owner'})});
   expect(res.status).toBe(404);
  });
  it('404s every /demo and /api/demo path in the proxy when DEMO_MODE is unset, and leaves other paths alone',async()=>{
   const {NextRequest}=await import('next/server');
   const {proxy}=await import('@/proxy');
-  for(const path of ['/demo','/demo/workspace','/demo/start/admin','/api/demo/chat'])expect((await proxy(new NextRequest('http://x'+path))).status).toBe(404);
+  for(const path of ['/demo','/demo/workspace','/demo/start/owner','/api/demo/chat'])expect((await proxy(new NextRequest('http://x'+path))).status).toBe(404);
   expect((await proxy(new NextRequest('http://x/demonstration'))).status).toBe(200);
   process.env.DEMO_MODE='on';expect((await proxy(new NextRequest('http://x/demo'))).status).toBe(200);
  });
@@ -39,7 +39,7 @@ describe('demo gate',()=>{
   expect((await actions.createChatAction({})).ok).toBe(false);
   await actions.resetDemoAction();await actions.switchPersonaAction('resident');await actions.signOutAction();
   expect(hasStore('forged-session')).toBe(false);
-  expect(jar.get('demo_persona')).toBe('admin');// switchPersonaAction and signOutAction left the cookies alone
+  expect(jar.get('demo_persona')).toBe('owner');// switchPersonaAction and signOutAction left the cookies alone
  });
  it('reports the demo as disabled unless DEMO_MODE is exactly on',async()=>{
   const {demoEnabled}=await import('@/lib/env');

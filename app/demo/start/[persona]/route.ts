@@ -1,6 +1,6 @@
 import {redirect} from 'next/navigation';
 import {demoEnabled} from '@/lib/env';
-import {persona,landingPath} from '@/mock/personas';
+import {persona,landingPath,PERSONA_ALIASES} from '@/mock/personas';
 import {startDemo} from '@/mock/session';
 import {getStore} from '@/mock/store';
 export const dynamic='force-dynamic';
@@ -11,7 +11,11 @@ export const dynamic='force-dynamic';
 // happened in it.
 export async function GET(_req:Request,{params}:{params:Promise<{persona:string}>}){
  if(!demoEnabled())return new Response(null,{status:404});
- const p=persona((await params).persona);
+ const id=(await params).persona;
+ // Old links (e.g. `/demo/start/admin`, now the firm owner) redirect to the renamed person.
+ const alias=Object.hasOwn(PERSONA_ALIASES,id)?PERSONA_ALIASES[id]:undefined;
+ if(alias)redirect('/demo/start/'+alias);
+ const p=persona(id);
  if(!p)return new Response(null,{status:404});
  const sessionId=await startDemo(p.id);
  redirect(landingPath(p,getStore(sessionId!)));

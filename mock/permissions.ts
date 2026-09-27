@@ -22,4 +22,8 @@ export const ROLE_PERMISSIONS:Record<AppRole,readonly string[]>={
  external_counsel:readOnlyStaffPermissions,
  owner_resident:residentPermissions,
 };
-export function permissionsFor(r:AppRole|null):string[]{return r?[...ROLE_PERMISSIONS[r]]:[];}
+// Demo-only permissions with no `role_permissions` row: `chat.resident` lets an owner/resident use the paid,
+// owner-visible-only Ask in the demo (see mock/rules.ts#canResidentAsk). Not in any migration — do not copy.
+// TODO(legal): resident AI needs legal sign-off before it exists outside the demo.
+export const DEMO_ONLY_PERMISSIONS:Partial<Record<AppRole,readonly string[]>>={owner_resident:['chat.resident']};
+export function permissionsFor(r:AppRole|null):string[]{return r?[...ROLE_PERMISSIONS[r],...(DEMO_ONLY_PERMISSIONS[r]??[])]:[];}

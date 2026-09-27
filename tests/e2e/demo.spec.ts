@@ -10,7 +10,7 @@ const harbour=IDS.buildings.harbour;
 const draftTitle='Visitor parking · Draft response';
 
 test('each person lands where their role begins, with navigation scoped to their permissions',async({page})=>{
- await page.goto('/demo/start/admin');
+ await page.goto('/demo/start/owner');
  await expect(page).toHaveURL(/\/demo\/workspace$/);
  await expect(page.getByRole('heading',{name:/^Welcome back, Dana\./})).toBeVisible();
 

@@ -1,5 +1,5 @@
 import type {Building,Row} from '@/lib/schema';
-import type {MockState} from './store';
+import type {Layer,MockState} from './store';
 import {permissionsFor,type AppRole} from './permissions';
 // Pure rule functions shared by `mock/actions.ts` and `mock/source.ts` (later tasks). Every function here is
 // the mock equivalent of a Postgres function or RLS policy from supabase/migrations/*.sql, named after it in
@@ -36,4 +36,33 @@ export function canAssign(s:MockState,userId:string,buildingId:string,r:string):
   case 'building_manager':case 'council_president':return ['council_member','external_counsel'].includes(r);
   default:return false;
  }
+}
+// --- Demo v2: knowledge layers, firm staff, resident Ask, platform admin (no production equivalent yet). ---
+const FIRM_STAFF_ROLES=['org_owner','org_admin','portfolio_manager','portfolio_assistant'];
+// Mirrors an active `public.org_members` row in a `kind:'firm'` organization with a firm staff role.
+export function isFirmStaff(s:MockState,userId:string,orgId:string|null):boolean{
+ if(!orgId||!s.organizations.some(o=>o.id===orgId&&o.kind==='firm'))return false;
+ return s.orgMembers.some(m=>m.org_id===orgId&&m.user_id===userId&&m.status==='active'&&FIRM_STAFF_ROLES.includes(String(m.role)));
+}
+// The firm a person works for, or null (building staff, residents and the platform admin have none).
+export function firmOf(s:MockState,userId:string):string|null{
+ const m=s.orgMembers.find(m=>m.user_id===userId&&isFirmStaff(s,userId,String(m.org_id)));
+ return m?String(m.org_id):null;
+}
+// Mock stand-in for the `platform_admin` JWT claim. Deliberately not `profiles.account_type`, which a firm
+// owner shares ('admin').
+export function isPlatformAdmin(s:MockState,userId:string):boolean{return s.platform.admins.includes(userId);}
+// Resident Ask (demo only): the mock-only `chat.resident` permission on that building, and only while the
+// platform's resident AI flag is on.
+export function canResidentAsk(s:MockState,userId:string,buildingId:string):boolean{return s.platform.flags.residentAi&&can(s,userId,'chat.resident',buildingId);}
+/** The knowledge layers a person may search on one building, always in the order building, firm, legal.
+ * Anyone with Ask on the building (staff via `chat.use`, residents via `canResidentAsk`) gets that building's
+ * own documents and the legal corpus; the `firm` layer is added only for staff of the firm the building is
+ * actively linked to. Building managers, council and residents never get `firm`; the platform admin, who has
+ * no building memberships, gets nothing. The building layer for a resident is still limited to owner-visible
+ * documents by `visibleDocuments`. */
+export function layersFor(s:MockState,userId:string,buildingId:string):Layer[]{
+ if(isPlatformAdmin(s,userId))return [];
+ if(!can(s,userId,'chat.use',buildingId)&&!canResidentAsk(s,userId,buildingId))return [];
+ return isFirmStaff(s,userId,linkedFirmId(s,buildingId))&&isLinkedMember(s,userId,buildingId)?['building','firm','legal']:['building','legal'];
 }

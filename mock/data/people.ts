@@ -1,9 +1,11 @@
 import type {Profile} from '@/lib/schema';
 import {IDS} from './ids';
 // One profile row per seed user (mirrors `public.profiles`: id, display_name, account_type, bound_building_id).
-// The four persona users (Dana, Sarah, James, Priya) are also described in `mock/personas.ts`; the rest are
+// The five persona users (Alex, Dana, Sarah, James, Priya) are also described in `mock/personas.ts`; the rest are
 // background people who make member lists, reviews and org rows realistic.
 export const profiles:Profile[]=[
+ // Alex is BylawIQ's own platform admin: no org or building membership anywhere (see `platform.admins`).
+ {id:IDS.users.alex,display_name:'Alex Kim',account_type:'admin',bound_building_id:null},
  {id:IDS.users.dana,display_name:'Dana Ruiz',account_type:'admin',bound_building_id:null},
  {id:IDS.users.sarah,display_name:'Sarah Chen',account_type:'multi_building',bound_building_id:null},
  {id:IDS.users.leeWong,display_name:'Lee Wong',account_type:'multi_building',bound_building_id:null},

@@ -25,7 +25,7 @@ const topics:Record<string,Topics>={
   parking:'Visitor parking permits are issued by the building manager and are valid for 72 hours. EV charging stalls are reserved for vehicles registered with the manager.',
   rentals:'The minimum rental term is three months. A short-term rental of less than 30 days is not permitted.',
   moveInFee:'A refundable $300 move-in deposit is payable to the strata, and the elevator must be booked at least 72 hours before a move.',
-  fineSchedule:'A bylaw contravention draws a $200 fine after a written warning, doubling for a repeat contravention within 12 months.',
+  fineSchedule:'A fine for noise under bylaw 3.1 is capped at $100 per contravention and follows a written warning. Any other bylaw contravention draws a fine of up to $200 after a written warning.',
   elevatorBooking:'The elevator must be booked with the building manager at least 72 hours before a move.'},
  parkside:{quietHours:'Quiet hours run from 9:30 pm to 7:30 am.',
   pets:'A pet over 15 kg is not permitted. A pet application must be approved by the council before a pet moves in.',
