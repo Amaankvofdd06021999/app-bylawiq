@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {id,role} from '@/lib/schema';
 const text=z.string().trim().min(1).max(200);
-export const mutationSchema=z.object({buildingId:id,operation:z.enum(['building.create','building.update','building.archive','knowledge.save','knowledge.delete','agent.save','agent.deploy','agent.pause','agent.delete','document.update','document.delete','document.confirm','bylaw.save','bylaw.transition','bylaw.register','notice.save','notice.transition','dispute.save','dispute.event','update.state','member.change','member.invite','invite.revoke','org.update','chat.rename','chat.archive']),id:id.optional(),values:z.record(z.string(),z.unknown())});
+export const mutationSchema=z.object({buildingId:id,operation:z.enum(['building.create','building.update','building.archive','knowledge.save','knowledge.delete','agent.save','agent.deploy','agent.pause','agent.delete','document.update','document.delete','document.confirm','bylaw.save','bylaw.transition','bylaw.register','notice.save','notice.transition','notice.firm_review','notice.firm_decision','notice.comment','dispute.save','dispute.event','update.state','member.change','member.invite','invite.revoke','org.update','chat.rename','chat.archive']),id:id.optional(),values:z.record(z.string(),z.unknown())});
 export const values={
  building:z.object({orgId:id,name:text,plan:z.string().max(30).default(''),address:z.string().max(300).default(''),units:z.coerce.number().int().min(1).max(5000).nullable().default(null)}),
  knowledge:z.object({name:text,description:z.string().max(500).default('')}),
