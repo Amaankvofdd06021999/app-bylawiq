@@ -1,28 +1,13 @@
 import {beforeAll,afterAll,describe,it,expect} from 'vitest';
-import {PGlite} from '@electric-sql/pglite';
-import {vector} from '@electric-sql/pglite-pgvector';
-import {pgcrypto} from '@electric-sql/pglite/contrib/pgcrypto';
-import {pg_trgm} from '@electric-sql/pglite/contrib/pg_trgm';
-import {readFile,readdir} from 'node:fs/promises';
 import {createHmac} from 'node:crypto';
-const db=new PGlite({extensions:{vector,pgcrypto,pg_trgm}});
+import type {PGlite} from '@electric-sql/pglite';
+import {migratedDb} from './db-harness';
+let db:PGlite;let sql:(s:string)=>Promise<unknown>;let identity:(id:string)=>Promise<void>;let admin:()=>Promise<void>;
 const a='10000000-0000-4000-8000-000000000001',b='10000000-0000-4000-8000-000000000002',assistant='10000000-0000-4000-8000-000000000003',counsel='10000000-0000-4000-8000-000000000004';
-let ba:string,bb:string,chat:string,notice:string;const sql=(s:string)=>db.exec(s);
+let ba:string,bb:string,chat:string,notice:string;
 const embedding=JSON.stringify([1,...Array(1023).fill(0)]);
-async function identity(id:string){await sql("reset role; select set_config('request.jwt.claim.sub','"+id+"',false); set role authenticated;");}
-async function admin(){await sql('reset role;');}
 beforeAll(async()=>{
- await sql(`create role anon; create role authenticated; create role service_role bypassrls; create role supabase_auth_admin;
- create schema auth; create schema storage; create schema extensions;
- create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
- create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
- grant usage on schema auth,storage,public to authenticated,anon,service_role,supabase_auth_admin;
- grant execute on function auth.uid() to authenticated,anon,service_role,supabase_auth_admin;
- create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
- create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text);alter table storage.objects enable row level security;
- create function storage.foldername(name text) returns text[] language sql as $$ select string_to_array(name,'/') $$;
- grant select,insert on storage.objects to authenticated;`);
- for(const file of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort())await sql(await readFile('supabase/migrations/'+file,'utf8'));
+ ({db,sql,identity,admin}=await migratedDb());
  await sql(`insert into auth.users(id,email,email_confirmed_at) values ('${a}','alpha@example.test',now()),('${b}','beta@example.test',now()),('${assistant}','assistant@example.test',now()),('${counsel}','counsel@example.test',now());`);
  await identity(a);ba=String((await db.query<{id:string}>(`select public.bootstrap_workspace('Alpha','admin','Alpha building','Alice') id`)).rows[0].id);
  await identity(b);bb=String((await db.query<{id:string}>(`select public.bootstrap_workspace('Beta','single_building','Beta building','Bob') id`)).rows[0].id);
