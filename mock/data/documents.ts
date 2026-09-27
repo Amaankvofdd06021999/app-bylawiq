@@ -35,13 +35,15 @@ const topics:Record<string,Topics>={
   fineSchedule:'A bylaw contravention draws a $150 fine after a written warning.',
   elevatorBooking:'The elevator must be booked with the building manager at least 24 hours before a move.'},
 };
-function buildingDocs(slug:string,buildingId:string,uploaderId:string,prefix:string):{documents:Row[];chunks:Chunk[]}{
+// `kbId` puts the bylaws and rules in the building's seeded knowledge base, so `deploy_agent`'s ready-source
+// check passes for the seeded agent the same way it would for a real building.
+function buildingDocs(slug:string,buildingId:string,uploaderId:string,prefix:string,kbId:string):{documents:Row[];chunks:Chunk[]}{
  const t=topics[slug];
  const d=(n:number,title:string,type:string,extra:Record<string,unknown>={}):Row=>({id:uid(prefix,n),building_id:buildingId,title,type,status:'ready',owner_visible:false,uploaded_by:uploaderId,byte_size:96000+n*11000,created_at:'2026-05-'+String(10+n).padStart(2,'0')+'T09:00:00Z',...extra});
  const c=(documentId:string,sectionRef:string|null,content:string):Chunk=>({documentId,buildingId,sectionRef,content});
  const docs:Row[]=[
-  d(1,'Registered bylaws · Consolidated 2025','bylaws',{owner_visible:true,effective_date:'2025-03-12',lto_filing_ref:'LF-2025-0182'}),
-  d(2,'Building rules · Common areas','rules',{owner_visible:true,effective_date:'2025-03-12'}),
+  d(1,'Registered bylaws · Consolidated 2025','bylaws',{owner_visible:true,knowledge_base_id:kbId,effective_date:'2025-03-12',lto_filing_ref:'LF-2025-0182'}),
+  d(2,'Building rules · Common areas','rules',{owner_visible:true,knowledge_base_id:kbId,effective_date:'2025-03-12'}),
   d(3,'Move-in package · Guide for new owners','other',{owner_visible:true}),
   d(4,'Council meeting minutes · June 2026','council_minutes'),
   d(5,'AGM minutes · March 2026','agm_minutes'),
@@ -72,9 +74,9 @@ function buildingDocs(slug:string,buildingId:string,uploaderId:string,prefix:str
  ];
  return {documents:docs,chunks};
 }
-const harbour=buildingDocs('harbour',IDS.buildings.harbour,IDS.users.sarah,'20000001');
-const marina=buildingDocs('marina',IDS.buildings.marina,IDS.users.sarah,'20000002');
-const seaside=buildingDocs('seaside',IDS.buildings.seaside,IDS.users.james,'20000003');
-const parkside=buildingDocs('parkside',IDS.buildings.parkside,IDS.users.omar,'20000004');
+const harbour=buildingDocs('harbour',IDS.buildings.harbour,IDS.users.sarah,'20000001',uid('21000001',1));
+const marina=buildingDocs('marina',IDS.buildings.marina,IDS.users.sarah,'20000002',uid('21000002',1));
+const seaside=buildingDocs('seaside',IDS.buildings.seaside,IDS.users.james,'20000003',uid('21000003',1));
+const parkside=buildingDocs('parkside',IDS.buildings.parkside,IDS.users.omar,'20000004',uid('21000004',1));
 export const documents:Row[]=[...harbour.documents,...marina.documents,...seaside.documents,...parkside.documents];
 export const chunks:Chunk[]=[...harbour.chunks,...marina.chunks,...seaside.chunks,...parkside.chunks];

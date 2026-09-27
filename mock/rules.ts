@@ -27,3 +27,13 @@ export function isLinkedMember(s:MockState,userId:string,buildingId:string):bool
  if(!m||m.via_link_id==null)return false;
  return s.firmLinks.some(l=>l.id===m.via_link_id&&l.status==='active');
 }
+// Mirrors `public.can_assign`: which roles the caller's own role may hand out or take away on that building.
+export function canAssign(s:MockState,userId:string,buildingId:string,r:string):boolean{
+ switch(roleIn(s,userId,buildingId)){
+  case 'org_owner':return r!=='org_owner';
+  case 'org_admin':return !['org_owner','org_admin'].includes(r);
+  case 'portfolio_manager':return ['portfolio_assistant','building_manager','council_president','council_member','external_counsel','owner_resident'].includes(r);
+  case 'building_manager':case 'council_president':return ['council_member','external_counsel'].includes(r);
+  default:return false;
+ }
+}
