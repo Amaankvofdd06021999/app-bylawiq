@@ -1,6 +1,9 @@
 -- supabase/migrations/20260927093000_firm_review.sql
 -- A building can send a draft to its linked firm. Only the firm's reviewers decide; the building cannot approve
--- around them. Revoking the firm returns open reviews to draft.
+-- around them. Firm review is binding until the author edits: transition_artifact can no longer move a document
+-- from changes_requested back to pending_review on its own (only request_firm_review, or an edit, can send it
+-- again) and, while the firm is actively reviewing a document, editing it withdraws it from that review and
+-- leaves a comment saying so. Revoking the firm returns open reviews to draft.
 -- Rollback: drop the functions created here; drop table public.document_review_comments;
 --  update public.generated_documents set status='draft' where status='changes_requested';
 --  alter table public.generated_documents drop constraint generated_documents_status_check,
@@ -32,7 +35,9 @@ begin
  select * into d from public.generated_documents where id=p_id and deleted_at is null for update;
  if not found or not public.authorize('document.draft',d.building_id) or private.is_linked_member(d.building_id) then raise exception 'forbidden'; end if;
  if d.status not in ('draft','changes_requested') then raise exception 'invalid_transition'; end if;
- if public.linked_firm_id(d.building_id) is null then raise exception 'no_firm_link'; end if;
+ -- Lock the active link row so a concurrent revoke cannot slip through between the check and the update.
+ perform 1 from public.firm_building_links where building_id=d.building_id and status='active' for share;
+ if not found then raise exception 'no_firm_link'; end if;
  update public.generated_documents set status='pending_review',review_by='firm',updated_at=now() where id=p_id;
 end; $$;
 
@@ -62,7 +67,9 @@ begin
  return i;
 end; $$;
 
--- Editing a draft sent back by the firm reopens it for the author.
+-- Editing a draft sent back by the firm reopens it for the author. Editing one the firm is actively reviewing
+-- withdraws it from that review (the building owns the record) and leaves a comment saying so, so the firm is
+-- not left waiting on a document that has moved out from under it.
 create or replace function public.save_artifact(p_id uuid,p_title text,p_body text) returns void language plpgsql security definer set search_path='' as $$
 declare d public.generated_documents;
 begin
@@ -70,6 +77,9 @@ begin
  if not found or not public.authorize('document.draft',d.building_id) then raise exception 'forbidden'; end if;
  if d.status not in ('draft','pending_review','changes_requested') then raise exception 'immutable_approved_document'; end if;
  insert into public.artifact_versions(building_id,artifact_id,body_md,edited_by) values(d.building_id,d.id,d.body_md,auth.uid());
+ if d.status='pending_review' and d.review_by='firm' then
+  insert into public.document_review_comments(document_id,building_id,author_id,body) values(d.id,d.building_id,auth.uid(),'The author edited this draft, which withdrew it from strata management review.');
+ end if;
  update public.generated_documents set title=p_title,body_md=p_body,status='draft',review_by='building',updated_at=now() where id=p_id;
 end; $$;
 
@@ -81,7 +91,9 @@ begin
  if d.status=p_status then return; end if;
  -- New: while the firm is reviewing, only decide_firm_review may move the document forward.
  if d.status='pending_review' and d.review_by='firm' and p_status<>'void' then raise exception 'firm_review_pending'; end if;
- if p_status='pending_review' and d.status in ('draft','changes_requested') and public.authorize('document.draft',d.building_id) then
+ -- New: firm review is binding until the author edits — a document the firm sent back with changes_requested
+ -- can only be resent via request_firm_review (or reopened by save_artifact), never by this generic transition.
+ if p_status='pending_review' and d.status='draft' and public.authorize('document.draft',d.building_id) then
   update public.generated_documents set status=p_status,review_by='building' where id=p_id;
  elsif p_status='approved' and d.status='pending_review' and public.authorize('document.approve',d.building_id) then
   select o.separation_of_duties into sep from public.organizations o join public.buildings b on b.org_id=o.id where b.id=d.building_id;
