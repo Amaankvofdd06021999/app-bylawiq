@@ -54,17 +54,10 @@ test('a direct link to a building outside the person\'s access shows the access-
 
 // The task-7 brief leaves the exact scenario for cross-persona review ambiguous; per the brief for this task,
 // it is: James (building manager) sends the seeded Seaside draft to strata management, then Sarah (strata
-// manager) sees it in her review inbox and approves it.
-//
-// CONCERN, not silently worked around (see the brief's instruction to report rather than route around this):
-// the demo has no in-app way to do this as two personas while keeping the same session's data. Both paths that
-// change persona — the "Switch person" link (-> /demo, then /demo/start/<persona>) and the unused
-// `switchPersonaAction` — call `startDemo()` (mock/session.ts), which always mints a brand-new session id and
-// therefore a freshly reseeded store (mock/store.ts#getStore). So switching persona via any in-app control
-// always discards whatever the first persona just did. This test instead keeps the same `demo_session` cookie
-// across the persona switch (only swapping `demo_persona`) to exercise the actual review hand-off; that is a
-// test-only technique, not something a real demo user can do.
-test('a sent draft reaches strata management\'s review inbox and can be approved',async({page,context,baseURL})=>{
+// manager) sees it in her review inbox and approves it — exercised here through the real "Switch person"
+// control, not a cookie workaround: mock/session.ts#startDemo now keeps the same demo session when switching
+// persona (only Reset demo reseeds it), so the draft James sends is still there once Sarah switches in.
+test('a sent draft reaches strata management\'s review inbox and can be approved',async({page})=>{
  await page.goto('/demo/start/building');
  await page.goto('/demo/b/'+seaside+'/notices');
  await page.getByText(draftTitle).click();
@@ -76,8 +69,10 @@ test('a sent draft reaches strata management\'s review inbox and can be approved
  await expect(page.getByRole('dialog')).toHaveCount(0);
  await expect(page.locator('tr',{hasText:draftTitle})).toContainText('Pending review');
 
- await context.addCookies([{name:'demo_persona',value:'strata',url:baseURL!}]);
- await page.goto('/demo/workspace');
+ await page.getByRole('link',{name:'Switch person'}).click();
+ await expect(page).toHaveURL(/\/demo$/);
+ await page.getByRole('link',{name:/Sarah Chen/}).click();
+ await expect(page).toHaveURL(/\/demo\/workspace$/);
  const inbox=page.getByRole('region',{name:'Waiting for your review'});
  await expect(inbox.getByRole('link',{name:draftTitle})).toBeVisible();
  await inbox.getByRole('link',{name:draftTitle}).click();
