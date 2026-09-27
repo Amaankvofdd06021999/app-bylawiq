@@ -6,6 +6,7 @@ import {getStore,resetStore,type MockState} from './store';
 import {persona} from './personas';
 import {demoEnabled} from '@/lib/env';
 import * as pure from './mutations';
+import {buyCredits,residentDraft} from './residents';
 // Demo stand-ins for the real server actions: same names, signatures and result shapes. Each one resolves the
 // demo session, runs the pure mutation against that session's own store as the persona's user, and refreshes
 // the demo pages. The persona comes from the session cookie, never from the caller's input.
@@ -24,6 +25,10 @@ export async function acceptFirmCodeAction(raw:unknown){return withSession((s,u)
 export async function createChatAction(raw:unknown){return withSession((s,u)=>pure.createChat(s,u,raw));}
 export async function branchChatAction(raw:unknown){return withSession((s,u)=>pure.branchChat(s,u,raw));}
 export async function setResidentAiAction(raw:unknown){return withSession((s,u)=>pure.setFlag(s,u,raw));}
+export async function buyCreditsAction(raw:unknown){return withSession((s,u)=>buyCredits(s,u,raw));}
+export async function residentDraftAction(raw:unknown){return withSession((s,u)=>residentDraft(s,u,raw));}
+export async function saveFirmDocAction(raw:unknown){return withSession((s,u)=>pure.saveFirmDoc(s,u,raw));}
+export async function deleteFirmDocAction(raw:unknown){return withSession((s,u)=>pure.deleteFirmDoc(s,u,raw));}
 export async function signOutAction():Promise<void>{if(!demoEnabled())return;await endDemo();redirect('/demo');}
 export async function resetDemoAction():Promise<void>{
  if(!demoEnabled())return;

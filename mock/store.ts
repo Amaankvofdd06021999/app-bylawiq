@@ -15,7 +15,7 @@ export type LegalChunk={id:string;source:'act'|'regulation'|'crt';title:string;c
 export type Wallet={userId:string;buildingId:string;credits:number;freeQuestionsUsed:number};
 export type LedgerReason='purchase'|'question'|'draft_notice'|'letter_reply'|'free_question';
 export type LedgerEntry={id:string;userId:string;buildingId:string;delta:number;reason:LedgerReason;at:string};
-export type ResidentDraft={id:string;userId:string;buildingId:string;kind:'notice_to_council'|'letter_reply';title:string;body:string;sources:unknown[];created_at:string};
+export type ResidentDraft={id:string;userId:string;buildingId:string;kind:'notice_to_council'|'letter_reply';title:string;body:string;sources:unknown[];meaning?:string[];created_at:string};
 export type Alert={id:string;buildingId:string;title:string;body:string;created_at:string};
 // Platform-wide aggregates for the BylawIQ admin. `admins` is the mock stand-in for the `platform_admin` JWT
 // claim (profiles.account_type can't tell a platform admin from a firm owner — both are 'admin').

@@ -166,6 +166,6 @@ export function buildingManagerDashboard(s:MockState,userId:string,buildingId:st
   can:{draft:can(s,userId,'document.draft',buildingId),ask:can(s,userId,'chat.use',buildingId),upload:can(s,userId,'vault.upload',buildingId),invite:can(s,userId,'member.invite',buildingId)},
  };
 }
-// Where `/demo/b/<id>/home` goes: staff with Ask get the building manager dashboard; everyone else (residents,
-// until their own home arrives in Task 4) is sent to documents.
+// Whether `/demo/b/<id>/home` is the building manager dashboard: staff with Ask. A resident gets their own home
+// instead (mock/residents.ts#hasResidentHome); anyone else is sent to documents.
 export function hasBuildingHome(s:MockState,userId:string,buildingId:string):boolean{return roleIn(s,userId,buildingId)!=null&&can(s,userId,'chat.use',buildingId);}

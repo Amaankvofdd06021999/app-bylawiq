@@ -35,8 +35,7 @@ describe('demo personas',()=>{
   expect(path('owner')).toBe('/demo/workspace');
   expect(path('strata')).toBe('/demo/workspace');
   expect(path('building')).toBe(`/demo/b/${seaside}/home`);
-  // TODO(Task 4): the resident moves to /demo/b/<seaside>/home once the resident home exists.
-  expect(path('resident')).toBe(`/demo/b/${seaside}/documents`);
+  expect(path('resident')).toBe(`/demo/b/${seaside}/home`);
  });
  it('redirects the old admin start link to the firm owner',async()=>{
   jar.clear();

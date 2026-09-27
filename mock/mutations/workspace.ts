@@ -19,6 +19,9 @@ const regulatedTerms=/\b(fines?|rent|rents|rental|rentals|rented|renter|renters|
 const disputeStages=['reported','investigating','warning_sent','notice_sent','hearing_offered','hearing_held','decision_issued','fine_levied','resolved','escalated_crt','withdrawn'];
 const emailOf=(userId:unknown)=>PERSONAS.find(p=>p.userId===userId)?.email;
 const bumpCorpus=(s:MockState,b:string)=>{const building=s.buildings.find(x=>x.id===b);if(building)building.corpus_version+=1;};
+// Demo only: residents get a bylaw-change alert when a version comes into force (mock/residents.ts shows them).
+// Only the bylaw's name and section — never the version text, which may not be in the owner documents yet.
+const inForceAlert=(s:MockState,b:string,nodeId:unknown)=>{const node=s.bylaws.find(n=>n.id===nodeId&&n.building_id===b);if(node)s.alerts.push({id:newId(),buildingId:b,title:`${String(node.title)} (${String(node.section_ref)}) is now in force`,body:'Council brought an updated bylaw into force. Ask your building manager for the owner copy if it isn’t in your documents yet.',created_at:now()});};
 // Mirrors `public.managing_org_ids`.
 const managingOrgs=(s:MockState,b:unknown)=>[s.buildings.find(x=>x.id===b)?.org_id,linkedFirmId(s,String(b))].filter(Boolean);
 export function mutate(s:MockState,userId:string,raw:unknown):Result<{id?:string;url?:string}>{return run(()=>{
@@ -138,7 +141,7 @@ export function mutate(s:MockState,userId:string,raw:unknown):Result<{id?:string
     for(const o of s.versions)if(o.node_id===r.node_id&&o.status==='in_force')Object.assign(o,{status:'superseded',effective_until:r.effective_date});
     r.status='in_force';
     for(const u of s.updates)if(u.target_id===r.id&&u.type==='unfiled_adoption')u.state='actioned';
-    bumpCorpus(s,b);
+    bumpCorpus(s,b);inForceAlert(s,b,r.node_id);
    }else if(['withdrawn','defeated'].includes(x.status)&&!['filed','in_force','superseded'].includes(status))r.status=x.status;
    else raise('invalid_transition');
    log('bylaw_versions','update',r.id);return {};
@@ -149,7 +152,7 @@ export function mutate(s:MockState,userId:string,raw:unknown):Result<{id?:string
    if(r.status!=='draft'||r.source_document_id==null||x.filing.trim().length<3||x.effective>today())raise('invalid_transition');
    for(const o of s.versions)if(o.node_id===r.node_id&&o.status==='in_force')Object.assign(o,{status:'superseded',effective_until:x.effective});
    Object.assign(r,{status:'in_force',review_choice:'registered',filing_reference:x.filing.trim(),effective_date:x.effective});
-   bumpCorpus(s,b);log('bylaw_versions','update',r.id);return {};
+   bumpCorpus(s,b);inForceAlert(s,b,r.node_id);log('bylaw_versions','update',r.id);return {};
   }
   case 'notice.save':{
    const x=values.notice.parse(v);

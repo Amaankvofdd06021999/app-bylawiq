@@ -34,11 +34,13 @@ test('each person lands where their role begins, with navigation scoped to their
  await expect(managerNav.getByRole('link',{name:'Disputes'})).toBeVisible();
 
  await page.goto('/demo/start/resident');
- await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/documents$'));
- await expect(page.getByRole('heading',{name:'Documents'})).toBeVisible();
+ await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/home$'));
+ await expect(page.getByRole('heading',{name:'Hi Priya.'})).toBeVisible();
  const residentNav=page.getByRole('navigation',{name:'Main navigation'});
- // Demo only: paid resident Ask (mock-only `chat.resident`) shows Ask; staff sections stay hidden.
+ await expect(residentNav.getByRole('link').first()).toHaveText('Home');
+ // Demo only: paid resident tools (mock-only `chat.resident`); staff sections stay hidden.
  await expect(residentNav.getByRole('link',{name:/^Ask BylawIQ/})).toBeVisible();
+ for(const name of ['Explainers','Draft a notice','Reply to a letter','My drafts','Credits'])await expect(residentNav.getByRole('link',{name})).toBeVisible();
  await expect(residentNav.getByRole('link',{name:'Notices'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Disputes'})).toHaveCount(0);
  // Bylaws and Updates need chat.use, same as Notices — a resident has only building.read/vault.read (+ demo chat.resident).
@@ -55,13 +57,28 @@ test('the platform admin turns resident AI off, and Ask disappears for the resid
  await expect(flag).toHaveAttribute('aria-checked','false');
  await page.goto('/demo/start/resident');
  await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:/^Ask BylawIQ/})).toHaveCount(0);
- await page.goto('/demo/b/'+seaside+'/home');// resident home arrives in Task 4; until then it falls back to documents
- await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/documents$'));
+ await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/home$'));
+ await expect(page.getByRole('heading',{name:'AI help is paused'})).toBeVisible();
+ await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Draft a notice'})).toHaveCount(0);
+});
+
+test('a resident drafts a notice to council from her owner bylaws, and it is saved to her drafts',async({page})=>{
+ await page.goto('/demo/start/resident');
+ await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Draft a notice'}).click();
+ await expect(page.getByRole('note',{name:'Legal notice'})).toContainText('Drafting help for owners needs legal sign-off before launch — demo only');
+ await page.getByLabel('Topic').fill('Weekend renovation noise');
+ await page.getByLabel('What happened').fill('Renovation noise started at 7:30 am on Saturday.');
+ await page.getByLabel('What you want council to do').fill('Please remind the owner of the weekend start time.');
+ await page.getByRole('button',{name:/^Draft my notice/}).click();
+ await expect(page.getByLabel('Draft text')).toContainText('Bylaw 3.1 says');
+ await expect(page.getByLabel('Draft text')).toContainText('Unit 1204');
+ await page.getByRole('link',{name:'My drafts'}).first().click();
+ await expect(page.getByRole('heading',{name:'Notice to council · Weekend renovation noise'})).toBeVisible();
 });
 
 test('a resident sees only the documents marked visible to owners',async({page})=>{
  await page.goto('/demo/start/resident');
- await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/documents$'));
+ await page.goto('/demo/b/'+seaside+'/documents');
  for(const title of ['Registered bylaws · Consolidated 2025','Building rules · Common areas','Move-in package · Guide for new owners'])
   await expect(page.getByText(title)).toBeVisible();
  for(const title of ['Council meeting minutes · June 2026','AGM minutes · March 2026','Insurance summary · 2026–2027','Strata plan · Original filing','Financial statements · 2025'])

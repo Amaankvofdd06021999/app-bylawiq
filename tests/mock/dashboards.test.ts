@@ -152,9 +152,11 @@ describe('demo pages for the platform admin',()=>{
   await startDemo('building');
   expect(await redirectOf(()=>AdminPage())).toBe(`/demo/b/${b.seaside}/home`);
  });
- it('falls back to documents for a resident’s home until the resident home exists',async()=>{
+ it('gives a resident their own home, not the building manager dashboard',async()=>{
   await startDemo('resident');
   const {default:BuildingPage}=await import('@/app/demo/b/[buildingId]/[section]/page');
-  expect(await redirectOf(()=>BuildingPage({params:Promise.resolve({buildingId:b.seaside,section:'home'}),searchParams:Promise.resolve({})}))).toBe(`/demo/b/${b.seaside}/documents`);
+  const page=await BuildingPage({params:Promise.resolve({buildingId:b.seaside,section:'home'}),searchParams:Promise.resolve({})});
+  const {ResidentHome}=await import('@/features/residents/components/resident-home');
+  expect((page as unknown as {props:{children:{type:unknown}}}).props.children.type).toBe(ResidentHome);
  });
 });

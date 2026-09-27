@@ -17,7 +17,7 @@ async function device(browser:Browser,width:number,touch:boolean,baseURL:string)
 // Measure only the real page. The app streams it behind loading.tsx: the content arrives inside a hidden
 // <div hidden id="S:n"> segment and is swapped in later, so measuring at the load event saw 0x0 elements.
 async function open(page:Page,route:string){await page.goto(route);await page.waitForFunction(()=>!document.querySelector('div[hidden][id^="S:"]')&&!document.querySelector('[aria-label="Loading workspace"]'));}
-const desktopOnly=(name:string)=>{test.skip(name!=='desktop','Runs once with its own device contexts');test.setTimeout(180_000);};
+const desktopOnly=(name:string)=>{test.skip(name!=='desktop','Runs once with its own device contexts');test.setTimeout(300_000);};
 
 test('no page scrolls sideways and the top bar stays on one line at any width',async({browser,baseURL},info)=>{desktopOnly(info.project.name);
  for(const width of [360,390,768,1024,1440]){const {context,page}=await device(browser,width,width<1440,baseURL!);
@@ -65,7 +65,9 @@ test('the ask box and filter tabs stay on one row on phones',async({browser,base
 
 // The other role homes (Task 3): each persona's own dashboard, at phone and desktop widths.
 test('role dashboards fit every width, keep touch targets large and pass axe',async({browser,baseURL},info)=>{desktopOnly(info.project.name);
- for(const [persona,route] of [['platform','/demo/admin'],['owner','/demo/workspace'],['strata','/demo/workspace'],['building','/demo/b/'+buildingId+'/home']] as const)for(const width of [360,390,1440]){
+ for(const [persona,route] of [['platform','/demo/admin'],['owner','/demo/workspace'],['strata','/demo/workspace'],['building','/demo/b/'+buildingId+'/home'],
+  // Task 4: the resident's home and paid tools, and the firm knowledge tab.
+  ...(['home','credits','draft','reply','explainers','my-drafts'] as const).map(s=>['resident','/demo/b/'+buildingId+'/'+s] as const),['strata','/demo/b/'+buildingId+'/knowledge?tab=firm']] as const)for(const width of [360,390,1440]){
   const context=await browser.newContext({baseURL,viewport:{width,height:width<900?800:900},isMobile:width<900,hasTouch:width<900});const page=await context.newPage();await page.goto('/demo/start/'+persona);await open(page,route);
   expect.soft(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth),`${persona} at ${width}px scrolls sideways`).toBeLessThanOrEqual(0);
   if(width<900)expect.soft(await smallTargets(page),`${persona} at ${width}px`).toEqual([]);

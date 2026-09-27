@@ -1,6 +1,6 @@
 import {IDS} from './data';
 import type {MockState} from './store';
-import {accessibleBuildings,can,isPlatformAdmin} from './rules';
+import {accessibleBuildings,can,isPlatformAdmin,roleIn} from './rules';
 export type PersonaId='platform'|'owner'|'strata'|'building'|'resident';
 // Old persona ids still reachable through `/demo/start/<old>` links (app/demo/start/[persona]/route.ts).
 export const PERSONA_ALIASES:Record<string,PersonaId>={admin:'owner'};
@@ -19,6 +19,6 @@ export function landingPath(p:Persona,store:MockState):string{
  if(p.accountType!=='single_building')return '/demo/workspace';
  const building=accessibleBuildings(store,p.userId)[0];
  if(!building)return '/demo/workspace';
-  // Building staff land on their building's home; a resident stays on documents until their own home (Task 4).
- return can(store,p.userId,'chat.use',building.id)?`/demo/b/${building.id}/home`:`/demo/b/${building.id}/documents`;
+ // Building staff with Ask land on the building home, and a resident on their own resident home.
+ return can(store,p.userId,'chat.use',building.id)||roleIn(store,p.userId,building.id)==='owner_resident'?`/demo/b/${building.id}/home`:`/demo/b/${building.id}/documents`;
 }
