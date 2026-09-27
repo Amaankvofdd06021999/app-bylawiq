@@ -75,5 +75,4 @@ begin
  where public.building_members.via_link_id is not null or public.building_members.status<>'active';
 end; $$;
 revoke all on function private.add_link_members(uuid),private.set_org_kind() from public,anon,authenticated;
-revoke all on function public.linked_firm_id(uuid),public.managing_org_ids(uuid) from public,anon;
-grant execute on function public.linked_firm_id(uuid),public.managing_org_ids(uuid) to authenticated;
+revoke all on function public.linked_firm_id(uuid),public.managing_org_ids(uuid) from public,anon,authenticated;

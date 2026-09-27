@@ -10,6 +10,10 @@ select public.bootstrap_workspace('RLS org A','admin','RLS building A','RLS A');
 select set_config('request.jwt.claim.sub','90000000-0000-4000-8000-000000000002',true);
 select public.bootstrap_workspace('RLS org B','admin','RLS building B','RLS B');
 select set_config('test.building_b',(select id::text from public.buildings where name='RLS building B'),true);
+insert into public.firm_building_links(building_id,firm_org_id,status,accepted_at) values
+ (current_setting('test.building_b')::uuid,(select id from public.organizations where name='RLS org A'),'active',now());
+insert into public.link_codes(building_id,kind,code_hash,created_by,expires_at) values
+ (current_setting('test.building_b')::uuid,'firm',encode(extensions.digest('pgtap','sha256'),'hex'),'90000000-0000-4000-8000-000000000002',now()+interval '1 day');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','90000000-0000-4000-8000-000000000001',true);
 select is((select count(*)::integer from public.buildings where id=current_setting('test.building_b')::uuid),0,'known foreign building UUID returns no rows');
