@@ -14,10 +14,11 @@ export const PERSONAS:Persona[]=[
 ];
 export function persona(id:string):Persona|undefined{return PERSONAS.find(p=>p.id===id);}
 export function landingPath(p:Persona,store:MockState):string{
- // The platform admin has no building memberships; their home arrives with the admin dashboard.
+ // The platform admin has no building memberships; their home is the admin dashboard.
  if(isPlatformAdmin(store,p.userId))return '/demo/admin';
  if(p.accountType!=='single_building')return '/demo/workspace';
  const building=accessibleBuildings(store,p.userId)[0];
  if(!building)return '/demo/workspace';
- return can(store,p.userId,'chat.use',building.id)?`/demo/b/${building.id}/ask`:`/demo/b/${building.id}/documents`;
+  // Building staff land on their building's home; a resident stays on documents until their own home (Task 4).
+ return can(store,p.userId,'chat.use',building.id)?`/demo/b/${building.id}/home`:`/demo/b/${building.id}/documents`;
 }

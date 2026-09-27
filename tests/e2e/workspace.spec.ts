@@ -5,7 +5,7 @@ import {IDS} from '@/mock/data';
 // signs in as James Park, the Seaside Towers building manager, the same single-building persona `/preview`
 // used to impersonate.
 const seaside=IDS.buildings.seaside;
-test('workspace loads and fits the viewport',async({page})=>{await page.goto('/demo/start/building');await expect(page.getByRole('heading',{name:'What does your building need to know?'})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);const a11y=await new AxeBuilder({page}).analyze();expect(a11y.violations.filter(v=>v.impact==='critical'||v.impact==='serious')).toEqual([]);});
+test('workspace loads and fits the viewport',async({page})=>{await page.goto('/demo/start/building');await page.goto('/demo/b/'+seaside+'/ask');await expect(page.getByRole('heading',{name:'What does your building need to know?'})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);const a11y=await new AxeBuilder({page}).analyze();expect(a11y.violations.filter(v=>v.impact==='critical'||v.impact==='serious')).toEqual([]);});
 // The old prototype's agents screen only proved the write was blocked with a message; the interactive demo's
 // agent form is a real (session-scoped) mutation, so the equivalent check is that the screen is reachable and
 // completing it actually creates the agent.

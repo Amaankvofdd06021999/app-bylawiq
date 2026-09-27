@@ -23,6 +23,7 @@ export async function revokeFirmLinkAction(raw:unknown){return withSession((s,u)
 export async function acceptFirmCodeAction(raw:unknown){return withSession((s,u)=>pure.acceptFirmCode(s,u,raw));}
 export async function createChatAction(raw:unknown){return withSession((s,u)=>pure.createChat(s,u,raw));}
 export async function branchChatAction(raw:unknown){return withSession((s,u)=>pure.branchChat(s,u,raw));}
+export async function setResidentAiAction(raw:unknown){return withSession((s,u)=>pure.setFlag(s,u,raw));}
 export async function signOutAction():Promise<void>{if(!demoEnabled())return;await endDemo();redirect('/demo');}
 export async function resetDemoAction():Promise<void>{
  if(!demoEnabled())return;

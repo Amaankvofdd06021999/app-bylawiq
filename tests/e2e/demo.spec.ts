@@ -10,18 +10,26 @@ const harbour=IDS.buildings.harbour;
 const draftTitle='Visitor parking · Draft response';
 
 test('each person lands where their role begins, with navigation scoped to their permissions',async({page})=>{
+ await page.goto('/demo/start/platform');
+ await expect(page).toHaveURL(/\/demo\/admin$/);
+ await expect(page.getByRole('heading',{name:'Platform overview'})).toBeVisible();
+ await expect(page.getByRole('navigation',{name:'Main navigation'})).toHaveCount(0);// no building sidebar
+
  await page.goto('/demo/start/owner');
  await expect(page).toHaveURL(/\/demo\/workspace$/);
  await expect(page.getByRole('heading',{name:/^Welcome back, Dana\./})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Your team'})).toBeVisible();
 
  await page.goto('/demo/start/strata');
  await expect(page).toHaveURL(/\/demo\/workspace$/);
  await expect(page.getByRole('heading',{name:/^Welcome back, Sarah\./})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Needs attention today'})).toBeVisible();
 
  await page.goto('/demo/start/building');
- await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/ask$'));
- await expect(page.getByRole('heading',{name:'What does your building need to know?'})).toBeVisible();
+ await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/home$'));
+ await expect(page.getByRole('heading',{name:'Seaside Towers',level:1})).toBeVisible();
  const managerNav=page.getByRole('navigation',{name:'Main navigation'});
+ await expect(managerNav.getByRole('link').first()).toHaveText('Home');
  await expect(managerNav.getByRole('link',{name:'Notices'})).toBeVisible();
  await expect(managerNav.getByRole('link',{name:'Disputes'})).toBeVisible();
 
@@ -37,6 +45,18 @@ test('each person lands where their role begins, with navigation scoped to their
  await expect(residentNav.getByRole('link',{name:'Bylaws'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Updates'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Documents'})).toBeVisible();
+});
+
+test('the platform admin turns resident AI off, and Ask disappears for the resident',async({page})=>{
+ await page.goto('/demo/start/platform');
+ const flag=page.getByRole('switch',{name:'Resident AI'});
+ await expect(flag).toHaveAttribute('aria-checked','true');
+ await flag.click();
+ await expect(flag).toHaveAttribute('aria-checked','false');
+ await page.goto('/demo/start/resident');
+ await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:/^Ask BylawIQ/})).toHaveCount(0);
+ await page.goto('/demo/b/'+seaside+'/home');// resident home arrives in Task 4; until then it falls back to documents
+ await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/documents$'));
 });
 
 test('a resident sees only the documents marked visible to owners',async({page})=>{

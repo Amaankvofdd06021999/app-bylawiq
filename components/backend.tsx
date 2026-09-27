@@ -12,8 +12,11 @@ export type Backend={
  createFirmCode:typeof createFirmCodeAction;revokeFirmLink:typeof revokeFirmLinkAction;acceptFirmCode:typeof acceptFirmCodeAction;
  createChat:typeof createChatAction;branchChat:typeof branchChatAction;
  signOut:()=>Promise<unknown>;
+ /** Platform feature flags. Demo only for now: the real app has no flags table, so the default says so. */
+ setFlag:(raw:{flag:'residentAi';enabled:boolean})=>Promise<{ok:true}|{ok:false;error:string}>;
 };
-const real:Backend={base:'',api:'/api',mutate:mutateAction,createFirmCode:createFirmCodeAction,revokeFirmLink:revokeFirmLinkAction,acceptFirmCode:acceptFirmCodeAction,createChat:createChatAction,branchChat:branchChatAction,signOut:signOutAction};
+const noFlags:Backend['setFlag']=async()=>({ok:false,error:'Feature flags aren’t available yet.'});
+const real:Backend={base:'',api:'/api',mutate:mutateAction,createFirmCode:createFirmCodeAction,revokeFirmLink:revokeFirmLinkAction,acceptFirmCode:acceptFirmCodeAction,createChat:createChatAction,branchChat:branchChatAction,signOut:signOutAction,setFlag:noFlags};
 const BackendContext=createContext<Backend>(real);
 export function BackendProvider({value,children}:{value:Backend;children:ReactNode}){return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;}
 /** Defaults to the real backend when no provider is present, so real pages need no wrapper. */

@@ -1,5 +1,6 @@
 import {test,expect,type Browser,type Page} from '@playwright/test';
 import {IDS} from '@/mock/data';
+import AxeBuilder from '@axe-core/playwright';
 // Layout checks run once, from the desktop project, with their own device contexts per width.
 // The read-only sample prototype (`/preview/...`) moved to the interactive demo. Every route below is now
 // building-scoped and needs a signed-in demo session, so each fresh device context signs in as James Park
@@ -9,7 +10,7 @@ import {IDS} from '@/mock/data';
 // and strata personas, not this single-building one.
 const buildingId=IDS.buildings.seaside;
 const chatRoute='/demo/b/'+buildingId+'/chat/'+IDS.chats.jamesConversation;
-const sections=['ask','documents','agents','knowledge','bylaws','notices','disputes','updates','members','settings','audit'];
+const sections=['home','ask','documents','agents','knowledge','bylaws','notices','disputes','updates','members','settings','audit'];
 const routes=[...sections.map(s=>'/demo/b/'+buildingId+'/'+s),chatRoute,'/login','/signup'];
 const tableSections=['documents','bylaws','notices','disputes','members','audit'];
 async function device(browser:Browser,width:number,touch:boolean,baseURL:string){const context=await browser.newContext({baseURL,viewport:{width,height:width<900?800:900},isMobile:touch&&width<900,hasTouch:touch});const page=await context.newPage();await page.goto('/demo/start/building');return {context,page};}
@@ -61,3 +62,12 @@ test('the ask box and filter tabs stay on one row on phones',async({browser,base
  await open(page,'/demo/b/'+buildingId+'/documents');const tabs=await page.evaluate(()=>{const f=document.querySelector('.tab-filter')!;return new Set([...f.children].map(c=>Math.round(c.getBoundingClientRect().top))).size;});
  expect.soft(tabs,'filter tabs wrap onto more than one row').toBe(1);
  await context.close();});
+
+// The other role homes (Task 3): each persona's own dashboard, at phone and desktop widths.
+test('role dashboards fit every width, keep touch targets large and pass axe',async({browser,baseURL},info)=>{desktopOnly(info.project.name);
+ for(const [persona,route] of [['platform','/demo/admin'],['owner','/demo/workspace'],['strata','/demo/workspace'],['building','/demo/b/'+buildingId+'/home']] as const)for(const width of [360,390,1440]){
+  const context=await browser.newContext({baseURL,viewport:{width,height:width<900?800:900},isMobile:width<900,hasTouch:width<900});const page=await context.newPage();await page.goto('/demo/start/'+persona);await open(page,route);
+  expect.soft(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth),`${persona} at ${width}px scrolls sideways`).toBeLessThanOrEqual(0);
+  if(width<900)expect.soft(await smallTargets(page),`${persona} at ${width}px`).toEqual([]);
+  else{const a11y=await new AxeBuilder({page}).analyze();expect.soft(a11y.violations.filter(v=>v.impact==='critical'||v.impact==='serious').map(v=>v.id),`${persona} axe`).toEqual([]);}
+  await context.close();}});

@@ -34,8 +34,8 @@ describe('demo personas',()=>{
   expect(path('platform')).toBe('/demo/admin');
   expect(path('owner')).toBe('/demo/workspace');
   expect(path('strata')).toBe('/demo/workspace');
-  // TODO(Task 3/4): building and resident move to /demo/b/<seaside>/home once those home screens exist.
-  expect(path('building')).toBe(`/demo/b/${seaside}/ask`);
+  expect(path('building')).toBe(`/demo/b/${seaside}/home`);
+  // TODO(Task 4): the resident moves to /demo/b/<seaside>/home once the resident home exists.
   expect(path('resident')).toBe(`/demo/b/${seaside}/documents`);
  });
  it('redirects the old admin start link to the firm owner',async()=>{

@@ -3,3 +3,4 @@
 export {mutate} from './workspace';
 export {createFirmCode,revokeFirmLink,acceptFirmCode} from './firm';
 export {createChat,branchChat} from './chat';
+export {setFlag} from './platform';
