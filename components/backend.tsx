@@ -1,0 +1,20 @@
+'use client';
+import {createContext,useContext,type ReactNode} from 'react';
+import {mutateAction} from '@/features/workspace/actions';
+import {createFirmCodeAction,revokeFirmLinkAction,acceptFirmCodeAction} from '@/features/firm-links/actions';
+import {createChatAction,branchChatAction} from '@/features/chat/actions';
+import {signOutAction} from '@/features/auth/actions';
+/** The seam between screens and whatever serves them: the real server actions and API, or the demo's mock ones. */
+export type Backend={
+ base:''|'/demo';          // prefix for app links: `${base}/b/${id}/${section}`, `${base}/workspace`
+ api:'/api'|'/api/demo';   // prefix for upload, sources, download, export, chat
+ mutate:typeof mutateAction;
+ createFirmCode:typeof createFirmCodeAction;revokeFirmLink:typeof revokeFirmLinkAction;acceptFirmCode:typeof acceptFirmCodeAction;
+ createChat:typeof createChatAction;branchChat:typeof branchChatAction;
+ signOut:()=>Promise<unknown>;
+};
+const real:Backend={base:'',api:'/api',mutate:mutateAction,createFirmCode:createFirmCodeAction,revokeFirmLink:revokeFirmLinkAction,acceptFirmCode:acceptFirmCodeAction,createChat:createChatAction,branchChat:branchChatAction,signOut:signOutAction};
+const BackendContext=createContext<Backend>(real);
+export function BackendProvider({value,children}:{value:Backend;children:ReactNode}){return <BackendContext.Provider value={value}>{children}</BackendContext.Provider>;}
+/** Defaults to the real backend when no provider is present, so real pages need no wrapper. */
+export function useBackend():Backend{return useContext(BackendContext);}
