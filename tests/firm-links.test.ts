@@ -37,3 +37,21 @@ describe('firm link tables',()=>{
  it('does not let an authenticated user call the link helper',async()=>{await t.identity(manager);await expect(t.sql(`select private.add_link_members('${link}')`)).rejects.toThrow();});
  it('does not let a user call the internal org-linkage helpers directly',async()=>{await t.identity(manager);await expect(t.sql(`select public.managing_org_ids('${otherBuilding}')`)).rejects.toThrow();await expect(t.sql(`select public.linked_firm_id('${otherBuilding}')`)).rejects.toThrow();});
 });
+
+describe('buildings own their organization',()=>{
+ it('puts a firm’s first building in its own building organization linked to the firm',async()=>{await t.admin();const r=await one<{kind:string;firm:string}>(`select o.kind,l.firm_org_id firm from public.buildings b join public.organizations o on o.id=b.org_id join public.firm_building_links l on l.building_id=b.id and l.status='active' where b.id='${firmBuilding}'`);expect(r).toEqual({kind:'building',firm:firmOrg});});
+ it('gives all firm staff access to a building the firm creates',async()=>{await t.identity(firmOwner);const created=(await one<{id:string}>(`select public.create_building('${firmOrg}','Marina Court',null,'',null) id`)).id;for(const u of [firmOwner,firmManager,firmAssistant]){await t.identity(u);expect((await one<{ok:boolean}>(`select public.has_building_access('${created}') ok`)).ok).toBe(true);}});
+ it('does not let a building organization create buildings',async()=>{await t.identity(manager);const org=(await one<{org_id:string}>(`select org_id from public.buildings where id='${building}'`)).org_id;await expect(t.sql(`select public.create_building('${org}','Sneaky annex',null,'',null)`)).rejects.toThrow('forbidden');});
+ it('moves an existing firm-owned building into its own organization without losing access',async()=>{
+  const legacyOwner=uid(120);await addUsers(t,legacyOwner);await t.admin();
+  const org=(await one<{id:string}>(`insert into public.organizations(name,created_by,kind,letterhead) values('Legacy Strata','${legacyOwner}','firm','Legacy letterhead') returning id`)).id;
+  await t.sql(`update public.profiles set account_type='admin' where id='${legacyOwner}';insert into public.org_members(org_id,user_id,role) values('${org}','${legacyOwner}','org_owner');`);
+  const old=(await one<{id:string}>(`insert into public.buildings(org_id,name) values('${org}','Legacy Place') returning id`)).id;
+  await t.sql(`insert into public.building_members(building_id,user_id,role) values('${old}','${legacyOwner}','org_owner')`);
+  expect((await one<{n:number}>(`select private.split_firm_buildings() n`)).n).toBe(1);
+  const r=await one<{kind:string;letterhead:string;via:string|null}>(`select o.kind,o.letterhead,m.via_link_id via from public.buildings b join public.organizations o on o.id=b.org_id join public.building_members m on m.building_id=b.id and m.user_id='${legacyOwner}' where b.id='${old}'`);
+  expect(r.kind).toBe('building');expect(r.letterhead).toBe('Legacy letterhead');expect(r.via).not.toBeNull();
+  await t.identity(legacyOwner);expect((await one<{ok:boolean}>(`select public.authorize('chat.use','${old}') ok`)).ok).toBe(true);});
+ it('uses the linked firm’s letterhead for a managed building',async()=>{await t.admin();await t.sql(`update public.organizations set letterhead='Coastline letterhead' where id='${firmOrg}'`);await t.identity(firmOwner);expect((await one<{letterhead:string}>(`select letterhead from public.building_letterhead('${firmBuilding}')`)).letterhead).toBe('Coastline letterhead');});
+ it('returns no letterhead for a building the caller cannot use',async()=>{await t.identity(manager);expect(await t.rows(`select letterhead from public.building_letterhead('${firmBuilding}')`)).toHaveLength(0);});
+});

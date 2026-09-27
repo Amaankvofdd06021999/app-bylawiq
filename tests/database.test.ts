@@ -106,7 +106,7 @@ describe('Postgres scope and permissions',()=>{
  });
  describe('single-building conflicts when inviting',()=>{
   const annexManager='10000000-0000-4000-8000-000000000051';
-  beforeAll(async()=>{await identity(a);const org=(await db.query<{org_id:string}>(`select org_id from public.buildings where id='${ba}'`)).rows[0].org_id;const annex=(await db.query<{id:string}>(`select public.create_building('${org}','Alpha annex',null,'',null) id`)).rows[0].id;
+  beforeAll(async()=>{await identity(a);const org=(await db.query<{org_id:string}>(`select org_id from public.org_members where user_id='${a}'`)).rows[0].org_id;const annex=(await db.query<{id:string}>(`select public.create_building('${org}','Alpha annex',null,'',null) id`)).rows[0].id;
    await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${annexManager}','annex@example.test',now());update public.profiles set account_type='single_building' where id='${annexManager}';insert into public.building_members(building_id,user_id,role) values('${annex}','${annexManager}','building_manager');`);});
   it('does not reveal a single-building account that belongs to another organization',async()=>{await identity(a);await expect(sql(`select public.create_invitation('${ba}','beta@example.test','council_member','cross-org-hash',null)`)).resolves.toBeDefined();});
   it('still stops that account from joining when they accept',async()=>{await identity(b);await expect(sql(`select public.accept_invitation('cross-org-hash')`)).rejects.toThrow('single_building_bound');});
