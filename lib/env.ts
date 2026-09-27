@@ -11,3 +11,5 @@ export function publicEnv(){
 }
 export function secret(name:string){const value=process.env[name];if(!value)throw new AppError('service_unconfigured','This service is not connected yet. Your work has been saved.',503);return value;}
 export function appUrl(){return process.env.NEXT_PUBLIC_APP_URL||(process.env.VERCEL_URL?'https://'+process.env.VERCEL_URL:'http://localhost:3000');}
+/** The interactive demo (`/demo`, `/api/demo`) exists only when DEMO_MODE is exactly `on`; otherwise every demo route is a 404. */
+export function demoEnabled(){return process.env.DEMO_MODE==='on';}

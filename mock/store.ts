@@ -6,7 +6,10 @@ export type MockState={profiles:Profile[];organizations:Row[];orgMembers:Row[];b
 // Per-session, in-memory store. Each session gets its own deep clone of the seed so one demo persona's
 // changes never leak into another session's copy of the same buildings — the in-memory analogue of the
 // RLS boundary the real app enforces in Postgres (see AGENTS.md §0).
-const sessions=new Map<string,MockState>();
+// Kept on `globalThis` so pages, server actions and route handlers — which Next.js may bundle as separate
+// module instances — all see the same sessions, and dev hot reloads don't wipe them.
+const g=globalThis as typeof globalThis&{__bylawiqDemoSessions?:Map<string,MockState>};
+const sessions=g.__bylawiqDemoSessions??=new Map<string,MockState>();
 export function seed():MockState{return structuredClone(SEED);}
 export function getStore(sessionId:string):MockState{
  let state=sessions.get(sessionId);
