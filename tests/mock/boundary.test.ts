@@ -12,10 +12,16 @@ function files(dir:string):string[]{
   return /\.(ts|tsx)$/.test(e.name)&&!e.name.endsWith('.d.ts')?[full]:[];
  });
 }
+// Static (`from '…'`), side-effect (`import '…'`), dynamic (`import('…')`) and `require('…')` imports alike.
+const mockImport=/(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\s*\(\s*)['"](?:@\/mock|[^'"]*\/mock)(?:\/[^'"]*)?['"]/;
 describe('demo import boundary',()=>{
  it('scans the app',()=>{expect(files(root).length).toBeGreaterThan(20);});
+ it('recognises every import form',()=>{
+  for(const line of ["import {x} from '@/mock/api';","import '@/mock/store';","await import('@/mock/actions')","require('../mock/session')","const a=require( \"@/mock\" )"])expect(mockImport.test(line)).toBe(true);
+  for(const line of ["import {x} from '@/lib/mockup';","import '@/features/mocked';","const mock='x'"])expect(mockImport.test(line)).toBe(false);
+ });
  it('has no imports of the mock outside the demo folders',()=>{
-  const offenders=files(root).filter(f=>/from\s+['"](@\/mock|[^'"]*\/mock)(\/[^'"]*)?['"]|import\(\s*['"](@\/mock|[^'"]*\/mock)/.test(readFileSync(f,'utf8'))).map(f=>path.relative(root,f));
+  const offenders=files(root).filter(f=>mockImport.test(readFileSync(f,'utf8'))).map(f=>path.relative(root,f));
   expect(offenders).toEqual([]);
  });
 });

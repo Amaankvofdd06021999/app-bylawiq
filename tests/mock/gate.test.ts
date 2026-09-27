@@ -1,4 +1,12 @@
-import {describe,it,expect,beforeEach,afterAll} from 'vitest';
+import {describe,it,expect,beforeEach,afterAll,vi} from 'vitest';
+// A forged demo cookie jar, as an attacker would send alongside a Next-Action POST.
+const jar=new Map<string,string>([['demo_session','forged-session'],['demo_persona','admin']]);
+vi.mock('next/headers',()=>({cookies:async()=>({
+ get:(name:string)=>jar.has(name)?{name,value:jar.get(name)!}:undefined,
+ set:(name:string,value:string)=>{jar.set(name,value);},
+ delete:(name:string)=>{jar.delete(name);},
+})}));
+vi.mock('next/cache',()=>({revalidatePath:()=>{}}));
 // Spec §3.3: every /demo and /api/demo route is a 404 unless DEMO_MODE=on.
 const original=process.env.DEMO_MODE;
 beforeEach(()=>{delete process.env.DEMO_MODE;});
@@ -20,6 +28,18 @@ describe('demo gate',()=>{
   for(const path of ['/demo','/demo/workspace','/demo/start/admin','/api/demo/chat'])expect((await proxy(new NextRequest('http://x'+path))).status).toBe(404);
   expect((await proxy(new NextRequest('http://x/demonstration'))).status).toBe(200);
   process.env.DEMO_MODE='on';expect((await proxy(new NextRequest('http://x/demo'))).status).toBe(200);
+ });
+ it('refuses mock server actions with forged demo cookies when DEMO_MODE is unset, without creating a store',async()=>{
+  const actions=await import('@/mock/actions');
+  const {hasStore}=await import('@/mock/store');
+  const {demoSession}=await import('@/mock/session');
+  expect(await demoSession()).toBeNull();
+  const r=await actions.mutateAction({action:'chat.rename',buildingId:'x',id:'y',values:{title:'z'}});
+  expect(r.ok).toBe(false);
+  expect((await actions.createChatAction({})).ok).toBe(false);
+  await actions.resetDemoAction();await actions.switchPersonaAction('resident');await actions.signOutAction();
+  expect(hasStore('forged-session')).toBe(false);
+  expect(jar.get('demo_persona')).toBe('admin');// switchPersonaAction and signOutAction left the cookies alone
  });
  it('reports the demo as disabled unless DEMO_MODE is exactly on',async()=>{
   const {demoEnabled}=await import('@/lib/env');
