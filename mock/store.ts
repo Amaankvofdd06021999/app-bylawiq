@@ -1,7 +1,7 @@
 import type {Building,Profile,Row} from '@/lib/schema';
 // `mock/data/index.ts` only needs the `MockState` type below (a type-only import, erased at compile time),
-// so importing its `SEED` value here is not a runtime cycle.
-import {SEED} from './data';
+// so importing its `buildSeed` value here is not a runtime cycle.
+import {buildSeed} from './data';
 export type MockState={profiles:Profile[];organizations:Row[];orgMembers:Row[];buildings:Building[];members:Row[];firmLinks:Row[];linkCodes:Row[];documents:Row[];chunks:{documentId:string;buildingId:string;sectionRef:string|null;content:string}[];knowledge:Row[];agents:Row[];deployments:Row[];bylaws:Row[];versions:Row[];notices:Row[];comments:Row[];disputes:Row[];events:Row[];updates:Row[];invitations:Row[];audit:Row[];chats:Row[];messages:{id:string;chatId:string;role:'user'|'assistant';parts:unknown[]}[];
  firmDocs:FirmDoc[];firmChunks:FirmChunk[];legalChunks:LegalChunk[];wallets:Wallet[];ledger:LedgerEntry[];residentDrafts:ResidentDraft[];alerts:Alert[];platform:PlatformState};
 // Demo v2 knowledge layers (see mock/rules.ts#layersFor): `firm` is a firm's internal knowledge, `legal` the
@@ -29,7 +29,8 @@ export type PlatformState={plans:Row[];usage:Row[];flags:{residentAi:boolean};au
 export const MAX_SESSIONS=500;
 const g=globalThis as typeof globalThis&{__bylawiqDemoSessions?:Map<string,MockState>};
 const sessions=g.__bylawiqDemoSessions??=new Map<string,MockState>();
-export function seed():MockState{return structuredClone(SEED);}
+/** A fresh demo state, dated relative to `now` (see mock/data/clock.ts). */
+export function seed(now=new Date()):MockState{return structuredClone(buildSeed(now));}
 function put(sessionId:string,state:MockState):MockState{
  sessions.delete(sessionId);sessions.set(sessionId,state);// Map order is insertion order, so the end is most recent
  while(sessions.size>MAX_SESSIONS){const oldest=sessions.keys().next().value;if(oldest===undefined)break;sessions.delete(oldest);}

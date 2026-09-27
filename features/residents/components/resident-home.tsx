@@ -6,7 +6,8 @@ import {Badge,Empty,PageHeading} from '@/components/ui';
 import {useBackend} from '@/components/backend';
 import {pretty} from '@/lib/constants';
 import type {ResidentData} from '../types';
-import {CreditHistory,CreditsCard,creditWord,shortDate} from './credits-card';
+import {shortDate} from '@/lib/dates';
+import {CreditHistory,CreditsCard,creditWord} from './credits-card';
 /** Priya's home: what she can spend, what she can do with it, what changed in her building's bylaws, and her
  * building's owner documents. Every tool shows its price up front. */
 export function ResidentHome({data}:{data:ResidentData}){

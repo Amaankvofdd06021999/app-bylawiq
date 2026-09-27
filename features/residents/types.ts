@@ -24,5 +24,5 @@ export type ResidentData={
  explainers:Explainer[];
 };
 /** Result of a paid drafting tool: the saved draft, or why not (`paywall` when the credits don't cover it). */
-export type DraftResult={ok:true;draft:ResidentDraftView;credits:number}|{ok:false;error:string;paywall?:boolean};
+export type DraftResult={ok:true;draft:ResidentDraftView;credits:number}|{ok:false;error:string;paywall?:boolean;/** The current balance, with `paywall`. */credits?:number};
 export type DraftInput={kind:'notice_to_council';buildingId:string;topic:string;happened:string;request:string}|{kind:'letter_reply';buildingId:string;letter:string;response:string};

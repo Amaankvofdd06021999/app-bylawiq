@@ -1,6 +1,7 @@
-import {test,expect} from '@playwright/test';
+import {randomUUID} from 'node:crypto';
+import {test,expect,type Page} from '@playwright/test';
 import {IDS} from '@/mock/data';
-// Business-flow and permission-scoping coverage for the four demo personas (see AGENTS.md §0: scope is
+// Business-flow and permission-scoping coverage for the five demo personas (see AGENTS.md §0: scope is
 // enforced in the mock store the same way RLS enforces it for real, so these are the demo's equivalent of a
 // cross-building leak test). Layout/responsiveness across widths is covered separately in responsive.spec.ts,
 // so this file runs once, from the desktop project.
@@ -14,6 +15,8 @@ test('each person lands where their role begins, with navigation scoped to their
  await expect(page).toHaveURL(/\/demo\/admin$/);
  await expect(page.getByRole('heading',{name:'Platform overview'})).toBeVisible();
  await expect(page.getByRole('navigation',{name:'Main navigation'})).toHaveCount(0);// no building sidebar
+ await expect(page.getByText('Monthly recurring revenue')).toBeVisible();
+ await expect(page.getByText('$198.50',{exact:true})).toBeVisible();
 
  await page.goto('/demo/start/owner');
  await expect(page).toHaveURL(/\/demo\/workspace$/);
@@ -126,4 +129,63 @@ test('a sent draft reaches strata management\'s review inbox and can be approved
  await approveForm.getByRole('button',{name:'Save changes'}).click();
  await expect(page.getByRole('dialog')).toHaveCount(0);
  await expect(page.locator('tr',{hasText:draftTitle})).toContainText('Approved');
+});
+
+// Layered answers: the firm's internal practice is a separate, labelled section for firm staff only.
+async function ask(page:Page,question:string){
+ await page.goto('/demo/b/'+seaside+'/ask');
+ await page.getByRole('textbox',{name:'Ask BylawIQ'}).fill(question);
+ await page.getByRole('button',{name:'Send question'}).click();
+ await expect(page).toHaveURL(/\/chat\//);
+ await expect(page.getByRole('heading',{name:'What Seaside Towers’ bylaws say'}).first()).toBeVisible();
+}
+test('a strata manager\'s answer adds Coastline\'s internal practice, and a building manager\'s never does',async({page})=>{
+ await page.goto('/demo/start/strata');
+ await ask(page,'What is the fine for noise?');
+ await expect(page.getByRole('heading',{name:'What the law says'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:/internal practice — not law or bylaw/})).toBeVisible();
+
+ await page.goto('/demo/start/building');
+ await ask(page,'What is the fine for noise?');
+ await expect(page.getByRole('heading',{name:/internal practice/})).toHaveCount(0);
+ await expect(page.getByText(/Coastline/)).toHaveCount(0);
+});
+
+// Spends the resident's credits down to `leave` without clicking through dozens of questions: one question through
+// the UI (her two free questions are already used, so it costs 1 of her 87 credits), then the same paid question
+// sent straight to the demo chat API as her. Returns on that conversation's page.
+async function spendCreditsTo(page:Page,leave:number){
+ await page.goto('/demo/start/resident');
+ await ask(page,'What are the quiet hours?');
+ const chatId=new URL(page.url()).pathname.split('/chat/')[1];
+ // Sent from the page (not `page.request`) so the browser attaches the demo's Secure session cookies.
+ const ids=Array.from({length:86-leave},()=>randomUUID());
+ const statuses=await page.evaluate(async({chatId,ids})=>{const out:number[]=[];for(const id of ids){const r=await fetch('/api/demo/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:chatId,message:{id,role:'user',parts:[{type:'text',text:'What are the quiet hours?'}]}})});await r.text();out.push(r.status);}return out;},{chatId,ids});
+ expect(statuses.every(x=>x===200)).toBe(true);
+}
+test('a resident out of credits buys more from the chat paywall and her question is answered',async({page})=>{
+ await spendCreditsTo(page,0);
+ await page.getByRole('textbox',{name:'Message BylawIQ'}).fill('What are the quiet hours?');
+ await page.getByRole('button',{name:'Send message'}).click();
+ const paywall=page.getByRole('dialog',{name:'You’re out of credits'});
+ await expect(paywall).toContainText('Demo — no real charge');
+ await paywall.getByRole('button',{name:'Buy 100 credits · $20 and ask'}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByRole('heading',{name:'What Seaside Towers’ bylaws say'})).toHaveCount(2);
+ await page.goto('/demo/b/'+seaside+'/credits');
+ await expect(page.getByText('Bought 100 credits',{exact:true})).toHaveCount(2);// the seeded purchase and this one
+});
+test('a resident short of credits buys more from the drafting paywall and her notice is drafted',async({page})=>{
+ await spendCreditsTo(page,3);
+ await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Draft a notice'}).click();
+ await page.getByLabel('Topic').fill('Weekend renovation noise');
+ await page.getByLabel('What happened').fill('Renovation noise started at 7:30 am on Saturday.');
+ await page.getByLabel('What you want council to do').fill('Please remind the owner of the weekend start time.');
+ await page.getByRole('button',{name:/^Draft my notice/}).click();
+ const paywall=page.getByRole('dialog',{name:'You need more credits'});
+ await expect(paywall).toContainText('This uses 5 credits and you have 3 credits.');
+ await expect(page.getByLabel('Draft text')).toHaveCount(0);// nothing drafted or charged yet
+ await paywall.getByRole('button',{name:'Buy 100 credits · $20 and continue'}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByLabel('Draft text')).toContainText('Bylaw 3.1 says');
 });

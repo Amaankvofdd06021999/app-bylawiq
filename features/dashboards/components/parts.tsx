@@ -3,11 +3,11 @@ import Link from 'next/link';
 import {ArrowUpRight} from 'lucide-react';
 import type {ReactNode} from 'react';
 import {Badge} from '@/components/ui';
+import {shortDate} from '@/lib/dates';
 import type {Health} from '../types';
 // Small building blocks shared by the role dashboards. Formatting is done by hand, not with Intl, so the server
 // render and the browser always print the same text (no hydration mismatch across ICU versions).
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-export function date(value:string|null|undefined):string{if(!value)return '—';const [y,m,d]=value.slice(0,10).split('-').map(Number);return y&&m&&d?`${MONTHS[m-1]} ${d}, ${y}`:'—';}
+export const date=shortDate;
 export function money(n:number):string{const [whole,cents]=Math.abs(n).toFixed(2).split('.');return (n<0?'−$':'$')+whole.replace(/\B(?=(\d{3})+(?!\d))/g,',')+(cents==='00'?'':'.'+cents);}
 export function percent(n:number):string{return (Math.round(n*1000)/10).toFixed(1)+'%';}
 export const plural=(n:number,one:string,many=one+'s')=>`${n} ${n===1?one:many}`;

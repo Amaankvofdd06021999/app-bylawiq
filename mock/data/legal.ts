@@ -1,13 +1,16 @@
 import type {LegalChunk} from '@/mock/store';
 import {uid} from './uid';
+import type {Clock} from './clock';
 // The `legal` layer: a small mock corpus of Strata Property Act sections, one Regulation section and sample
 // Civil Resolution Tribunal decisions. Visible to everyone with Ask access (mock/rules.ts#layersFor).
 // TODO(legal): these are short plain-language paraphrases written for the demo, not the text of the Act or
 // Regulation, and not verified against the current consolidation. The CRT decisions are fictional and every
 // one is labelled "Sample" in its title and citation. Nothing here may be copied into the real legal corpus.
-const UPDATED='2026-09-01T09:00:00Z';
+// When the legal corpus was last refreshed (relative to seed day, like the platform audit's sync entry).
+export function legalSeed(c:Clock):LegalChunk[]{
+const UPDATED=c.ago(26);
 const act=(n:number,sec:string,heading:string,content:string):LegalChunk=>({id:uid('32000000',n),source:'act',title:`Strata Property Act · s. ${sec} — ${heading}`,citation:`Strata Property Act, SBC 1998, c. 43, s. ${sec}`,sectionRef:sec,content,updated_at:UPDATED});
-export const legalChunks:LegalChunk[]=[
+return [
  act(1,'26','Council exercises powers and performs duties','Except as otherwise provided in the Act, the regulations, the bylaws or the rules, the council must exercise the powers and perform the duties of the strata corporation, including the enforcement of bylaws and rules.'),
  act(2,'31','Council member’s standard of care','In exercising the powers and performing the duties of the strata corporation, each council member must act honestly and in good faith with a view to the best interests of the strata corporation, and exercise the care, diligence and skill of a reasonably prudent person in comparable circumstances.'),
  act(3,'130','Fines','The strata corporation may fine an owner if a bylaw or rule is contravened by the owner, by a visitor of the owner, or by an occupant if the strata lot is not rented. A fine may not exceed the maximum set by the bylaws, and the bylaws may not set a maximum above the amount set by the regulations.'),
@@ -19,3 +22,4 @@ export const legalChunks:LegalChunk[]=[
  {id:uid('32000000',9),source:'crt',title:'Sample CRT decision (fictional) — emotional support animal and a pet bylaw',citation:'Sample decision, 2026 BCCRT 9214 (fictional)',sectionRef:'para. 31',content:'The tribunal found that the strata corporation should have considered the owner’s request to keep an emotional support animal as an accommodation request before enforcing its pet bylaw. The pet bylaw fines were ordered refunded.',updated_at:UPDATED},
  {id:uid('32000000',10),source:'crt',title:'Sample CRT decision (fictional) — fine above the bylaw maximum',citation:'Sample decision, 2026 BCCRT 9377 (fictional)',sectionRef:'para. 18',content:'The tribunal found that a fine was only enforceable up to the maximum set in the strata corporation’s own bylaws. The portion of the fine above the bylaw maximum was ordered refunded, even though it was within the amount the regulations allow.',updated_at:UPDATED},
 ];
+}

@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import type {Building,Row} from '@/lib/schema';
 import {IDS} from './ids';
 import {uid} from './uid';
+import type {Clock} from './clock';
 // Mirrors `public.organizations`: Coastline Strata is the firm; every building owns its own `kind:'building'`
 // organization (see supabase/migrations/20260927091000_building_orgs.sql), which a firm reaches only through
 // a `firm_building_links` row.
@@ -39,8 +40,8 @@ export const firmLinks:Row[]=[
 // Mirrors `public.link_codes`. `PARK-7QK4` is unused: Sarah (persona: strata manager) is meant to redeem it
 // against Parkside in a later demo task. The plaintext code is never stored — only its sha256 hash, exactly
 // like `lib/link-codes.ts#hashCode`.
-export const linkCodes:Row[]=[
- {id:IDS.linkCodes.parkside,building_id:IDS.buildings.parkside,kind:'firm',code_hash:createHash('sha256').update('PARK-7QK4').digest('hex'),created_by:IDS.users.omar,expires_at:'2026-10-04T09:00:00Z',used_at:null,revoked_at:null,created_at:'2026-09-27T09:00:00Z'},
+export const linkCodeSeed=(c:Clock):Row[]=>[
+ {id:IDS.linkCodes.parkside,building_id:IDS.buildings.parkside,kind:'firm',code_hash:createHash('sha256').update('PARK-7QK4').digest('hex'),created_by:IDS.users.omar,expires_at:c.ahead(7),used_at:null,revoked_at:null,created_at:c.ago(1)},
 ];
 // Mirrors `public.building_members`. Firm staff join a linked building with `via_link_id` set (see
 // `private.add_link_members` in supabase/migrations/20260927090000_firm_links_schema.sql); everyone else is a

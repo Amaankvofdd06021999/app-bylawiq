@@ -31,6 +31,6 @@ export function ReplyLetter({data}:{data:ResidentData}){
    <div aria-live="polite">{tool.busy?<div className="loading-skeleton" role="status" aria-label="Reading your letter"/>:tool.draft?<><p className="success-note" role="status">Saved to <Link href={`${base}/b/${data.building.id}/my-drafts`}>My drafts</Link>. Add your side and check every detail before you send it.</p><DraftView draft={tool.draft}/></>
     :<div className="card"><h2 className="card-heading">What you’ll get</h2><ul className="plain-bullets"><li>What this letter means, point by point, against your building’s bylaws</li><li>Any amount or deadline in the letter worth checking</li><li>What the Strata Property Act says about the process</li><li>A polite draft reply, saved privately in My drafts</li></ul></div>}</div>
   </div>
-  <PaywallDialog open={tool.paywall} onOpenChange={v=>{if(!v)tool.closePaywall();}} buildingId={data.building.id} needed={price} credits={data.wallet.credits} pack={data.prices.pack} onBought={tool.retry}/>
+  <PaywallDialog open={tool.paywall} onOpenChange={v=>{if(!v)tool.closePaywall();}} buildingId={data.building.id} needed={price} credits={tool.paywallCredits??data.wallet.credits} pack={data.prices.pack} onBought={tool.retry}/>
  </>;
 }

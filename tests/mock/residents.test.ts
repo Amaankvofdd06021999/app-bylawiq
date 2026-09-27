@@ -97,7 +97,7 @@ describe('drafting a notice to council',()=>{
  });
  it('shows the paywall without saving anything when credits run short, and proceeds after buying',()=>{
   const s=seed();s.wallets.find(x=>x.userId===u.priya)!.credits=4;const drafts=s.residentDrafts.length,ledger=s.ledger.length;
-  expect(residentDraft(s,u.priya,notice)).toMatchObject({ok:false,paywall:true});
+  expect(residentDraft(s,u.priya,notice)).toMatchObject({ok:false,paywall:true,credits:4});
   expect(s.residentDrafts.length).toBe(drafts);expect(s.ledger.length).toBe(ledger);
   buyCredits(s,u.priya,{buildingId:b.seaside});
   expect(residentDraft(s,u.priya,notice)).toMatchObject({ok:true,credits:99});

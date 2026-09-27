@@ -1,9 +1,10 @@
 import {IDS} from './ids';
 import {uid} from './uid';
+import type {Clock} from './clock';
 // One chat owned by James on Seaside, reusing the sample conversation shape from `lib/preview.ts` (now
 // grounded in Seaside's own visitor-parking provision instead of the generic sample text).
-export const chats=[
- {id:IDS.chats.jamesConversation,building_id:IDS.buildings.seaside,user_id:IDS.users.james,title:'Can residents use visitor parking?',scope:'building' as const,scope_building_ids:[],as_of:null,source_types:[],agent_deployment_id:null,updated_at:'2026-09-20T09:05:00Z',archived:false},
+export const chatSeed=(c:Clock)=>[
+ {id:IDS.chats.jamesConversation,building_id:IDS.buildings.seaside,user_id:IDS.users.james,title:'Can residents use visitor parking?',scope:'building' as const,scope_building_ids:[],as_of:null,source_types:[],agent_deployment_id:null,updated_at:c.ago(7,'09:05'),archived:false},
 ];
 export const messages:{id:string;chatId:string;role:'user'|'assistant';parts:unknown[]}[]=[
  {id:uid('1d000000',1),chatId:IDS.chats.jamesConversation,role:'user',parts:[{type:'text',text:'Can residents use visitor parking?'}]},

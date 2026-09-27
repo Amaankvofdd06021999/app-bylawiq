@@ -107,25 +107,30 @@ export function firmOwnerDashboard(s:MockState,userId:string,now=new Date()):Fir
  };
 }
 
+// "Needs attention today" is ordered by urgency across buildings, never by building name: dispute deadlines
+// (soonest first), then reviews waiting on her (longest waiting first), approved notices not yet sent (longest
+// since approval first), then law changes (newest first). `at` is the sort time within each kind.
+const ATTENTION_ORDER:AttentionItem['kind'][]=['deadline','review','unsent','law'];
 export function strataManagerDashboard(s:MockState,userId:string,now=new Date()):StrataManagerData{
  const orgId=firmOf(s,userId);
  const mine=accessibleBuildings(s,userId).sort((a,b)=>a.name.localeCompare(b.name));
- const items:AttentionItem[]=[];
- for(const b of mine)for(const d of disputesFor(s,userId,b.id).filter(d=>dueSoon(d,now)).sort((x,y)=>String(x.next_deadline).localeCompare(String(y.next_deadline)))){
+ const items:(AttentionItem&{at:number})[]=[];
+ for(const b of mine)for(const d of disputesFor(s,userId,b.id).filter(d=>dueSoon(d,now))){
   const n=daysUntil(d.next_deadline,now);
-  items.push({id:'deadline:'+d.id,kind:'deadline',title:String(d.title),detail:`${d.deadline_label??'Deadline'} ${n<0?`— overdue by ${-n} days`:n===0?'today':`in ${n} day${n===1?'':'s'}`} (${String(d.next_deadline).slice(0,10)})`,buildingId:b.id,buildingName:b.name,section:'disputes',tone:n<=3?'red':'warning'});
+  items.push({at:time(d.next_deadline),id:'deadline:'+d.id,kind:'deadline',title:String(d.title),detail:`${d.deadline_label??'Deadline'} ${n<0?`— overdue by ${-n} days`:n===0?'today':`in ${n} day${n===1?'':'s'}`} (${String(d.next_deadline).slice(0,10)})`,buildingId:b.id,buildingName:b.name,section:'disputes',tone:n<=3?'red':'warning'});
  }
- for(const r of firmReviewInbox(s,userId)){const days=Math.floor((now.getTime()-time(r.created_at))/DAY);items.push({id:'review:'+r.id,kind:'review',title:r.title,detail:`Waiting for your review · ${days} day${days===1?'':'s'}`,buildingId:r.building_id,buildingName:mine.find(b=>b.id===r.building_id)?.name??null,section:'notices',tone:'blue'});}
- for(const b of mine)for(const n of listResource(s,userId,'notices',b.id).filter(n=>n.status==='approved'&&!n.sent_at))items.push({id:'unsent:'+n.id,kind:'unsent',title:String(n.title),detail:`Approved ${String(n.approved_at??'').slice(0,10)} · not sent yet`,buildingId:b.id,buildingName:b.name,section:'notices',tone:'warning'});
+ for(const r of firmReviewInbox(s,userId)){const days=Math.floor((now.getTime()-time(r.created_at))/DAY);items.push({at:time(r.created_at),id:'review:'+r.id,kind:'review',title:r.title,detail:`Waiting for your review · ${days} day${days===1?'':'s'}`,buildingId:r.building_id,buildingName:mine.find(b=>b.id===r.building_id)?.name??null,section:'notices',tone:'blue'});}
+ for(const b of mine)for(const n of listResource(s,userId,'notices',b.id).filter(n=>n.status==='approved'&&!n.sent_at))items.push({at:time(n.approved_at??n.created_at),id:'unsent:'+n.id,kind:'unsent',title:String(n.title),detail:`Approved ${String(n.approved_at??'').slice(0,10)} · not sent yet`,buildingId:b.id,buildingName:b.name,section:'notices',tone:'warning'});
  // Law changes: the firm's CRT & legislation tracker entries updated in the last 45 days apply to every linked building.
  const linked=mine.filter(b=>orgId&&isLinkedMember(s,userId,b.id)&&linkedFirmId(s,b.id)===orgId);
- if(orgId&&linked.length)for(const d of s.firmDocs.filter(d=>d.orgId===orgId&&d.collection==='legal_tracker'&&now.getTime()-time(d.updated_at)<=45*DAY).sort((a,b)=>b.updated_at.localeCompare(a.updated_at)))
-  items.push({id:'law:'+d.id,kind:'law',title:d.title,detail:`Updated ${d.updated_at.slice(0,10)} · affects ${linked.length===mine.length?'all':linked.length} of your buildings`,buildingId:linked[0].id,buildingName:null,section:'knowledge',tone:'neutral'});
+ if(orgId&&linked.length)for(const d of s.firmDocs.filter(d=>d.orgId===orgId&&d.collection==='legal_tracker'&&now.getTime()-time(d.updated_at)<=45*DAY))
+  items.push({at:-time(d.updated_at),id:'law:'+d.id,kind:'law',title:d.title,detail:`Updated ${d.updated_at.slice(0,10)} · affects ${linked.length===mine.length?'all':linked.length} of your buildings`,buildingId:linked[0].id,buildingName:null,section:'knowledge',tone:'neutral'});
  const knowledge=orgId&&linked.length?(()=>{const {docs,collections}=firmKnowledge(s,orgId);const label=(c:string)=>FIRM_COLLECTIONS.find(x=>x.id===c)?.label??c;
   return {collections,recent:[...docs].sort((a,b)=>b.updated_at.localeCompare(a.updated_at)).slice(0,4).map(d=>({id:d.id,title:d.title,collection:label(d.collection)})),buildingId:linked[0].id};})():null;
  const askFrom=mine.find(b=>can(s,userId,'chat.use_portfolio',b.id));
  return {
-  firstName:first(s,userId),needsAttention:items,knowledge,
+  firstName:first(s,userId),knowledge,
+  needsAttention:items.sort((x,y)=>ATTENTION_ORDER.indexOf(x.kind)-ATTENTION_ORDER.indexOf(y.kind)||x.at-y.at).map(x=>{const item:AttentionItem&{at?:number}={...x};delete item.at;return item;}),
   buildings:mine.map(b=>{const notices=listResource(s,userId,'notices',b.id);return {id:b.id,name:b.name,address:b.address??null,units:b.unit_count??null,health:healthOf(s,userId,b.id,now),
    reviews:notices.filter(n=>n.status==='pending_review').length,disputes:disputesFor(s,userId,b.id).length,drafts:notices.filter(n=>!n.sent_at&&n.status!=='sent').length,
    updates:listResource(s,userId,'updates',b.id).filter(u=>u.state==='new').length};}),

@@ -6,7 +6,7 @@ import {Badge,Button,Empty,PageHeading} from '@/components/ui';
 import {useBackend} from '@/components/backend';
 import type {CitedPassage,ResidentData,ResidentDraftView} from '../types';
 import {LegalBanner} from './legal-banner';
-import {shortDate} from './credits-card';
+import {shortDate} from '@/lib/dates';
 const KIND:Record<ResidentDraftView['kind'],string>={notice_to_council:'Notice to council',letter_reply:'Reply to a strata letter'};
 function sourceLabel(p:CitedPassage):string{return p.kind==='legal'?(p.citation??p.title):`${p.title}${p.sectionRef?' · '+p.sectionRef:''}`;}
 /** A saved draft: the letter text with copy and download, and the passages it cites. */

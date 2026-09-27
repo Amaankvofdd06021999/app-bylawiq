@@ -5,10 +5,9 @@ import {useRouter} from 'next/navigation';
 import {Coins,History,Receipt} from 'lucide-react';
 import {Badge,Button,Empty,Modal,PageHeading} from '@/components/ui';
 import {useBackend} from '@/components/backend';
+import {shortDate} from '@/lib/dates';
 import type {CreditEntry,ResidentData} from '../types';
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 /** Hand-formatted (not Intl) so the server and the browser print the same text. */
-export function shortDate(value:string):string{const [y,m,d]=value.slice(0,10).split('-').map(Number);return y&&m&&d?`${MONTHS[m-1]} ${d}, ${y}`:'—';}
 export const creditWord=(n:number)=>`${n} credit${Math.abs(n)===1?'':'s'}`;
 /** Demo checkout: one 100-credit pack, clearly labelled as no real charge. */
 export function BuyCreditsButton({data,variant='default',label}:{data:ResidentData;variant?:'default'|'secondary';label?:string}){

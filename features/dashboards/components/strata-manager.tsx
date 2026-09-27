@@ -25,7 +25,7 @@ export function StrataManagerDashboard({data,joinForm,reviewInbox}:{data:StrataM
     :<Empty icon={<CircleCheck/>} title="You’re all caught up" description="Reviews, dispute deadlines, approved notices and law changes that need you will show up here."/>}
   </Section>
   <Section id="buildings" title="Your buildings" count={data.buildings.length}>
-   {data.buildings.length?<div className="card-grid">{data.buildings.map(b=><Link key={b.id} href={`${base}/b/${b.id}/home`} className="card agent-card"><div className="agent-card-top"><span className="building-avatar"><Building2/></span><HealthBadge health={b.health}/></div>
+   {data.buildings.length?<div className="card-grid">{data.buildings.map(b=><Link key={b.id} href={`${base}/b/${b.id}/ask`} className="card agent-card"><div className="agent-card-top"><span className="building-avatar"><Building2/></span><HealthBadge health={b.health}/></div>
      <h3>{b.name}</h3><p>{b.health.issues.length?b.health.issues.slice(0,2).join(' · '):'Nothing waiting on this building.'}</p>
      <div className="agent-card-footer"><span className="form-note">{plural(b.reviews,'review')} · {plural(b.disputes,'dispute')} · {plural(b.drafts,'draft')}</span>{b.updates>0&&<Badge tone="blue">{b.updates} new</Badge>}</div></Link>)}</div>
     :<Empty icon={<Building2/>} title="No buildings yet" description="Join a building with the code its manager gives you, below."/>}

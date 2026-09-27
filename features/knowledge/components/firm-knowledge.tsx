@@ -5,9 +5,9 @@ import {useRouter} from 'next/navigation';
 import {Library,Lock,Pencil,Plus,Trash2} from 'lucide-react';
 import {Badge,Button,Empty,Modal,PageHeading} from '@/components/ui';
 import {useBackend} from '@/components/backend';
+import {shortDate} from '@/lib/dates';
 import type {FirmCollectionId,FirmDocView,FirmKnowledgeData} from '../types';
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const date=(v:string)=>{const [y,m,d]=v.slice(0,10).split('-').map(Number);return y&&m&&d?`${MONTHS[m-1]} ${d}, ${y}`:'—';};
+const date=shortDate;
 type Editing={id?:string;collection:FirmCollectionId;title:string;body:string};
 /** The Knowledge section's Firm tab: the firm's four collections. Owners, admins and portfolio managers add, edit
  * and delete; assistants read. Saved documents are answerable in Ask for the firm's staff straight away. */

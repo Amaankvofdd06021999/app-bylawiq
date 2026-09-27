@@ -22,7 +22,7 @@ async function redirectOf(run:()=>Promise<unknown>):Promise<string>{
 }
 describe('platform admin dashboard',()=>{
  it('sums revenue, usage and knowledge health from the seed',()=>{
-  const d=platformDashboard(seed(),u.alex,NOW);
+  const d=platformDashboard(seed(NOW),u.alex,NOW);
   expect(d.revenue.mrr).toBeCloseTo(198.5);
   expect(d.revenue.launchMrr).toBeCloseTo(99.5);
   expect(d.revenue.launchCustomers).toBe(1);
@@ -34,11 +34,11 @@ describe('platform admin dashboard',()=>{
   expect(d.usage.estCostUsd).toBeCloseTo(38.2);
   expect(d.usage.noGroundingRate).toBeCloseTo(23/446);
   expect(d.usage.top[0]).toMatchObject({buildingId:b.seaside,name:'Seaside Towers',questions:214});
-  expect(d.knowledge).toMatchObject({failed:0,processing:0,awaitingReview:4,bylawsUnconfirmed:0,legalPassages:10,legalUpdatedAt:'2026-09-01T09:00:00Z'});
+  expect(d.knowledge).toMatchObject({failed:0,processing:0,awaitingReview:3,bylawsUnconfirmed:0,legalPassages:10,legalUpdatedAt:'2026-09-01T09:00:00Z'});
   expect(d.flags.residentAi).toBe(true);
  });
  it('counts seats per customer',()=>{
-  const d=platformDashboard(seed(),u.alex,NOW);
+  const d=platformDashboard(seed(NOW),u.alex,NOW);
   const seats=Object.fromEntries(d.customers.map(c=>[c.name,[c.seatsUsed,c.seatsIncluded]]));
   expect(seats['Coastline Strata Management']).toEqual([3,5]);
   expect(seats['Seaside Towers']).toEqual([3,3]);
@@ -68,7 +68,7 @@ describe('platform admin dashboard',()=>{
 });
 describe('firm owner dashboard',()=>{
  it('lists Coastline’s staff with their buildings, open reviews and last activity',()=>{
-  const d=firmOwnerDashboard(seed(),u.dana,NOW);
+  const d=firmOwnerDashboard(seed(NOW),u.dana,NOW);
   expect(d.firm.name).toBe('Coastline Strata Management');
   expect(d.staff.map(x=>[x.name,x.role,x.buildings,x.openReviews])).toEqual([
    ['Dana Ruiz','Organization owner',3,2],['Sarah Chen','Portfolio manager',3,2],['Lee Wong','Assistant manager',3,0]]);
@@ -77,9 +77,10 @@ describe('firm owner dashboard',()=>{
   expect(d.staff[0].you).toBe(true);
  });
  it('shows the roster, review turnaround, knowledge, plan and invitations',()=>{
-  const d=firmOwnerDashboard(seed(),u.dana,NOW);
+  const d=firmOwnerDashboard(seed(NOW),u.dana,NOW);
   expect(d.roster.map(r=>[r.name,r.pendingReviews,r.openDisputes])).toEqual([['Harbour View',1,0],['Marina Court',0,0],['Seaside Towers',1,2]]);
-  expect(d.roster.find(r=>r.name==='Marina Court')?.health.tone).toBe('warning');// insurance summary awaiting review
+  expect(d.roster.find(r=>r.name==='Marina Court')?.health).toMatchObject({tone:'green',label:'On track'});// insurance summary confirmed
+  expect(d.roster.find(r=>r.name==='Harbour View')?.health.tone).toBe('warning');
   expect(d.turnaround).toMatchObject({medianHours:60,decided:2,waiting:2});
   expect(d.turnaround.oldest).toMatchObject({title:'Noise contravention · Unit 812',days:7});
   expect(d.knowledge.total).toBe(8);
@@ -94,7 +95,7 @@ describe('firm owner dashboard',()=>{
 });
 describe('strata manager dashboard',()=>{
  it('puts what needs Sarah today first: deadlines, reviews, unsent notices and law changes',()=>{
-  const d=strataManagerDashboard(seed(),u.sarah,NOW);
+  const d=strataManagerDashboard(seed(NOW),u.sarah,NOW);
   expect(d.needsAttention.map(i=>[i.kind,i.title])).toEqual([
    ['deadline','Noise contravention · Unit 812'],
    ['review','Noise contravention · Unit 812'],
@@ -105,20 +106,44 @@ describe('strata manager dashboard',()=>{
   expect(d.needsAttention[0]).toMatchObject({buildingId:b.seaside,section:'disputes'});
  });
  it('summarises each building and offers firm knowledge and asking across buildings',()=>{
-  const d=strataManagerDashboard(seed(),u.sarah,NOW);
+  const d=strataManagerDashboard(seed(NOW),u.sarah,NOW);
   expect(d.buildings.map(x=>x.name)).toEqual(['Harbour View','Marina Court','Seaside Towers']);
   expect(d.buildings.find(x=>x.name==='Seaside Towers')).toMatchObject({reviews:1,disputes:2,drafts:4,updates:2});
   expect(d.knowledge?.collections).toHaveLength(4);
   expect(d.askAcross?.count).toBe(3);
  });
+ it('sorts by urgency across buildings, not by building name: soonest deadline, then longest waiting',()=>{
+  const s=seed(NOW);
+  // Harbour sorts before Seaside by name; every Harbour item below is less urgent than Seaside's.
+  s.disputes.push({id:'d-harbour',building_id:b.harbour,title:'Harbour · Balcony noise',reference:'D-H-1',category:'noise',stage:'warning_sent',created_at:'2026-09-20T09:00:00Z',next_deadline:'2026-10-09',deadline_label:'Response due'});
+  s.notices.push({id:'n-harbour',building_id:b.harbour,dispute_id:null,kind:'email',title:'Harbour · Parking reminder',body_md:'x',status:'approved',review_by:'firm',created_by:u.nina,approved_by:u.sarah,approved_at:'2026-09-26T09:00:00Z',sent_at:null,created_at:'2026-09-25T09:00:00Z'});
+  const d=strataManagerDashboard(s,u.sarah,NOW);
+  expect(d.needsAttention.map(i=>[i.kind,i.title])).toEqual([
+   ['deadline','Noise contravention · Unit 812'],
+   ['deadline','Harbour · Balcony noise'],
+   ['review','Noise contravention · Unit 812'],
+   ['review','Harbour View council report · Q3'],
+   ['unsent','Move-in fee · Reminder to Unit 1204'],
+   ['unsent','Harbour · Parking reminder'],
+   ['law','Legislation tracker: fines and the s.135 process'],
+  ]);
+ });
+ it('keeps seeded dates relative to the seed day, so the dashboard does not drift',()=>{
+  const later=new Date('2027-03-15T12:00:00Z');
+  const d=strataManagerDashboard(seed(later),u.sarah,later);
+  expect(d.needsAttention.find(i=>i.kind==='deadline')?.detail).toContain('in 9 days');
+  expect(d.needsAttention.find(i=>i.kind==='review')?.detail).toBe('Waiting for your review · 7 days');
+  expect(d.needsAttention.some(i=>i.kind==='law')).toBe(true);
+  expect(platformDashboard(seed(later),u.alex,later).month).toBe('2027-03');
+ });
  it('drops deadlines more than 14 days away',()=>{
-  const d=strataManagerDashboard(seed(),u.sarah,new Date('2026-09-01T12:00:00Z'));
+  const d=strataManagerDashboard(seed(NOW),u.sarah,new Date('2026-09-01T12:00:00Z'));
   expect(d.needsAttention.some(i=>i.kind==='deadline')).toBe(false);
  });
 });
 describe('building manager dashboard',()=>{
  it('shows James his building, drafts, council tasks, residents and seats',()=>{
-  const d=buildingManagerDashboard(seed(),u.james,b.seaside,NOW);
+  const d=buildingManagerDashboard(seed(NOW),u.james,b.seaside,NOW);
   expect(d.building.name).toBe('Seaside Towers');
   expect(d.plan).toMatchObject({label:'Building',price:99,seatsIncluded:3,seatsUsed:3});
   expect(d.residents.count).toBe(1);
@@ -151,6 +176,13 @@ describe('demo pages for the platform admin',()=>{
   expect(await redirectOf(()=>AdminPage())).toBe('/demo/workspace');
   await startDemo('building');
   expect(await redirectOf(()=>AdminPage())).toBe(`/demo/b/${b.seaside}/home`);
+ });
+ it('sends a multi-building person from a building home to the workspace',async()=>{
+  const {default:BuildingPage}=await import('@/app/demo/b/[buildingId]/[section]/page');
+  for(const persona of ['strata','owner'] as const){
+   await startDemo(persona);
+   expect(await redirectOf(()=>BuildingPage({params:Promise.resolve({buildingId:b.seaside,section:'home'}),searchParams:Promise.resolve({})}))).toBe('/demo/workspace');
+  }
  });
  it('gives a resident their own home, not the building manager dashboard',async()=>{
   await startDemo('resident');

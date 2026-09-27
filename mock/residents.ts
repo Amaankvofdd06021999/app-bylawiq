@@ -146,7 +146,7 @@ export function residentDraft(s:MockState,userId:string,raw:unknown):DraftResult
   const passages=relevant(ownerPassages(s,userId,v.buildingId),text);
   if(!passages.length)throw new AppError('no_grounding',NO_MATCH);
   const price=v.kind==='notice_to_council'?PRICES.draftNotice:PRICES.letterReply;
-  if(!spend(s,userId,v.buildingId,price,v.kind==='notice_to_council'?'draft_notice':'letter_reply'))return {ok:false,paywall:true,error:`This needs ${price} credits. Buy credits to continue — nothing was charged.`};
+  if(!spend(s,userId,v.buildingId,price,v.kind==='notice_to_council'?'draft_notice':'letter_reply'))return {ok:false,paywall:true,credits:walletOf(s,userId,v.buildingId).credits,error:`This needs ${price} credits. Buy credits to continue — nothing was charged.`};
   const draft:ResidentDraft={id:newId(),userId,buildingId:v.buildingId,created_at:now(),...(v.kind==='notice_to_council'?noticeDraft(s,userId,v,passages):replyDraft(s,userId,v,passages))};
   s.residentDrafts.push(draft);
   return {ok:true,draft:draftView(draft),credits:walletOf(s,userId,v.buildingId).credits};

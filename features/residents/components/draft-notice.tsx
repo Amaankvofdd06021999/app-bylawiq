@@ -33,6 +33,6 @@ export function DraftNotice({data}:{data:ResidentData}){
    <div aria-live="polite">{tool.busy?<div className="loading-skeleton" role="status" aria-label="Drafting your notice"/>:tool.draft?<><p className="success-note" role="status">Saved to <Link href={`${base}/b/${data.building.id}/my-drafts`}>My drafts</Link>. Read it through and change anything before you send it.</p><DraftView draft={tool.draft}/></>
     :<div className="card"><h2 className="card-heading">What you’ll get</h2><ul className="plain-bullets"><li>A letter to council in plain language</li><li>The exact words of the bylaws it relies on, from your building’s owner documents</li><li>Your name and unit number in the sign-off</li><li>A private copy in My drafts to copy or download</li></ul></div>}</div>
   </div>
-  <PaywallDialog open={tool.paywall} onOpenChange={v=>{if(!v)tool.closePaywall();}} buildingId={data.building.id} needed={price} credits={data.wallet.credits} pack={data.prices.pack} onBought={tool.retry}/>
+  <PaywallDialog open={tool.paywall} onOpenChange={v=>{if(!v)tool.closePaywall();}} buildingId={data.building.id} needed={price} credits={tool.paywallCredits??data.wallet.credits} pack={data.prices.pack} onBought={tool.retry}/>
  </>;
 }

@@ -30,7 +30,7 @@ const RESIDENT_SECTIONS=['explainers','draft','reply','my-drafts','credits'];
 export default async function DemoBuildingPage({params,searchParams}:{params:Promise<{buildingId:string;section:string}>;searchParams:Promise<{agent?:string;scope?:string;tab?:string;collection?:string}>}){const session=await demoSession();if(!session)redirect('/demo');const {buildingId,section}=await params;const valid=['home','ask','documents','bylaws','notices','disputes','updates','agents','knowledge','members','settings','audit',...RESIDENT_SECTIONS];if(!valid.includes(section))notFound();const s=getStore(session.sessionId),userId=session.persona.userId;if(isPlatformAdmin(s,userId))redirect('/demo/admin');let state:ReturnType<typeof buildingWorkspace>;try{state=buildingWorkspace(s,userId,buildingId);}catch(e){if(e instanceof NotFoundError)redirect('/demo/workspace?notice=access_removed');throw e;}
  const resident=hasResidentHome(s,userId,buildingId);
  const home=state.profile.account_type==='single_building'&&hasBuildingHome(s,userId,buildingId);
- const shell={profile:state.profile,buildings:state.buildings,activeId:buildingId,permissions:state.permissions,unreadUpdates:state.unreadUpdates,home,residentNav:resident};
+ const shell={profile:state.profile,buildings:state.buildings,activeId:buildingId,permissions:state.permissions,unreadUpdates:state.unreadUpdates,home,residentNav:resident,firmKnowledge:firmTabFor(s,userId,buildingId)};
  if(resident&&(section==='home'||RESIDENT_SECTIONS.includes(section))){
   const data=residentData(s,userId,buildingId);
   const view=section==='explainers'?<Explainers data={data}/>:section==='draft'?<DraftNotice data={data}/>:section==='reply'?<ReplyLetter data={data}/>:section==='my-drafts'?<MyDrafts data={data}/>:section==='credits'?<CreditsPage data={data}/>:<ResidentHome data={data}/>;
@@ -38,6 +38,8 @@ export default async function DemoBuildingPage({params,searchParams}:{params:Pro
  }
  if(RESIDENT_SECTIONS.includes(section))notFound();
  if(section==='home'){
+  // The building home is the single-building view; a multi-building person's home is the workspace.
+  if(state.profile.account_type!=='single_building')redirect('/demo/workspace');
   if(!hasBuildingHome(s,userId,buildingId))redirect(`/demo/b/${buildingId}/documents`);
   const status=firmLinkStatus(s,userId,buildingId);
   return <Shell {...shell}><BuildingManagerDashboard data={buildingManagerDashboard(s,userId,buildingId)} firmCard={status&&<StrataManagementCard buildingId={buildingId} canManage={state.permissions.includes('building.link_firm')} status={status}/>}/></Shell>;

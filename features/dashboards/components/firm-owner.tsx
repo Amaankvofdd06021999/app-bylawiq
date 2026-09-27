@@ -25,7 +25,7 @@ export function FirmOwnerDashboard({data,joinForm}:{data:FirmOwnerData;joinForm?
   </Section>
   <Section id="roster" title="Building roster" count={data.roster.length}>
    {data.roster.length?<div className="resource-table"><table><thead><tr><th>Building</th><th>Health</th><th className="hide-mobile">Linked since</th><th className="hide-mobile">Open disputes</th><th>Reviews waiting</th></tr></thead><tbody>
-    {data.roster.map(r=><tr key={r.buildingId}><td><Link className="cell-link" href={`${base}/b/${r.buildingId}/home`}><strong>{r.name}</strong></Link>{r.health.issues[0]&&<small className="cell-sub">{r.health.issues[0]}</small>}</td><td><HealthBadge health={r.health}/></td><td className="hide-mobile">{r.linked?date(r.since):'Not linked'}</td><td className="hide-mobile">{r.openDisputes||'—'}</td><td>{r.pendingReviews||'—'}</td></tr>)}
+    {data.roster.map(r=><tr key={r.buildingId}><td><Link className="cell-link" href={`${base}/b/${r.buildingId}/ask`}><strong>{r.name}</strong></Link>{r.health.issues[0]&&<small className="cell-sub">{r.health.issues[0]}</small>}</td><td><HealthBadge health={r.health}/></td><td className="hide-mobile">{r.linked?date(r.since):'Not linked'}</td><td className="hide-mobile">{r.openDisputes||'—'}</td><td>{r.pendingReviews||'—'}</td></tr>)}
    </tbody></table></div>:<Empty icon={<Building2/>} title="No linked buildings" description="Buildings appear here once they give your firm a code and you join them."/>}
   </Section>
   <div className="split-grid dash-split">

@@ -47,7 +47,9 @@ function buildingDocs(slug:string,buildingId:string,uploaderId:string,prefix:str
   d(3,'Move-in package · Guide for new owners','other',{owner_visible:true}),
   d(4,'Council meeting minutes · June 2026','council_minutes'),
   d(5,'AGM minutes · March 2026','agm_minutes'),
-  d(6,'Insurance summary · 2026–2027','insurance',{status:'review'}),
+  // Marina Court's manager has already confirmed its insurance summary, so Marina is the healthy building in
+  // Sarah's portfolio; the others still have it waiting for a human check.
+  d(6,'Insurance summary · 2026–2027','insurance',{status:slug==='marina'?'ready':'review'}),
   d(7,'Strata plan · Original filing','strata_plan'),
   d(8,'Financial statements · 2025','financial_statements'),
  ];
