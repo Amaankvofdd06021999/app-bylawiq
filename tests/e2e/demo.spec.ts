@@ -29,10 +29,11 @@ test('each person lands where their role begins, with navigation scoped to their
  await expect(page).toHaveURL(new RegExp('/demo/b/'+seaside+'/documents$'));
  await expect(page.getByRole('heading',{name:'Documents'})).toBeVisible();
  const residentNav=page.getByRole('navigation',{name:'Main navigation'});
- await expect(residentNav.getByRole('link',{name:/^Ask BylawIQ/})).toHaveCount(0);
+ // Demo only: paid resident Ask (mock-only `chat.resident`) shows Ask; staff sections stay hidden.
+ await expect(residentNav.getByRole('link',{name:/^Ask BylawIQ/})).toBeVisible();
  await expect(residentNav.getByRole('link',{name:'Notices'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Disputes'})).toHaveCount(0);
- // Bylaws and Updates need chat.use, same as Ask and Notices — a resident has only building.read/vault.read.
+ // Bylaws and Updates need chat.use, same as Notices — a resident has only building.read/vault.read (+ demo chat.resident).
  await expect(residentNav.getByRole('link',{name:'Bylaws'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Updates'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Documents'})).toBeVisible();

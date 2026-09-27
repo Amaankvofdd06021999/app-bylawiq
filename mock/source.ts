@@ -6,7 +6,7 @@ import {NotFoundError} from '@/lib/errors';
 import type {MockState} from './store';
 import {PERSONAS} from './personas';
 import {permissionsFor} from './permissions';
-import {accessibleBuildings,can,isLinkedMember,roleIn,visibleDocuments} from './rules';
+import {accessibleBuildings,can,canResidentAsk,isLinkedMember,roleIn,visibleDocuments} from './rules';
 // Mock equivalent of `features/workspace/queries.ts` + `features/firm-links/queries.ts`. Every function here
 // takes `(state,userId,...)` instead of reading the authenticated user off a Supabase client, so it is a pure,
 // testable stand-in for the real query that runs behind RLS (see AGENTS.md §0) — the same scoping rules from
@@ -67,8 +67,9 @@ export function listResource(s:MockState,userId:string,resource:Resource,buildin
    // Mirrors `members_read`: your own row, or every row with `member.read`.
    rows=can(s,userId,'member.read',buildingId)?all:all.filter(r=>r.user_id===userId);
   }else if(resource==='chats'){
-   // Mirrors `chats_read`: only chats you started, and only with `chat.use` on their building.
-   rows=can(s,userId,'chat.use',buildingId)?all.filter(r=>r.user_id===userId):[];
+   // Mirrors `chats_read`: only chats you started, and only with `chat.use` on their building (demo only: or
+   // a resident's own building chats while they have paid Ask).
+   rows=can(s,userId,'chat.use',buildingId)?all.filter(r=>r.user_id===userId):canResidentAsk(s,userId,buildingId)?all.filter(r=>r.user_id===userId&&r.scope==='building'):[];
   }else{
    const permission=readPermission[resource];
    rows=permission&&can(s,userId,permission,buildingId)?all:[];
@@ -83,14 +84,16 @@ export function buildingWorkspace(s:MockState,userId:string,buildingId:string):R
  // Mirrors the `notifications` count query: it runs under `scoped_read`, i.e. `chat.use`, so it reads 0
  // rather than erroring when the caller (an owner_resident) lacks that permission.
  const unreadUpdates=can(s,userId,'chat.use',buildingId)?s.updates.filter(u=>u.building_id===buildingId&&u.state==='new').length:0;
- const permissions=permissionsFor(roleIn(s,userId,buildingId));
+ // `chat.resident` (demo only) is dropped while the platform's resident AI flag is off, so the nav hides Ask.
+ const permissions=permissionsFor(roleIn(s,userId,buildingId)).filter(p=>p!=='chat.resident'||canResidentAsk(s,userId,buildingId));
  const linkedMember=isLinkedMember(s,userId,buildingId);
  return {...state,building,unreadUpdates,permissions,linkedMember};
 }
 export function conversation(s:MockState,userId:string,chatId:string):{chat:Chat;messages:{id:string;role:'user'|'assistant';parts:unknown[]}[]}{
  const row=s.chats.find(c=>c.id===chatId);
- // Mirrors `chats_read`: only the chat's own user, and only with `chat.use` unless it is a general chat.
- const accessible=row!=null&&row.user_id===userId&&(row.scope==='general'||can(s,userId,'chat.use',String(row.building_id)));
+ // Mirrors `chats_read`: only the chat's own user, and only with `chat.use` unless it is a general chat (demo
+ // only: or a resident's own building chat while they have paid Ask).
+ const accessible=row!=null&&row.user_id===userId&&(row.scope==='general'||can(s,userId,'chat.use',String(row.building_id))||(row.scope==='building'&&canResidentAsk(s,userId,String(row.building_id))));
  if(!row||!accessible)throw new NotFoundError();
  const chat=chatSchema.parse(pick(row,['id','building_id','user_id','title','scope','scope_building_ids','as_of','source_types','agent_deployment_id']));
  const messages=s.messages.filter(m=>m.chatId===chatId).map(m=>({id:m.id,role:m.role,parts:m.parts}));

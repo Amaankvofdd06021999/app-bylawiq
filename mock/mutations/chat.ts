@@ -2,16 +2,18 @@ import {z} from 'zod';
 import type {Row} from '@/lib/schema';
 import {ForbiddenError} from '@/lib/errors';
 import {audit,newId,type MockState} from '../store';
-import {can} from '../rules';
+import {can,canResidentAsk} from '../rules';
 import {need,now,raise,run,type Result} from './shared';
 // Mirrors features/chat/actions.ts: the `chats_insert` policy, `public.can_use_chat` and `public.branch_chat`.
 const createInput=z.object({buildingId:z.uuid().nullable(),scope:z.enum(['building','general','portfolio']).default('building'),buildingIds:z.array(z.uuid()).max(30).default([]),asOf:z.iso.date().nullable().default(null),sourceTypes:z.array(z.string()).max(10).default([]),agentId:z.uuid().nullable().default(null)});
 export function createChat(s:MockState,userId:string,raw:unknown):Result<{id:string}>{return run(()=>{
  const v=createInput.parse(raw);
- if(v.buildingId)need(s,userId,v.scope==='portfolio'?'chat.use_portfolio':'chat.use',v.buildingId);
+ // Demo only: a resident with paid Ask (`canResidentAsk`) may start a building-scoped chat on their building.
+ const resident=v.scope==='building'&&v.buildingId!=null&&!can(s,userId,'chat.use',v.buildingId)&&canResidentAsk(s,userId,v.buildingId);
+ if(v.buildingId&&!resident)need(s,userId,v.scope==='portfolio'?'chat.use_portfolio':'chat.use',v.buildingId);
  for(const b of v.buildingIds)need(s,userId,'chat.use_portfolio',b);
  // `chats_insert`: anything but a general chat needs `chat.use` on its building.
- if(v.scope!=='general'&&!(v.buildingId&&can(s,userId,'chat.use',v.buildingId)))throw new ForbiddenError();
+ if(v.scope!=='general'&&!resident&&!(v.buildingId&&can(s,userId,'chat.use',v.buildingId)))throw new ForbiddenError();
  let deployment:string|null=null;
  if(v.agentId){
   const d=s.deployments.filter(x=>x.agent_id===v.agentId&&x.building_id===v.buildingId).sort((a,b)=>Number(b.version)-Number(a.version))[0];
@@ -25,11 +27,12 @@ export function createChat(s:MockState,userId:string,raw:unknown):Result<{id:str
  audit(s,userId,buildingId,'chats.insert',id);
  return {id};
 });}
-// Mirrors `public.can_use_chat`.
+// Mirrors `public.can_use_chat`, plus (demo only) a resident's own building chat while `canResidentAsk` holds.
 export function canUseChat(s:MockState,userId:string,chatId:unknown):boolean{
  const c=s.chats.find(x=>x.id===chatId);
  if(!c||c.user_id!==userId)return false;
  if(c.scope==='general')return true;
+ if(c.scope==='building'&&isResidentAsker(s,userId,String(c.building_id)))return true;
  if(!can(s,userId,'chat.use',String(c.building_id)))return false;
  const ids=Array.isArray(c.scope_building_ids)?c.scope_building_ids.map(String):[];
  return c.scope!=='portfolio'||(ids.length>0&&ids.every(b=>can(s,userId,'chat.use_portfolio',b)));
@@ -48,3 +51,18 @@ export function branchChat(s:MockState,userId:string,raw:unknown):Result<{id:str
  audit(s,userId,c.building_id??null,'chats.insert',id);
  return {id};
 });}
+// --- Demo v2: resident Ask and credits (no production equivalent; TODO(legal): needs sign-off first). ---
+/** A person who asks on this building as a paying resident: no staff `chat.use`, but `canResidentAsk`. */
+export function isResidentAsker(s:MockState,userId:string,buildingId:string):boolean{return !can(s,userId,'chat.use',buildingId)&&canResidentAsk(s,userId,buildingId);}
+export const FREE_QUESTIONS=2;
+/** Charges one resident question: a free question while any are left, otherwise 1 credit. Returns false (and
+ * changes nothing) when the resident has neither, so the caller can show the paywall. */
+export function spendQuestion(s:MockState,userId:string,buildingId:string):boolean{
+ let w=s.wallets.find(x=>x.userId===userId&&x.buildingId===buildingId);
+ if(!w){w={userId,buildingId,credits:0,freeQuestionsUsed:0};s.wallets.push(w);}
+ const free=w.freeQuestionsUsed<FREE_QUESTIONS;
+ if(!free&&w.credits<1)return false;
+ if(free)w.freeQuestionsUsed++;else w.credits--;
+ s.ledger.push({id:newId(),userId,buildingId,delta:free?0:-1,reason:free?'free_question':'question',at:now()});
+ return true;
+}

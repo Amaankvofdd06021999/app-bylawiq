@@ -11,7 +11,7 @@ import {demoSession} from './session';
 import {getStore,newId,audit,type MockState} from './store';
 import {visibleDocuments,linkedFirmId} from './rules';
 import {need,now} from './mutations/shared';
-import {canUseChat} from './mutations/chat';
+import {canUseChat,isResidentAsker,spendQuestion} from './mutations/chat';
 import {answer} from './answers';
 // Demo stand-ins for `app/api/*/route.ts`: same request/response contracts, but reading and writing the
 // session's own in-memory `MockState` instead of Postgres — the mock's RLS boundary is `mock/rules.ts`,
@@ -108,19 +108,26 @@ export async function chat(req:Request):Promise<Response>{
  const g=await gate();if(g instanceof Response)return g;
  const {s,userId}=g;
  try{
-  const v=z.object({id:z.uuid(),message:z.object({id:z.uuid(),role:z.literal('user'),parts:z.array(z.object({type:z.literal('text'),text:z.string().min(1).max(20000)})).min(1).max(1)})}).parse(await req.json());
+  // `layers` is the demo's knowledge-layer filter (Building · Firm · Law chips); `answer` intersects it with
+  // what `layersFor` allows, so asking for a layer you can't see simply finds nothing in it.
+  const v=z.object({id:z.uuid(),message:z.object({id:z.uuid(),role:z.literal('user'),parts:z.array(z.object({type:z.literal('text'),text:z.string().min(1).max(20000)})).min(1).max(1)}),layers:z.array(z.enum(['building','firm','legal'])).min(1).max(3).optional()}).parse(await req.json());
   const row=s.chats.find(c=>c.id===v.id);
   if(!row)throw new NotFoundError();
   const chatRow=chatSchema.parse(row);
-  // Mirrors `public.can_use_chat`: only the chat's own user, and only with `chat.use` on its building.
+  // Mirrors `public.can_use_chat`: only the chat's own user, and only with `chat.use` on its building (or,
+  // demo only, a resident with paid Ask on it).
   if(!canUseChat(s,userId,chatRow.id))throw new ForbiddenError();
+  const buildingId=chatRow.building_id?String(chatRow.building_id):'';
+  // A resident pays per question (free questions first). Checked before anything is saved, so a paywalled
+  // question leaves no trace in the conversation.
+  if(buildingId&&isResidentAsker(s,userId,buildingId)&&!spendQuestion(s,userId,buildingId))return Response.json({error:'You’re out of credits.',code:'paywall'},{status:402});
   const question=v.message.parts[0].text;
   s.messages.push({id:v.message.id,chatId:chatRow.id,role:'user',parts:v.message.parts});
   const assistantId=newId();
   const stream=createUIMessageStream<BylawMessage>({execute:async({writer})=>{
    writer.write({type:'start',messageId:assistantId});
    writer.write({type:'data-progress',id:'progress',data:{label:'Searching sample documents'},transient:true});
-   const result=answer(s,userId,chatRow.building_id?String(chatRow.building_id):'',question);
+   const result=answer(s,userId,buildingId,question,v.layers);
    const parts:BylawMessage['parts']=[];
    if(!result.sources.length){
     const value=NO_GROUNDING+'\n\n'+DISCLAIMER;

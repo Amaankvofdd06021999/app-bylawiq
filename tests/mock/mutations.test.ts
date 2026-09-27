@@ -72,8 +72,11 @@ describe('mock mutations: resident',()=>{
   expect(createFirmCode(s,priya,{buildingId:seaside})).toEqual({ok:false,error:FORBIDDEN});
   expect(revokeFirmLink(s,priya,{buildingId:seaside})).toEqual({ok:false,error:FORBIDDEN});
  });
- it('cannot start a building conversation',()=>{
+ it('starts a building conversation only through paid resident Ask (demo), never a portfolio one',()=>{
   const s=seed();
+  expect(createChat(s,priya,{buildingId:seaside})).toMatchObject({ok:true});
+  expect(createChat(s,priya,{buildingId:seaside,scope:'portfolio',buildingIds:[seaside]})).toEqual({ok:false,error:FORBIDDEN});
+  s.platform.flags.residentAi=false;
   expect(createChat(s,priya,{buildingId:seaside})).toEqual({ok:false,error:FORBIDDEN});
  });
 });

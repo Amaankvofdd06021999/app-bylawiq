@@ -11,6 +11,10 @@ describe('visibleNav',()=>{
   const slugs=visibleNav(['building.read','vault.read']).map(([slug])=>slug);
   expect(slugs).toEqual(['documents','settings']);
  });
+ it('adds Ask for a demo resident with paid Ask (chat.resident), and nothing else staff-only',()=>{
+  const slugs=visibleNav(['building.read','vault.read','chat.resident']).map(([slug])=>slug);
+  expect(slugs).toEqual(['ask','documents','settings']);
+ });
  it('includes notices, members and agents for a building manager',()=>{
   const slugs=visibleNav(['building.read','vault.read','vault.upload','vault.delete','chat.use','bylaw.edit','bylaw.adopt','document.draft','document.approve','document.send','dispute.read','dispute.create','dispute.update','member.read','member.invite','member.update_role','member.remove','audit.read','agent.manage','agent.deploy','building.link_firm']).map(([slug])=>slug);
   expect(slugs).toContain('notices');

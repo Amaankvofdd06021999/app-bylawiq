@@ -97,6 +97,67 @@ describe('mock api: chat',()=>{
   expect(text).toContain('Demo answer from sample documents.');
  });
 });
+describe('mock api: resident Ask and credits',()=>{
+ const ask=(id:string,text:string,layers?:string[])=>api.chat(new Request('http://x',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,message:{id:crypto.randomUUID(),role:'user',parts:[{type:'text',text}]},...(layers?{layers}:{})})}));
+ async function residentStore(){const {getStore}=await import('@/mock/store');const {demoSession}=await import('@/mock/session');return getStore((await demoSession())!.sessionId);}
+ async function residentChat(){
+  const s=await residentStore();
+  const {createChat}=await import('@/mock/mutations');
+  const r=createChat(s,IDS.users.priya,{buildingId:seaside,scope:'building'});
+  if(!r.ok)throw new Error(r.error);
+  return {s,id:r.id};
+ }
+ it('lets Priya ask, spends one credit and never streams firm sources',async()=>{
+  await startDemo('resident');
+  const {s,id}=await residentChat();
+  const before=s.wallets.find(w=>w.userId===IDS.users.priya)!.credits;
+  const res=await ask(id,'What is the fine for noise?');
+  expect(res.status).toBe(200);
+  const text=await res.text();
+  expect(text).toContain('data-answer');
+  expect(text).not.toContain('"kind":"firm"');
+  expect(s.wallets.find(w=>w.userId===IDS.users.priya)!.credits).toBe(before-1);
+  expect(s.ledger.at(-1)).toMatchObject({userId:IDS.users.priya,delta:-1,reason:'question'});
+ });
+ it('uses a free question first when one is left',async()=>{
+  await startDemo('resident');
+  const {s,id}=await residentChat();
+  const w=s.wallets.find(x=>x.userId===IDS.users.priya)!;w.freeQuestionsUsed=1;const credits=w.credits;
+  expect((await ask(id,'Can I have a dog?')).status).toBe(200);
+  expect(w.credits).toBe(credits);expect(w.freeQuestionsUsed).toBe(2);
+  expect(s.ledger.at(-1)).toMatchObject({delta:0,reason:'free_question'});
+ });
+ it('returns 402 paywall with no credits and saves nothing',async()=>{
+  await startDemo('resident');
+  const {s,id}=await residentChat();
+  s.wallets.find(x=>x.userId===IDS.users.priya)!.credits=0;
+  const count=s.messages.length;
+  const res=await ask(id,'Can I have a dog?');
+  expect(res.status).toBe(402);
+  expect(await res.json()).toEqual({error:'You’re out of credits.',code:'paywall'});
+  expect(s.messages.length).toBe(count);
+ });
+ it('forbids resident Ask when the platform flag is off',async()=>{
+  await startDemo('resident');
+  const {s,id}=await residentChat();
+  s.platform.flags.residentAi=false;
+  expect((await ask(id,'Can I have a dog?')).status).toBe(403);
+ });
+ it('never charges staff and honours the layers chips',async()=>{
+  const res=await as('strata',async()=>{
+   const s=await residentStore();
+   const {createChat}=await import('@/mock/mutations');
+   const r=createChat(s,IDS.users.sarah,{buildingId:seaside,scope:'building'});
+   if(!r.ok)throw new Error(r.error);
+   return ask(r.id,'What is the fine for noise?',['legal']);
+  });
+  expect(res.status).toBe(200);
+  const text=await res.text();
+  expect(text).toContain('"kind":"legal"');
+  expect(text).not.toContain('"kind":"building"');
+  expect(text).not.toContain('"kind":"firm"');
+ });
+});
 describe('mock api: chat stop/stream',()=>{
  it('returns 204 for both',async()=>{
   const stop=await as('building',()=>api.chatStop(new Request('http://x',{method:'POST'}),{id:IDS.chats.jamesConversation}));
