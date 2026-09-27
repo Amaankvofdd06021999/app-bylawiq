@@ -78,7 +78,7 @@ begin
  if d.status not in ('draft','pending_review','changes_requested') then raise exception 'immutable_approved_document'; end if;
  insert into public.artifact_versions(building_id,artifact_id,body_md,edited_by) values(d.building_id,d.id,d.body_md,auth.uid());
  if d.status='pending_review' and d.review_by='firm' then
-  insert into public.document_review_comments(document_id,building_id,author_id,body) values(d.id,d.building_id,auth.uid(),'The author edited this draft, which withdrew it from strata management review.');
+  insert into public.document_review_comments(document_id,building_id,author_id,body) values(d.id,d.building_id,auth.uid(),'This draft was edited, which withdrew it from strata management review.');
  end if;
  update public.generated_documents set title=p_title,body_md=p_body,status='draft',review_by='building',updated_at=now() where id=p_id;
 end; $$;
@@ -116,6 +116,9 @@ begin
  select id into l from public.firm_building_links where building_id=p_building and status='active' for update;
  if not found then raise exception 'no_firm_link'; end if;
  update public.firm_building_links set status='revoked',revoked_by=auth.uid(),revoked_at=now() where id=l;
+ -- New: pending invitations sent by the firm's staff die with the link, so no personal membership outlives it.
+ update public.invitations set revoked_at=now() where building_id=p_building and accepted_at is null and revoked_at is null
+  and invited_by in (select user_id from public.building_members where building_id=p_building and via_link_id=l);
  update public.building_members set status='suspended' where via_link_id=l;
  update public.link_codes set revoked_at=now() where building_id=p_building and kind='firm' and revoked_at is null and used_at is null;
  -- New: open firm reviews go back to their authors.

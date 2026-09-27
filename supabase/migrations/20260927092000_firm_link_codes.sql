@@ -27,7 +27,11 @@ begin
  -- Ruling: an archived building cannot be linked to a firm, even with a still-valid code.
  if not exists(select 1 from public.buildings where id=c.building_id and deleted_at is null) then raise exception 'invalid_code'; end if;
  if exists(select 1 from public.firm_building_links where building_id=c.building_id and status='active') then raise exception 'firm_already_linked'; end if;
- insert into public.firm_building_links(building_id,firm_org_id,status,invited_by,accepted_by,accepted_at) values(c.building_id,p_firm_org,'active',c.created_by,auth.uid(),now()) returning id into l;
+ -- Two firms accepting different codes at once: the partial unique index decides, and the loser gets a clear error.
+ begin
+  insert into public.firm_building_links(building_id,firm_org_id,status,invited_by,accepted_by,accepted_at) values(c.building_id,p_firm_org,'active',c.created_by,auth.uid(),now()) returning id into l;
+ exception when unique_violation then raise exception 'firm_already_linked';
+ end;
  update public.link_codes set used_at=now() where id=c.id;
  perform private.add_link_members(l);
  return c.building_id;
@@ -95,6 +99,9 @@ begin
  if m.user_id=auth.uid() or not public.can_assign(m.building_id,m.role) or not public.can_assign(m.building_id,p_role) then raise exception 'forbidden'; end if;
  -- New: linked firm staff cannot remove or demote the people who can revoke the firm.
  if m.role in ('building_manager','council_president') and exists(select 1 from public.building_members me where me.building_id=m.building_id and me.user_id=auth.uid() and me.via_link_id is not null) then raise exception 'forbidden'; end if;
+ -- New: linked firm staff can only assign roles that stay under the building's control (no personal membership
+ -- with building-level authority that would survive a revoke).
+ if p_role not in ('council_member','external_counsel') and exists(select 1 from public.building_members me where me.building_id=m.building_id and me.user_id=auth.uid() and me.via_link_id is not null and me.status='active') then raise exception 'forbidden'; end if;
  update public.building_members set role=p_role,status=case when p_remove then 'suspended' else 'active' end where id=p_id;
  -- All RLS checks consult live membership. Demotion/revocation takes effect on the very next statement.
 end; $$;

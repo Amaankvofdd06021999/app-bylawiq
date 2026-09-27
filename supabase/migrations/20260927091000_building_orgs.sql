@@ -71,7 +71,7 @@ select private.split_firm_buildings();
 create or replace function public.user_org_ids(p_user uuid) returns setof uuid language sql stable security definer set search_path='' as $$
  select org_id from public.org_members where user_id=p_user
  union select b.org_id from public.building_members m join public.buildings b on b.id=m.building_id where m.user_id=p_user
- union select l.firm_org_id from public.building_members m join public.firm_building_links l on l.building_id=m.building_id and l.status='active' where m.user_id=p_user and m.via_link_id is null; $$;
+ union select l.firm_org_id from public.building_members m join public.firm_building_links l on l.building_id=m.building_id and l.status='active' where m.user_id=p_user and m.via_link_id is null and m.status='active'; $$;
 create or replace function public.list_account_links_for_building(p_building uuid) returns table(id uuid,first_account text,second_account text,created_at timestamptz,expires_at timestamptz,revoked_at timestamptz) language sql stable security definer set search_path='' as $$
  select l.id,pa.display_name||' · '||ua.email::text,pb.display_name||' · '||ub.email::text,l.created_at,l.expires_at,l.revoked_at
  from public.linked_accounts l
@@ -87,6 +87,8 @@ create or replace function public.create_invitation(p_building uuid,p_email text
 declare i uuid;
 begin
  if not public.authorize('member.invite',p_building) or not public.can_assign(p_building,p_role) then raise exception 'forbidden'; end if;
+ -- Linked firm staff may only invite roles that stay under the building's control; anything else would outlive a revoke.
+ if p_role not in ('council_member','external_counsel') and exists(select 1 from public.building_members where building_id=p_building and user_id=auth.uid() and via_link_id is not null and status='active') then raise exception 'forbidden'; end if;
  if exists(select 1 from public.building_members m join auth.users u on u.id=m.user_id where m.building_id=p_building and lower(u.email)=lower(trim(p_email)) and m.status='active' and (m.expires_at is null or m.expires_at>now())) then raise exception 'already_member'; end if;
  -- Leftover rows from a revoked firm link do not block re-inviting that person as an ordinary member.
  if exists(select 1 from public.building_members m join auth.users u on u.id=m.user_id where m.building_id=p_building and lower(u.email)=lower(trim(p_email)) and m.via_link_id is null and not public.can_assign(p_building,m.role)) then raise exception 'forbidden'; end if;
