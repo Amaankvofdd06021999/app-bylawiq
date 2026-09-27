@@ -32,7 +32,9 @@ test('each person lands where their role begins, with navigation scoped to their
  await expect(residentNav.getByRole('link',{name:/^Ask BylawIQ/})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Notices'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Disputes'})).toHaveCount(0);
- await expect(residentNav.getByRole('link',{name:'Bylaws'})).toBeVisible();
+ // Bylaws and Updates need chat.use, same as Ask and Notices — a resident has only building.read/vault.read.
+ await expect(residentNav.getByRole('link',{name:'Bylaws'})).toHaveCount(0);
+ await expect(residentNav.getByRole('link',{name:'Updates'})).toHaveCount(0);
  await expect(residentNav.getByRole('link',{name:'Documents'})).toBeVisible();
 });
 

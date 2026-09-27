@@ -18,7 +18,7 @@ export async function demoSession():Promise<{sessionId:string;persona:Persona}|n
 export async function startDemo(id:PersonaId):Promise<string|null>{
  if(!demoEnabled())return null;
  const jar=await cookies();
- const options={httpOnly:true,sameSite:'lax' as const,path:'/'};
+ const options={httpOnly:true,sameSite:'lax' as const,path:'/',secure:process.env.NODE_ENV==='production'};
  // Switching persona keeps the same demo session — its store is the shared "world" every person in it acts
  // on, so a change one person makes (e.g. sending a draft for review) is visible to the next (e.g. that
  // draft showing up in another person's review inbox). Only `resetDemoAction` reseeds it. A session id is

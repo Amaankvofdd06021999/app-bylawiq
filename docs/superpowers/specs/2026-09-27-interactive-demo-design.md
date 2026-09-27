@@ -69,13 +69,13 @@ Mock actions enforce the same permission and rule checks as the database (using 
 | Dana Ruiz — Admin | `org_owner`, Coastline Strata (firm) | Harbour View, Marina Court, Seaside Towers (all linked to Coastline) | `/demo/workspace` |
 | Sarah Chen — Strata manager | `portfolio_manager`, Coastline Strata | Same three buildings; Parkside has an unused firm code `PARK-7QK4`; 2 drafts waiting for review | `/demo/workspace` |
 | James Park — Building manager | `building_manager`, Seaside Towers (own building org) | Seaside Towers only; firm link active to Coastline; one draft with changes requested | `/demo/b/<seaside>/ask` |
-| Priya Nair — Resident | `owner_resident`, Seaside Towers, unit 1204 | Seaside Towers; owner-visible documents and bylaws only | `/demo/b/<seaside>/documents` |
+| Priya Nair — Resident | `owner_resident`, Seaside Towers, unit 1204 | Seaside Towers; owner-visible documents only (no bylaws — Bylaws needs `chat.use`, which residents lack) | `/demo/b/<seaside>/documents` |
 
 Plus background people (council president, council member, a second building manager at Parkside, firm assistant) so member lists and reviews are realistic.
 
 ### 3.5 Navigation by permission
 
-`components/shell.tsx` navigation items declare the permission they need (`ask`→`chat.use`, `bylaws`→`building.read`, `documents`→`vault.read`, `notices`→`chat.use`, `disputes`→`dispute.read`, `updates`→`building.read`, `agents`/`knowledge`→`agent.manage`, `members`→`member.read`, `settings`→`building.read`). Items the current user lacks are hidden. This applies to the real app as well.
+`components/shell.tsx` navigation items declare the permission they need (`ask`→`chat.use`, `bylaws`→`chat.use`, `documents`→`vault.read`, `notices`→`chat.use`, `disputes`→`dispute.read`, `updates`→`chat.use`, `agents`/`knowledge`→`agent.manage`, `members`→`member.read`, `settings`→`building.read`). Bylaws and Updates read `bylaw_nodes`/`bylaw_versions`/`notifications`, which the database gates behind `chat.use`, not `building.read`. Items the current user lacks are hidden. This applies to the real app as well.
 
 ### 3.6 Mock AI
 
