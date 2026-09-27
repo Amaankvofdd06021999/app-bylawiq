@@ -12,4 +12,5 @@ export const profiles:Profile[]=[
  {id:IDS.users.ben,display_name:'Ben Ortiz',account_type:'single_building',bound_building_id:IDS.buildings.seaside},
  {id:IDS.users.priya,display_name:'Priya Nair',account_type:'single_building',bound_building_id:IDS.buildings.seaside},
  {id:IDS.users.omar,display_name:'Omar Haddad',account_type:'single_building',bound_building_id:IDS.buildings.parkside},
+ {id:IDS.users.nina,display_name:'Nina Patel',account_type:'single_building',bound_building_id:IDS.buildings.harbour},
 ];

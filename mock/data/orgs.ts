@@ -12,14 +12,16 @@ export const organizations:Row[]=[
  {id:IDS.orgs.seasideOrg,name:'Seaside Towers',kind:'building',plan:'pilot',letterhead:'',signature_block:'',created_at:'2025-01-22T09:00:00Z'},
  {id:IDS.orgs.parksideOrg,name:'Parkside',kind:'building',plan:'pilot',letterhead:'',signature_block:'',created_at:'2025-05-06T09:00:00Z'},
 ];
-// Mirrors `public.org_members`: only Coastline's own staff, plus the on-site manager each unlinked-capable
-// building started with.
+// Mirrors `public.org_members`: Coastline's own staff, plus the on-site manager each building started with —
+// Harbour and Seaside keep theirs even after linking to Coastline, the same way a real linked building's own
+// staff stay org members of their own building org.
 export const orgMembers:Row[]=[
  {id:uid('12000000',1),org_id:IDS.orgs.coastline,user_id:IDS.users.dana,role:'org_owner',status:'active'},
  {id:uid('12000000',2),org_id:IDS.orgs.coastline,user_id:IDS.users.sarah,role:'portfolio_manager',status:'active'},
  {id:uid('12000000',3),org_id:IDS.orgs.coastline,user_id:IDS.users.leeWong,role:'portfolio_assistant',status:'active'},
  {id:uid('12000000',4),org_id:IDS.orgs.seasideOrg,user_id:IDS.users.james,role:'building_manager',status:'active'},
  {id:uid('12000000',5),org_id:IDS.orgs.parksideOrg,user_id:IDS.users.omar,role:'building_manager',status:'active'},
+ {id:uid('12000000',6),org_id:IDS.orgs.harbourOrg,user_id:IDS.users.nina,role:'building_manager',status:'active'},
 ];
 export const buildings:Building[]=[
  {id:IDS.buildings.harbour,org_id:IDS.orgs.harbourOrg,name:'Harbour View',strata_plan_no:'EPS 3312',address:'145 Harbour Rd, Victoria, BC',unit_count:86,municipality:'Victoria',corpus_version:1,jurisdiction_chain:[]},
@@ -54,4 +56,5 @@ export const members:Row[]=[
  {id:uid('14000000',3),building_id:IDS.buildings.seaside,user_id:IDS.users.ben,role:'council_member',status:'active',expires_at:null,via_link_id:null},
  {id:uid('14000000',4),building_id:IDS.buildings.seaside,user_id:IDS.users.priya,role:'owner_resident',status:'active',expires_at:null,via_link_id:null,unit:'1204'},
  {id:uid('14000000',5),building_id:IDS.buildings.parkside,user_id:IDS.users.omar,role:'building_manager',status:'active',expires_at:null,via_link_id:null},
+ {id:uid('14000000',6),building_id:IDS.buildings.harbour,user_id:IDS.users.nina,role:'building_manager',status:'active',expires_at:null,via_link_id:null},
 ];
