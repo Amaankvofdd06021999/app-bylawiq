@@ -2,7 +2,7 @@
 -- Firm codes: the building creates, a firm manager accepts once, the building revokes. Staff changes in the firm
 -- follow automatically. Linked staff cannot archive the building or remove the people who can revoke them.
 -- Rollback: drop trigger sync_firm_member on public.org_members; drop the functions created here; re-apply the previous
---  change_membership, archive_building and accept_invitation definitions.
+--  change_membership, archive_building, accept_invitation and private.add_link_members definitions.
 create function public.create_firm_code(p_building uuid,p_hash text) returns uuid language plpgsql security definer set search_path='' as $$
 declare c uuid;
 begin
@@ -24,6 +24,8 @@ begin
  if c.kind<>'firm' then raise exception 'wrong_code_kind'; end if;
  if c.revoked_at is not null then raise exception 'revoked_code'; end if;
  if c.expires_at<=now() then raise exception 'expired_code'; end if;
+ -- Ruling: an archived building cannot be linked to a firm, even with a still-valid code.
+ if not exists(select 1 from public.buildings where id=c.building_id and deleted_at is null) then raise exception 'invalid_code'; end if;
  if exists(select 1 from public.firm_building_links where building_id=c.building_id and status='active') then raise exception 'firm_already_linked'; end if;
  insert into public.firm_building_links(building_id,firm_org_id,status,invited_by,accepted_by,accepted_at) values(c.building_id,p_firm_org,'active',c.created_by,auth.uid(),now()) returning id into l;
  update public.link_codes set used_at=now() where id=c.id;
@@ -50,20 +52,38 @@ create function public.building_firm_status(p_building uuid) returns table(statu
  left join lateral (select id,expires_at from public.link_codes where building_id=p_building and kind='firm' and revoked_at is null and used_at is null and expires_at>now() order by created_at desc limit 1) c on true
  where public.authorize('member.read',p_building); $$;
 
--- Joining or leaving a firm updates access to every building the firm is linked to.
+-- Joining or leaving a firm updates access to every building the firm is linked to. Deleting the org_members row
+-- (not just suspending it) must suspend access the same way.
+-- Ruling: a firm link must not reactivate a membership the building itself suspended — only a link-owned row
+-- (via_link_id already set) is revived here.
 create function private.sync_firm_member() returns trigger language plpgsql security definer set search_path='' as $$
 begin
- if new.status='active' and new.role in ('org_owner','org_admin','portfolio_manager','portfolio_assistant') then
+ if tg_op='DELETE' then
+  update public.building_members m set status='suspended' from public.firm_building_links l where m.via_link_id=l.id and l.firm_org_id=old.org_id and l.status='active' and m.user_id=old.user_id;
+ elsif new.status='active' and new.role in ('org_owner','org_admin','portfolio_manager','portfolio_assistant') then
   insert into public.building_members(building_id,user_id,role,via_link_id)
   select l.building_id,new.user_id,new.role,l.id from public.firm_building_links l where l.firm_org_id=new.org_id and l.status='active'
   on conflict(building_id,user_id) do update set role=excluded.role,status='active',via_link_id=excluded.via_link_id,expires_at=null
-  where public.building_members.via_link_id is not null or public.building_members.status<>'active';
+  where public.building_members.via_link_id is not null;
  else
   update public.building_members m set status='suspended' from public.firm_building_links l where m.via_link_id=l.id and l.firm_org_id=new.org_id and m.user_id=new.user_id;
  end if;
- return new;
+ return coalesce(new,old);
 end; $$;
-create trigger sync_firm_member after insert or update on public.org_members for each row execute function private.sync_firm_member();
+create trigger sync_firm_member after insert or update or delete on public.org_members for each row execute function private.sync_firm_member();
+
+-- Ruling: same as above — a firm link must not reactivate a membership the building itself suspended.
+create or replace function private.add_link_members(p_link uuid) returns void language plpgsql security definer set search_path='' as $$
+declare l public.firm_building_links;
+begin
+ select * into l from public.firm_building_links where id=p_link and status='active';
+ if not found then return; end if;
+ insert into public.building_members(building_id,user_id,role,via_link_id)
+ select l.building_id,m.user_id,m.role,l.id from public.org_members m
+ where m.org_id=l.firm_org_id and m.status='active' and m.role in ('org_owner','org_admin','portfolio_manager','portfolio_assistant')
+ on conflict(building_id,user_id) do update set role=excluded.role,status='active',via_link_id=excluded.via_link_id,expires_at=null
+ where public.building_members.via_link_id is not null;
+end; $$;
 
 create or replace function public.change_membership(p_id uuid,p_role public.app_role,p_remove boolean default false) returns void language plpgsql security definer set search_path='' as $$
 declare m public.building_members;
