@@ -90,7 +90,7 @@ Tick tasks in this file as you finish them (`- [x]`) and record the commit in th
 
 - [x] **B1. Standard bylaw notes.** For each of the 29 `bc.spa.sched.bylaw*` items, a building-facing note in `building-starter/standard-bylaws/` (type `standard-bylaw`) that says what the bylaw covers, when it applies (a building that has not filed its own bylaw on the topic), and what buildings commonly change — citing the law item. Never copy the bylaw text again.
 - [x] **B2. Document checklist.** Expand `building-starter/document-checklist.md`: each document (registered bylaws and amendments, rules, AGM/SGM minutes, depreciation report, insurance summary, Form B, budget, strata plan), why BylawIQ needs it, which topics it unlocks, citing the SPA sections that require it.
-- [ ] **B3. Bylaw patterns.** For the high-traffic topics (rentals, short-term-rentals, pets, noise, smoking-cannabis, parking, alterations-renovations, move-in-move-out, fines), one `bylaw-pattern` item each: the common shapes of the bylaw buildings adopt, the SPA limits that constrain it (e.g. rental restriction rules, fine maximums in the Regulation), and a "tested in" list that stays empty until Phase C adds decisions.
+- [x] **B3. Bylaw patterns.** For the high-traffic topics (rentals, short-term-rentals, pets, noise, smoking-cannabis, parking, alterations-renovations, move-in-move-out, fines), one `bylaw-pattern` item each: the common shapes of the bylaw buildings adopt, the SPA limits that constrain it (e.g. rental restriction rules, fine maximums in the Regulation), and a "tested in" list that stays empty until Phase C adds decisions.
 
 ### Phase C — Decisions (summaries only; see rules 2 and 6)
 
