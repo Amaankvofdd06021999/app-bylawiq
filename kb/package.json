@@ -1,6 +1,6 @@
 {
   "name": "bylawiq-kb",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "BylawIQ knowledge base: BC strata law, firm starter kit, building starter kit, topic guides and evals.",

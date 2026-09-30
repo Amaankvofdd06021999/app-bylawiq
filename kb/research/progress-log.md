@@ -208,3 +208,28 @@ Nothing is invented: a reference to a section the kb does not hold is reported, 
 - Items added: 12 (11 new, 1 replacing the section 135 notice skeleton) · updated: 4 READMEs.
 - Next: D1 and D2 for the remaining 19 topics. Everything else in the queue is blocked on a person:
   A2 to A6 and F1 on question 24, C3 on questions 18 and 19, E4 on A2 and C3.
+
+## 2026-09-30 — session 2 (continued): guides and evals for the whole taxonomy
+
+- **Done: D1 and D2 in full.** The remaining 19 topics now have a guide and an eval set, so all 29
+  taxonomy topics are covered: 29 guides and 29 eval sets with 159 cases. kb 0.7.0, 532 items,
+  1608 chunks, `pnpm validate` 0 errors, `pnpm test` 77 pass.
+- Sections read for this batch and cited for the first time: 4, 25, 27, 30, 32, 33, 34, 45, 48, 50,
+  51, 52, 53, 56, 73, 74, 75, 77, 84, 85, 92, 93, 95, 96, 97, 98, 100, 109, 127, 136, 159, 161,
+  164, 165, 189.1, and Regulation 6.1, 7.01 and 9.1.
+- Two provisions worth flagging to whoever reviews these, because they change what an answer should
+  say and are easy to miss:
+  - **Section 189.1 (2)**: an owner or tenant may not ask the tribunal to resolve a strata dispute
+    unless they first requested a council hearing under section 34.1, or the tribunal directs
+    otherwise. That is the gate on the whole tribunal route and it is now in the `crt-process` and
+    `hearings` guides.
+  - **Regulation 6.1 (2)**: the annual contingency reserve fund contribution must be at least 10%
+    of the operating fund budget, determined after considering the most recent depreciation report.
+    It ties the reserve fund, the depreciation report and the budget together.
+- Every guide's "what decisions have held" still says what it is waiting for. That is 29 places
+  where an answer will be thinner than it should be until phase C3 is unblocked, and it is the
+  strongest argument for pursuing open questions 18 and 19.
+- Items added: 38 (19 guides, 19 eval sets).
+- Next: nothing in the queue is unblocked. A2 to A6 and F1 wait on question 24; C3 on 18 and 19;
+  E4 on A2 and C3; F2 on 19 and 35. Phase B, D and E are complete as drafts and now need review:
+  a legal researcher for the law layer and counsel for the firm, building and topic layers.
