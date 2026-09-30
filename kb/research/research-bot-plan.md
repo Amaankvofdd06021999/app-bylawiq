@@ -19,17 +19,36 @@ BylawIQ answers questions from BC strata managers, councils and owners. Every an
 
 A wrong citation is worse than no answer: a strata manager may send an enforcement notice based on it. Accuracy beats volume, always.
 
-## 2. Current state (2026-09-30)
+## 2. Current state (updated 2026-09-30, end of session 2)
 
-- **Done (draft):** Strata Property Act (303 sections), Schedule of Standard Bylaws (29), Strata Property Regulation (91), imported verbatim by `tools/import-bclaws.ts` and checked word for word against BC Laws. See `source-register.md`.
-- **Licensing settled:** `licensing-register.md`. Summary:
-  - `bc-kings-printer` (BC legislation): store verbatim, commercial use allowed, attribution required.
-  - `court-decisions` (BCSC/BCCA): **blocked for text** until the courts grant permission. Citation + link + our own summary only.
-  - `crt-decisions`: **unverified**. Citation + link + our own summary, **no party names**, until the CRT confirms reuse.
+kb 0.7.0 · 532 items · 1608 chunks · `pnpm validate` 0 errors · `pnpm test` 77 pass.
+
+- **Law (423 items, draft):** Strata Property Act (303 sections), Schedule of Standard Bylaws (29),
+  Strata Property Regulation (91), imported verbatim and checked word for word against BC Laws.
+  `cites[]` is filled across all of them from their own cross-references (`pnpm link:cites`).
+  No decisions, no other Acts.
+- **Building (39 items, draft):** a note on each of the 29 standard bylaws, 9 bylaw patterns for the
+  high-traffic topics, and the onboarding document checklist.
+- **Topic (58 items, draft):** a guide and an eval set for every one of the 29 taxonomy topics,
+  159 eval cases. Every guide's "what decisions have held" is empty and says why.
+- **Firm (12 items, draft, all `needs counsel review`):** 5 enforcement letters, 3 policies,
+  3 guidance notes, 1 legal tracker entry.
+- **Research, not shipped:** `decision-candidates/crt.md` (150 CRT decisions, all topics) and
+  `decision-candidates/courts.md` (127 BCSC and BCCA judgments, citations only).
+- **Licensing:** `licensing-register.md`. Summary:
+  - `bc-kings-printer` (BC legislation): store verbatim, commercial use allowed, attribution
+    required. **But bclaws.gov.bc.ca robots.txt disallows every automated client** (question 24).
+  - `court-decisions` (BCSC/BCCA): **blocked for text** until the courts grant permission.
+    Citation + link + our own summary only. `/jdb-txt/` is robots-disallowed.
+  - `crt-decisions`: **unverified**. Citation + link + our own summary, **no party names**, until
+    the CRT confirms reuse. The site's robots.txt does permit its search pages (question 35).
   - `canlii`: link only. **Never** fetch, scrape, download or store CanLII pages or data.
   - `bylawiq-original`: our own writing.
-- **Empty:** related Acts, decisions, topic guides, firm starter kit, building notes and patterns, evals (one example each).
-- **Open questions:** `open-questions.md` (items 18–19 are the permission requests a person is sending).
+- **Nothing in the task queue is unblocked.** A2 to A6 and F1 wait on question 24; C3 on 18 and 19;
+  E4 on A2 and C3; F2 on 19 and 35. A7 produced questions 26 to 32, which need scope decisions.
+- **Everything in the kb is `draft`.** The law layer needs a legal researcher; the firm, building
+  and topic layers need counsel. That review is now the critical path, not more drafting.
+- **Open questions:** `open-questions.md`, items 4 to 35.
 
 ## 3. Hard rules
 
