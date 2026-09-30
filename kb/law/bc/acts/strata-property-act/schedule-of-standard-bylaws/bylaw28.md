@@ -11,7 +11,7 @@ in_force_to: null
 retrieved_at: 2026-09-30
 licence: bc-kings-printer
 topics: [general-meetings-voting]
-cites: []
+cites: [bc.spa.s45, bc.spa.s103, bc.spa.s125, bc.spa.s154]
 supersedes: null
 status: draft
 reviewed_by: null
