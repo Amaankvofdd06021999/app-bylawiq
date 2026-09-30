@@ -131,3 +131,44 @@ test('source.json needs dates once the folder holds items', () => {
   assert.equal(validateSourceFile(src, 'x/source.json', false, ctx).length, 0);
   assert.equal(validateSourceFile(src, 'x/source.json', true, ctx).length, 2);
 });
+
+function decisionItem(type: 'crt-decision' | 'court-decision', body: string, overrides: Record<string, unknown> = {}): RawItem {
+  const d = item(`law/bc/decisions/${type === 'crt-decision' ? 'crt' : 'courts'}/x.md`, {
+    id: 'bc.crt.2024-bccrt-1',
+    layer: 'law',
+    type,
+    title: '2024 BCCRT 1',
+    citation: '2024 BCCRT 1',
+    source_url: 'https://decisions.civilresolutionbc.ca/crt/en/nav.do',
+    in_force_from: '2024-01-02',
+    retrieved_at: '2026-01-01',
+    licence: type === 'crt-decision' ? 'crt-decisions' : 'court-decisions',
+    ...overrides,
+  });
+  d.body = body;
+  return d;
+}
+
+const summary = '# 2024 BCCRT 1\n\n## Facts\n\nOur words.\n\n## Issue\n\nOur words.\n\n## Holding\n\nOur words.\n\n## Principle\n\nOur words.\n';
+
+test('decision items need Facts, Issue, Holding and Principle headings in order', () => {
+  assert.deepEqual(errors([decisionItem('crt-decision', summary)]), []);
+  assert.deepEqual(errors([decisionItem('court-decision', summary, { id: 'bc.bcsc.2016-bcsc-32', title: 'Owners v. Holding', citation: '2016 BCSC 32' })]), []);
+  const noPrinciple = summary.replace('## Principle', '## Notes');
+  assert.ok(errors([decisionItem('crt-decision', noPrinciple)]).some((m) => /missing or out of order: Principle/.test(m)));
+  const swapped = summary.replace('## Issue', '## TMP').replace('## Holding', '## Issue').replace('## TMP', '## Holding');
+  assert.ok(errors([decisionItem('crt-decision', swapped)]).some((m) => /headings Facts, Issue, Holding, Principle/.test(m)));
+});
+
+test('decision items cannot carry long quotations or a verbatim licence', () => {
+  const quoted = summary.replace('Our words.', `> ${'x'.repeat(401)}`);
+  assert.ok(errors([decisionItem('crt-decision', quoted)]).some((m) => /quote 401 characters/.test(m)));
+  const brief = summary.replace('Our words.', `> ${'x'.repeat(200)}`);
+  assert.deepEqual(errors([decisionItem('crt-decision', brief)]), []);
+  assert.ok(errors([decisionItem('court-decision', summary, { licence: 'bc-kings-printer' })]).some((m) => /cannot use the bc-kings-printer licence/.test(m)));
+});
+
+test('crt-decision items must not name the parties', () => {
+  const errs = errors([decisionItem('crt-decision', summary, { title: 'Smith v. The Owners, Strata Plan VR 1', citation: 'Smith v. The Owners, Strata Plan VR 1, 2024 BCCRT 1' })]);
+  assert.equal(errs.filter((m) => /must not name the parties/.test(m)).length, 2);
+});

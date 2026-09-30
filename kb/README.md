@@ -119,7 +119,22 @@ A production item that cites a non-approved item gets a warning: the cited item 
 
 ## Licensing rule
 
-Every law item has a `licence` from `research/licensing-register.md`, and the validator rejects any licence not in that table. Store verbatim text only where that licence allows it. Otherwise write a structured summary in our own words and link to the source in `source_url`. CanLII is link-only: never scrape or copy it. Until a licence row is marked verified, use the summary-and-link path.
+Every law item has a `licence` from `research/licensing-register.md`, and the validator rejects any licence not in that table. Store verbatim text only where that licence allows it. Otherwise write a structured summary in our own words and link to the source in `source_url`. Today (research of 2026-09-30, `research/licensing-research.md`):
+
+- `bc-kings-printer` (BC Acts and regulations): verbatim allowed, with the attribution statement below.
+- `court-decisions` (BCSC, BCCA): citation, link and our own reviewed summary only, until the courts grant written permission.
+- `crt-decisions` (CRT): citation, link and our own reviewed summary only, with no party names, until the CRT confirms reuse.
+- `canlii`: link only. Never scrape, download or copy it.
+
+The validator enforces the decision rules: Facts, Issue, Holding and Principle headings, at most a brief block quotation, and no style of cause in CRT titles or citations.
+
+### King's Printer attribution
+
+The King's Printer Licence requires this statement, verbatim, displayed prominently at least once in association with any reproduction of BC legislation. It must travel with the legislation items wherever they are shown or exported (the app displays it; see `research/open-questions.md`):
+
+> These materials contain information that has been derived from information originally made available by the Province of British Columbia at: http://www.bclaws.gov.bc.ca and this information is being used in accordance with the King's Printer Licence – British Columbia available at: https://www.bclaws.gov.bc.ca/standards/Licence.html. They have not, however, been produced in affiliation with, or with the endorsement of, the Province of British Columbia and THESE MATERIALS ARE NOT AN OFFICIAL VERSION.
+
+Do not present legislation items as the official text, and do not use the BC coat of arms or government logos.
 
 Never write statute text, section numbers or holdings from memory. Every law item is checked against its source.
 

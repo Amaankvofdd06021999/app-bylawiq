@@ -302,9 +302,62 @@ export function validateItems(items: RawItem[], ctx: Context): Issue[] {
     }
 
     if (item.body.trim().length === 0) warn(item.path, 'body is empty');
+
+    if (type === 'crt-decision' || type === 'court-decision') {
+      for (const m of checkDecision(item)) err(item.path, m);
+    }
   }
 
   return issues;
+}
+
+// ---------------------------------------------------------------------------
+// Decisions: our own summaries only (research/licensing-register.md)
+
+/** Section headings every decision item must have, in this order. */
+export const DECISION_HEADINGS = ['Facts', 'Issue', 'Holding', 'Principle'] as const;
+
+/** Longest total block-quoted text a decision item may carry: a brief attributed quotation, never the judgment. */
+export const MAX_DECISION_QUOTE_CHARS = 400;
+
+/** A style of cause ("Smith v. The Owners, Strata Plan ...") names the parties. */
+const STYLE_OF_CAUSE = /\sv\.?\s/i;
+
+/**
+ * Until the CRT and the BC courts grant written permission, a decision item is a citation, a link and
+ * our own reviewed summary. These checks keep judgment text and CRT party names out of the kb. They
+ * cannot prove a summary is in our own words; review does that.
+ */
+export function checkDecision(item: RawItem): string[] {
+  const errs: string[] = [];
+  const fm = item.frontmatter as Partial<Frontmatter>;
+  const headings = [...item.body.matchAll(/^#{1,6}\s+(.+?)\s*#*\s*$/gm)].map((m) => m[1].trim().toLowerCase());
+  let from = 0;
+  for (const h of DECISION_HEADINGS) {
+    const at = headings.indexOf(h.toLowerCase(), from);
+    if (at === -1) {
+      errs.push(`decision items must have the headings ${DECISION_HEADINGS.join(', ')} in that order (missing or out of order: ${h})`);
+      break;
+    }
+    from = at + 1;
+  }
+  const quoted = item.body
+    .split('\n')
+    .filter((l) => /^\s*>/.test(l))
+    .reduce((n, l) => n + l.replace(/^\s*>\s?/, '').trim().length, 0);
+  if (quoted > MAX_DECISION_QUOTE_CHARS) {
+    errs.push(`decision items quote ${quoted} characters; the limit is ${MAX_DECISION_QUOTE_CHARS} (summarise in our own words, do not copy the decision)`);
+  }
+  if (fm.licence === 'bc-kings-printer') errs.push('decision items cannot use the bc-kings-printer licence');
+  if (fm.type === 'crt-decision') {
+    for (const key of ['title', 'citation'] as const) {
+      const v = fm[key];
+      if (typeof v === 'string' && STYLE_OF_CAUSE.test(v)) {
+        errs.push(`crt-decision ${key} must not name the parties; use the neutral citation (for example 2024 BCCRT 123)`);
+      }
+    }
+  }
+  return errs;
 }
 
 // ---------------------------------------------------------------------------
