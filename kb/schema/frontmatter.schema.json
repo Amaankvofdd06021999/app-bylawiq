@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bylawiq.app/kb/schema/frontmatter.schema.json",
+  "title": "BylawIQ knowledge base item frontmatter",
+  "description": "YAML frontmatter for every Markdown item in kb/. tools/validate.ts reads the required list and enums from this file and adds cross-item rules (unique ids, taxonomy, cites, licences, review sign-off) in code.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "layer", "type", "title", "citation", "jurisdiction", "source_url",
+    "in_force_from", "in_force_to", "retrieved_at", "licence", "topics", "cites",
+    "supersedes", "status", "reviewed_by", "reviewed_at", "notes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$",
+      "description": "Stable identifier, lower-case, dotted or kebab. Never reuse or rename once shipped. Example: bc.spa.s135"
+    },
+    "layer": { "enum": ["law", "firm", "building", "topic"] },
+    "type": {
+      "enum": [
+        "act-section", "regulation-section", "schedule", "crt-decision", "court-decision",
+        "template", "policy", "guidance", "tracker",
+        "standard-bylaw", "bylaw-pattern", "checklist",
+        "topic-guide", "eval"
+      ]
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "citation": { "type": ["string", "null"], "description": "Legal citation. Required for law items, null otherwise." },
+    "jurisdiction": { "type": "string", "pattern": "^[A-Z]{2}$", "description": "Two-letter code, for example BC or CA." },
+    "source_url": { "type": ["string", "null"], "format": "uri", "description": "Required for law items." },
+    "in_force_from": { "type": ["string", "null"], "format": "date", "description": "YYYY-MM-DD. For decisions, the decision date. Required for law items." },
+    "in_force_to": { "type": ["string", "null"], "format": "date", "description": "YYYY-MM-DD, or null while in force." },
+    "retrieved_at": { "type": ["string", "null"], "format": "date", "description": "YYYY-MM-DD the source was fetched. Required for law items." },
+    "licence": { "type": "string", "description": "Licence id from research/licensing-register.md." },
+    "topics": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "description": "Ids from taxonomy/topics.json." },
+    "cites": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "description": "Ids of other kb items." },
+    "supersedes": { "type": ["string", "null"], "description": "Id of the item this one replaces." },
+    "status": { "enum": ["draft", "reviewed", "approved"] },
+    "reviewed_by": { "type": ["string", "null"], "description": "Name and role of the reviewer. Required when status is approved." },
+    "reviewed_at": { "type": ["string", "null"], "format": "date", "description": "YYYY-MM-DD. Required when status is approved." },
+    "notes": { "type": ["string", "null"] }
+  },
+  "x-layer-types": {
+    "law": ["act-section", "regulation-section", "schedule", "crt-decision", "court-decision"],
+    "firm": ["template", "policy", "guidance", "tracker"],
+    "building": ["standard-bylaw", "bylaw-pattern", "checklist"],
+    "topic": ["topic-guide", "eval"]
+  },
+  "x-layer-folders": {
+    "law": ["law"],
+    "firm": ["firm-starter"],
+    "building": ["building-starter"],
+    "topic": ["topics", "evals"]
+  }
+}

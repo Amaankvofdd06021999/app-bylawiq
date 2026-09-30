@@ -1,0 +1,25 @@
+{
+  "name": "bylawiq-kb",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "BylawIQ knowledge base: BC strata law, firm starter kit, building starter kit, topic guides and evals.",
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "validate": "tsx tools/validate.ts",
+    "build": "tsx tools/build.ts",
+    "build:prod": "tsx tools/build.ts --status=approved",
+    "test": "tsx --test tools/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "24.3.0",
+    "tsx": "4.20.5",
+    "typescript": "5.9.3",
+    "yaml": "2.8.1"
+  }
+}
