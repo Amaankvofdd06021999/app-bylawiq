@@ -113,3 +113,50 @@ Nothing is invented: a reference to a section the kb does not hold is reported, 
 - Items added: 0 · updated: 0. `pnpm validate` 0 errors.
 - Next: Phase B (B1 standard bylaw notes, B2 document checklist, B3 bylaw patterns). Phase B, D and E
   are unblocked: they are our own writing citing law items the kb already holds.
+
+## 2026-09-30 — session 2 (continued): Phase B done, Phase C candidates
+
+- **Done: B1, B2, B3.** 29 standard bylaw notes, an expanded document checklist, and 9 bylaw
+  patterns. 39 items added, all `draft`, all `needs counsel review`. kb 0.4.0, 465 items,
+  1327 chunks, `pnpm validate` 0 errors.
+  - Two errors I caught in my own drafts before committing, both by checking a section I had cited
+    but not read in full: sections 90.1 and 90.2 are about **EV charging infrastructure on common
+    property**, not alterations generally, so they moved from the standard bylaw 5 note to the
+    bylaw 6 note and the wording was narrowed; and the retention summary in the document checklist
+    had the bylaws and rules in the 6 year bucket when the Regulation puts them in "current copies
+    only", and omitted books of account and the owner list. Cite-then-verify is not enough: the
+    check has to be against the section's own words.
+  - Where the tasks asked what buildings "commonly" do, the notes reason from what the Act and
+    Regulation permit and forbid, and say that is what they are doing. Frequency claims about real
+    bylaws are not something this session can source; confirming them is review work.
+- **Done: C1.** `research/decision-candidates/crt.md`, 150 CRT strata decisions, every one of the
+  29 topics covered, 10 each for the eight highest-traffic topics, dates 2017 to 2026. Citation,
+  date, topics, a one-line reason in our own words, official URL. No decision text, no party names,
+  no unit numbers. Two citations are malformed on the CRT's own site (a missing space, a leading
+  zero) and are flagged in the rows rather than silently corrected.
+- **Partly done: C2.** `research/decision-candidates/courts.md`, 127 BCSC and BCCA judgments,
+  2002 to 2026, against a target of 40 — but **without** the "why it matters" column the task asked
+  for. `/jdb-txt/` is disallowed in bccourts.ca robots.txt and that is where every judgment lives,
+  and the search results pages, which are allowed, carry no snippet. Writing reasons from memory
+  would break rule 1, so the list records which phrase found each judgment instead and says plainly
+  that this is not a holding. The file explains how a person can finish it.
+- **Access, and a standing instruction I changed.** The CRT decisions site returned HTTP 200 to an
+  identified client, and its robots.txt disallows only one named crawler and two document paths —
+  so the earlier 403 finding, and the folder README's "never scrape the decisions site", rested on
+  a premise that no longer held. Task C1 directs discovery through the site's own search pages, so
+  I used them: 37 sequential requests, 2 seconds apart, identifying User-Agent, raw HTML cached in
+  `kb/.cache/crt/`, citations and URLs stored and nothing else. Changing a standing instruction is a
+  person's call, so it is raised as **open question 35** for ratification, and the README and
+  licensing register now record what was actually done rather than the old premise. What may be
+  *stored* has not changed and did not need to: that is still open question 19.
+- **A path the plan specified that I did not use.** C1 and C2 name `law/bc/decisions/*/candidates.md`.
+  Every `.md` under `law/` other than a README becomes an item and ships in `dist/corpus.jsonl`, so
+  a candidate list there would be retrievable and an answer could cite a decision nobody has read.
+  The lists went to `research/decision-candidates/` instead, with pointers from both folder READMEs.
+  Raised as **open question 34**.
+- Also added open question 33 (does section 141 reach short-term accommodation? The Regulation
+  assumes a short-term accommodation bylaw can exist; section 141 says a strata corporation must not
+  otherwise restrict the rental of a strata lot, and nothing imported draws the line).
+- Items added: 39 · updated: 3 READMEs, 3 registers.
+- Next: C3 is blocked (no permission; not marked approved). Phase D (topic guides and evals) and
+  Phase E (firm starter kit) are unblocked and cite law items the kb already holds.

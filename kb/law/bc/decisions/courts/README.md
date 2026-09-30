@@ -11,3 +11,15 @@ The BC courts require written permission to use published decisions in a user-pa
 - Never download from the judgment database (disallowed in robots.txt) or from CanLII.
 
 Respect publication bans. Empty until research fills it (research plan R4).
+
+## Candidates
+
+The list of judgments to read is **`research/decision-candidates/courts.md`** (127 judgments, BCSC
+and BCCA, 2002 to 2026), kept in `research/` for the same reason as the CRT list: nothing under
+`law/` can hold research material without shipping it to retrieval.
+
+That list has no "why it matters" column. `robots.txt` on bccourts.ca disallows `/jdb-txt/`, where
+the judgments themselves live, so they cannot be read by an automated client; the search results
+pages, which are allowed, carry no snippet. The list records which phrase found each judgment, which
+is the only subject-matter signal the permitted pages give. Finishing the task needs a person with a
+browser, or the permission in open question 18.

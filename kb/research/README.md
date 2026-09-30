@@ -8,3 +8,4 @@ Working notes for filling the knowledge base. Nothing in this folder is shipped 
 - `source-register.md`: every source we use and where it lands.
 - `licensing-register.md`: licence ids used in item frontmatter. The validator reads ids from this table.
 - `open-questions.md`: questions that block or shape the work.
+- `decision-candidates/`: CRT and court decisions worth summarising, for Phase C. Leads, not findings.
