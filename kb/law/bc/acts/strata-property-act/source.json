@@ -2,10 +2,1044 @@
   "title": "Strata Property Act",
   "citation": "SBC 1998, c 43",
   "chapter": "43",
-  "url": "https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/98043_01",
-  "consolidation_date": null,
+  "url": "https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/98043_00",
+  "xml_url": "https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/98043_00_multi/xml",
+  "consolidation_date": "2026-09-22",
   "licence": "bc-kings-printer",
-  "retrieved_at": null,
-  "parts": [],
-  "notes": "Unverified: title, citation, chapter and url must be confirmed against BC Laws before the first item is added. Fill consolidation_date, retrieved_at and parts[] then."
+  "retrieved_at": "2026-09-30",
+  "parts": [
+    {
+      "number": "1",
+      "title": "Definitions and Interpretation",
+      "folder": "part-01",
+      "in_scope": true,
+      "sections": [
+        "1"
+      ]
+    },
+    {
+      "number": "2",
+      "title": "The Strata Corporation",
+      "folder": "part-02",
+      "in_scope": true,
+      "sections": [
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "number": "3",
+      "title": "The Owner Developer",
+      "folder": "part-03",
+      "in_scope": true,
+      "sections": [
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "General",
+          "sections": [
+            "5",
+            "6"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "The Owner Developer and the Strata Corporation Before Strata Lots are Conveyed",
+          "sections": [
+            "7",
+            "8"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "The Owner Developer and the Strata Corporation After the First Conveyance",
+          "sections": [
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "23",
+            "24"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "4",
+      "title": "Strata Corporation Governance",
+      "folder": "part-04",
+      "in_scope": true,
+      "sections": [
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "34.1",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52",
+        "53",
+        "54",
+        "55",
+        "56",
+        "57",
+        "58",
+        "59",
+        "60",
+        "61",
+        "62",
+        "63",
+        "64",
+        "65"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "The Council",
+          "sections": [
+            "25",
+            "26",
+            "27",
+            "28",
+            "29",
+            "30",
+            "31",
+            "32",
+            "33",
+            "34",
+            "34.1"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Records",
+          "sections": [
+            "35",
+            "36",
+            "37"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "Contracts",
+          "sections": [
+            "38",
+            "39"
+          ]
+        },
+        {
+          "number": "4",
+          "title": "Annual General Meetings and Special General Meetings",
+          "sections": [
+            "40",
+            "41",
+            "42",
+            "43",
+            "44",
+            "45",
+            "46",
+            "47",
+            "48",
+            "49",
+            "50",
+            "51",
+            "52"
+          ]
+        },
+        {
+          "number": "5",
+          "title": "Voting",
+          "sections": [
+            "53",
+            "54",
+            "55",
+            "56",
+            "57",
+            "58"
+          ]
+        },
+        {
+          "number": "6",
+          "title": "Information Certificate",
+          "sections": [
+            "59"
+          ]
+        },
+        {
+          "number": "7",
+          "title": "Giving Notice and Providing Information",
+          "sections": [
+            "60",
+            "61",
+            "62",
+            "63",
+            "64",
+            "65"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "5",
+      "title": "Property",
+      "folder": "part-05",
+      "in_scope": true,
+      "sections": [
+        "66",
+        "67",
+        "68",
+        "69",
+        "70",
+        "71",
+        "72",
+        "73",
+        "74",
+        "75",
+        "76",
+        "77",
+        "78",
+        "79",
+        "80",
+        "81",
+        "82",
+        "83",
+        "84",
+        "85",
+        "86",
+        "87",
+        "88",
+        "89",
+        "90",
+        "90.1",
+        "90.2",
+        "90.3"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "General Property Matters",
+          "sections": [
+            "66",
+            "67",
+            "68",
+            "69",
+            "70",
+            "71",
+            "72"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Limited Common Property and Exclusive Use of Common Property",
+          "sections": [
+            "73",
+            "74",
+            "75",
+            "76",
+            "77"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "Property Acquisition and Disposal",
+          "sections": [
+            "78",
+            "79",
+            "80",
+            "81",
+            "82"
+          ]
+        },
+        {
+          "number": "4",
+          "title": "Work Orders",
+          "sections": [
+            "83",
+            "84",
+            "85"
+          ]
+        },
+        {
+          "number": "5",
+          "title": "Builders Liens and Other Charges",
+          "sections": [
+            "86",
+            "87",
+            "88",
+            "89",
+            "90"
+          ]
+        },
+        {
+          "number": "6",
+          "title": "Alterations to Common Property to Install EV Charging Infrastructure for Owner",
+          "sections": [
+            "90.1",
+            "90.2",
+            "90.3"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "6",
+      "title": "Finances",
+      "folder": "part-06",
+      "in_scope": true,
+      "sections": [
+        "91",
+        "92",
+        "93",
+        "94",
+        "94.1",
+        "95",
+        "96",
+        "97",
+        "98",
+        "99",
+        "100",
+        "101",
+        "102",
+        "103",
+        "104",
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110",
+        "111",
+        "112",
+        "113",
+        "114",
+        "115",
+        "116",
+        "117",
+        "118"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "Operating Fund and Contingency Reserve Fund",
+          "sections": [
+            "91",
+            "92",
+            "93",
+            "94",
+            "94.1",
+            "95",
+            "96",
+            "97",
+            "98"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Contribution to Expenses",
+          "sections": [
+            "99",
+            "100",
+            "101"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "Budgets",
+          "sections": [
+            "102",
+            "103",
+            "104",
+            "105",
+            "106",
+            "107"
+          ]
+        },
+        {
+          "number": "4",
+          "title": "Special Levies and User Fees",
+          "sections": [
+            "108",
+            "109",
+            "110"
+          ]
+        },
+        {
+          "number": "5",
+          "title": "Borrowing Powers of Strata Corporation",
+          "sections": [
+            "111"
+          ]
+        },
+        {
+          "number": "6",
+          "title": "Money Owing to Strata Corporation",
+          "sections": [
+            "112",
+            "113",
+            "114",
+            "115",
+            "116",
+            "117",
+            "118"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "7",
+      "title": "Bylaws and Rules",
+      "folder": "part-07",
+      "in_scope": true,
+      "sections": [
+        "119",
+        "120",
+        "121",
+        "122",
+        "123",
+        "123.1",
+        "123.2",
+        "124",
+        "125",
+        "126",
+        "127",
+        "128",
+        "129",
+        "130",
+        "131",
+        "132",
+        "133",
+        "134",
+        "135",
+        "136",
+        "137",
+        "138"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "General",
+          "sections": [
+            "119",
+            "120",
+            "121",
+            "122",
+            "123",
+            "123.1",
+            "123.2",
+            "124",
+            "125"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Amending the Bylaws",
+          "sections": [
+            "126",
+            "127",
+            "128"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "Enforcing the Bylaws and Rules",
+          "sections": [
+            "129",
+            "130",
+            "131",
+            "132",
+            "133",
+            "134",
+            "135",
+            "136",
+            "137",
+            "138"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "8",
+      "title": "Rentals",
+      "folder": "part-08",
+      "in_scope": true,
+      "sections": [
+        "141",
+        "146",
+        "147",
+        "148"
+      ]
+    },
+    {
+      "number": "9",
+      "title": "Insurance",
+      "folder": "part-09",
+      "in_scope": true,
+      "sections": [
+        "149",
+        "150",
+        "151",
+        "152",
+        "153",
+        "154",
+        "155",
+        "156",
+        "157",
+        "158",
+        "159",
+        "160",
+        "161",
+        "162"
+      ]
+    },
+    {
+      "number": "10",
+      "title": "Legal Proceedings and Dispute Resolution",
+      "folder": "part-10",
+      "in_scope": true,
+      "sections": [
+        "163",
+        "164",
+        "165",
+        "166",
+        "167",
+        "168",
+        "169",
+        "170",
+        "171",
+        "172",
+        "173",
+        "173.1",
+        "174",
+        "175",
+        "176",
+        "177",
+        "178",
+        "178.1",
+        "179",
+        "180",
+        "181",
+        "182",
+        "183",
+        "184",
+        "185",
+        "186",
+        "187",
+        "188",
+        "189",
+        "189.1",
+        "189.4"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "Suits Against the Strata Corporation",
+          "sections": [
+            "163",
+            "164",
+            "165",
+            "166",
+            "167",
+            "168",
+            "169"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Suits by the Strata Corporation",
+          "sections": [
+            "170",
+            "171",
+            "172",
+            "173"
+          ]
+        },
+        {
+          "number": "2.1",
+          "title": "Validity of Suits and Arbitrations",
+          "sections": [
+            "173.1"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "Administrator of Strata Corporation",
+          "sections": [
+            "174"
+          ]
+        },
+        {
+          "number": "4",
+          "title": "Arbitration",
+          "sections": [
+            "175",
+            "176",
+            "177",
+            "178",
+            "178.1",
+            "179",
+            "180",
+            "181",
+            "182",
+            "183",
+            "184",
+            "185",
+            "186",
+            "187",
+            "188",
+            "189"
+          ]
+        },
+        {
+          "number": "5",
+          "title": "Civil Resolution Tribunal",
+          "sections": [
+            "189.1",
+            "189.4"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "11",
+      "title": "Sections",
+      "folder": "part-11",
+      "in_scope": true,
+      "sections": [
+        "190",
+        "191",
+        "192",
+        "193",
+        "194",
+        "195",
+        "196",
+        "197",
+        "198"
+      ]
+    },
+    {
+      "number": "12",
+      "title": "Leasehold Strata Plans",
+      "folder": "part-12",
+      "in_scope": true,
+      "sections": [
+        "199",
+        "200",
+        "201",
+        "202",
+        "203",
+        "204",
+        "205",
+        "206",
+        "207",
+        "208",
+        "209",
+        "210",
+        "211",
+        "212",
+        "213",
+        "214",
+        "215",
+        "216"
+      ]
+    },
+    {
+      "number": "13",
+      "title": "Phased Strata Plans",
+      "folder": "part-13",
+      "in_scope": true,
+      "sections": [
+        "217",
+        "218",
+        "219",
+        "220",
+        "221",
+        "222",
+        "223",
+        "224",
+        "225",
+        "226",
+        "227",
+        "228",
+        "229",
+        "230",
+        "231",
+        "232",
+        "233",
+        "234",
+        "235",
+        "236",
+        "237",
+        "238"
+      ]
+    },
+    {
+      "number": "14",
+      "title": "Land Titles",
+      "folder": "part-14",
+      "in_scope": true,
+      "sections": [
+        "239",
+        "240",
+        "241",
+        "242",
+        "243",
+        "244",
+        "245",
+        "246",
+        "247",
+        "248",
+        "249",
+        "250",
+        "251",
+        "252",
+        "253",
+        "254",
+        "255",
+        "256"
+      ]
+    },
+    {
+      "number": "15",
+      "title": "Strata Plan Amendment and Amalgamation",
+      "folder": "part-15",
+      "in_scope": true,
+      "sections": [
+        "257",
+        "258",
+        "259",
+        "260",
+        "261",
+        "262",
+        "263",
+        "264",
+        "265",
+        "266",
+        "267",
+        "268",
+        "269",
+        "270",
+        "271"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "Strata Plan Amendment",
+          "sections": [
+            "257",
+            "258",
+            "259",
+            "260",
+            "261",
+            "262",
+            "263",
+            "264",
+            "265",
+            "266",
+            "267",
+            "268"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Amalgamation",
+          "sections": [
+            "269",
+            "270",
+            "271"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "16",
+      "title": "Cancellation of Strata Plan and Winding Up of Strata Corporation",
+      "folder": "part-16",
+      "in_scope": true,
+      "sections": [
+        "272",
+        "273",
+        "273.1",
+        "274",
+        "275",
+        "276",
+        "276.1",
+        "277",
+        "278",
+        "278.1",
+        "279",
+        "280",
+        "281",
+        "282",
+        "283",
+        "284",
+        "285",
+        "286",
+        "287",
+        "288",
+        "289"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "Voluntary Winding Up Without Liquidator",
+          "sections": [
+            "272",
+            "273",
+            "273.1",
+            "274",
+            "275"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Voluntary Winding Up With Liquidator",
+          "sections": [
+            "276",
+            "276.1",
+            "277",
+            "278",
+            "278.1",
+            "279",
+            "280",
+            "281",
+            "282",
+            "283"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "Court Ordered Winding Up",
+          "sections": [
+            "284",
+            "285"
+          ]
+        },
+        {
+          "number": "4",
+          "title": "General",
+          "sections": [
+            "286",
+            "287",
+            "288",
+            "289"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "17",
+      "title": "General",
+      "folder": "part-17",
+      "in_scope": true,
+      "sections": [
+        "290",
+        "291",
+        "291.1",
+        "292",
+        "293",
+        "322"
+      ]
+    },
+    {
+      "number": null,
+      "title": "Schedule of Standard Bylaws",
+      "folder": "schedule-of-standard-bylaws",
+      "in_scope": true,
+      "sections": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30"
+      ],
+      "divisions": [
+        {
+          "number": "1",
+          "title": "Duties of Owners, Tenants, Occupants and Visitors",
+          "sections": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+          ]
+        },
+        {
+          "number": "2",
+          "title": "Powers and Duties of Strata Corporation",
+          "sections": [
+            "8"
+          ]
+        },
+        {
+          "number": "3",
+          "title": "Council",
+          "sections": [
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22"
+          ]
+        },
+        {
+          "number": "4",
+          "title": "Enforcement of Bylaws and Rules",
+          "sections": [
+            "23",
+            "24"
+          ]
+        },
+        {
+          "number": "5",
+          "title": "Annual and Special General Meetings",
+          "sections": [
+            "25",
+            "26",
+            "27",
+            "28"
+          ]
+        },
+        {
+          "number": "6",
+          "title": "Voluntary Dispute Resolution",
+          "sections": [
+            "29"
+          ]
+        },
+        {
+          "number": "7",
+          "title": "Marketing Activities by Owner Developer",
+          "sections": [
+            "30"
+          ]
+        }
+      ]
+    }
+  ],
+  "omitted": [
+    {
+      "sections": "139-140",
+      "where": "Part 8",
+      "published_text": "[Repealed 2022-41-17.]"
+    },
+    {
+      "sections": "142-145",
+      "where": "Part 8",
+      "published_text": "[Repealed 2022-41-19.]"
+    },
+    {
+      "sections": "189.2-189.3",
+      "where": "Part 10",
+      "published_text": "[Repealed 2015-16-48.]"
+    },
+    {
+      "sections": "189.5",
+      "where": "Part 10",
+      "published_text": "[Repealed 2015-16-48.]"
+    },
+    {
+      "sections": "189.6",
+      "where": "Part 10",
+      "published_text": "[Repealed 2018-17-47.]"
+    },
+    {
+      "sections": "294-321",
+      "where": "Part 17",
+      "published_text": "[Repeal and consequential amendments. Spent. 1998-43-294 to 321.]"
+    },
+    {
+      "sections": "15",
+      "where": "Schedule of Standard Bylaws",
+      "published_text": "[Repealed 2009-17-35.]"
+    }
+  ],
+  "notes": "Generated by tools/import-bclaws.ts. consolidation_date is the BC Laws \"current to\" date. Repealed and spent sections are not imported; they are listed in omitted[] with the text BC Laws publishes in their place."
 }

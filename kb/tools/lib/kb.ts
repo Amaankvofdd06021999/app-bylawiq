@@ -42,6 +42,9 @@ export type RawItem = {
   body: string;
 };
 
+/** Sections of Acts, regulations and schedules: found by citation and text, so topics are optional. */
+export const STATUTE_TYPES = new Set(['act-section', 'regulation-section', 'schedule']);
+
 export type Issue = { level: 'error' | 'warning'; path: string; message: string };
 
 type PropSchema = {
@@ -251,7 +254,12 @@ export function validateItems(items: RawItem[], ctx: Context): Issue[] {
 
     if (layer === 'law') {
       for (const key of ['source_url', 'retrieved_at', 'citation', 'in_force_from'] as const) {
-        if (fm[key] === null || fm[key] === undefined || fm[key] === '') err(item.path, `law items must have ${key}`);
+        if (fm[key] === null || fm[key] === undefined || fm[key] === '') {
+          // A consolidation does not say when each section's current text came into force.
+          // Statute items may leave in_force_from null if notes say why.
+          if (key === 'in_force_from' && STATUTE_TYPES.has(String(type)) && typeof fm.notes === 'string' && fm.notes.trim()) continue;
+          err(item.path, `law items must have ${key}${key === 'in_force_from' && STATUTE_TYPES.has(String(type)) ? ' (or notes explaining why it is null)' : ''}`);
+        }
       }
       if (fm.licence === undefined || fm.licence === null || fm.licence === '') err(item.path, 'law items must have a licence');
     }
@@ -264,7 +272,7 @@ export function validateItems(items: RawItem[], ctx: Context): Issue[] {
       for (const t of fm.topics) {
         if (!ctx.topicIds.has(t)) err(item.path, `topic ${t} is not in taxonomy/topics.json`);
       }
-      if (fm.topics.length === 0 && type !== 'checklist') warn(item.path, 'no topics set; the item will be hard to find');
+      if (fm.topics.length === 0 && type !== 'checklist' && !STATUTE_TYPES.has(String(type))) warn(item.path, 'no topics set; the item will be hard to find');
     }
 
     if (Array.isArray(fm.cites)) {

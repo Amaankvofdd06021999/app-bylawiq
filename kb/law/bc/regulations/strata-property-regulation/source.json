@@ -3,9 +3,429 @@
   "citation": "BC Reg 43/2000",
   "chapter": "43/2000",
   "url": "https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/43_2000",
-  "consolidation_date": null,
+  "xml_url": "https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/43_2000/xml",
+  "consolidation_date": "2026-09-22",
   "licence": "bc-kings-printer",
-  "retrieved_at": null,
-  "parts": [],
-  "notes": "Unverified: title, citation, chapter and url must be confirmed against BC Laws before the first item is added. Fill consolidation_date, retrieved_at and parts[] then."
+  "retrieved_at": "2026-09-30",
+  "parts": [
+    {
+      "number": "1",
+      "title": "Definitions and Interpretation",
+      "folder": "part-01",
+      "in_scope": true,
+      "sections": [
+        "1.1"
+      ]
+    },
+    {
+      "number": "2",
+      "title": "The Strata Corporation",
+      "folder": null,
+      "in_scope": false,
+      "sections": [],
+      "note": "No current sections in this Part."
+    },
+    {
+      "number": "3",
+      "title": "The Owner Developer",
+      "folder": "part-03",
+      "in_scope": true,
+      "sections": [
+        "3.01",
+        "3.1",
+        "3.2",
+        "3.3",
+        "3.4"
+      ]
+    },
+    {
+      "number": "4",
+      "title": "Strata Corporation Governance",
+      "folder": "part-04",
+      "in_scope": true,
+      "sections": [
+        "4.01",
+        "4.1",
+        "4.2",
+        "4.3",
+        "4.4",
+        "4.5"
+      ]
+    },
+    {
+      "number": "5",
+      "title": "Property",
+      "folder": "part-05",
+      "in_scope": true,
+      "sections": [
+        "5.1",
+        "5.101",
+        "5.2"
+      ]
+    },
+    {
+      "number": "5.1",
+      "title": "Alterations to Common Property to Install EV Charging Infrastructure for Owner",
+      "folder": "part-05.1",
+      "in_scope": true,
+      "sections": [
+        "5.3",
+        "5.4",
+        "5.5",
+        "5.6"
+      ]
+    },
+    {
+      "number": "5.2",
+      "title": "Electrical Planning Report",
+      "folder": "part-05.2",
+      "in_scope": true,
+      "sections": [
+        "5.7",
+        "5.8",
+        "5.9",
+        "5.10",
+        "5.11",
+        "5.12"
+      ],
+      "divisions": [
+        {
+          "number": null,
+          "title": "Division 1 — Deadlines and Exemptions",
+          "sections": [
+            "5.7",
+            "5.8",
+            "5.9"
+          ]
+        },
+        {
+          "number": null,
+          "title": "Division 2 — Qualified Person and Content of Report",
+          "sections": [
+            "5.10",
+            "5.11",
+            "5.12"
+          ]
+        }
+      ]
+    },
+    {
+      "number": "6",
+      "title": "Finances",
+      "folder": "part-06",
+      "in_scope": true,
+      "sections": [
+        "6.1",
+        "6.2",
+        "6.21",
+        "6.22",
+        "6.23",
+        "6.3",
+        "6.4",
+        "6.5",
+        "6.6",
+        "6.7",
+        "6.8",
+        "6.9",
+        "6.10",
+        "6.11"
+      ]
+    },
+    {
+      "number": "7",
+      "title": "Bylaws and Rules",
+      "folder": "part-07",
+      "in_scope": true,
+      "sections": [
+        "7.01",
+        "7.1",
+        "7.2"
+      ]
+    },
+    {
+      "number": "8",
+      "title": "",
+      "folder": null,
+      "in_scope": false,
+      "sections": [],
+      "note": "No current sections in this Part."
+    },
+    {
+      "number": "9",
+      "title": "Insurance",
+      "folder": "part-09",
+      "in_scope": true,
+      "sections": [
+        "9.1",
+        "9.2",
+        "9.3"
+      ]
+    },
+    {
+      "number": "10",
+      "title": "Legal Proceedings and Arbitration",
+      "folder": "part-10",
+      "in_scope": true,
+      "sections": [
+        "10.1"
+      ]
+    },
+    {
+      "number": "11",
+      "title": "Sections",
+      "folder": "part-11",
+      "in_scope": true,
+      "sections": [
+        "11.1",
+        "11.2",
+        "11.3"
+      ]
+    },
+    {
+      "number": "12",
+      "title": "Leasehold Strata Plans",
+      "folder": "part-12",
+      "in_scope": true,
+      "sections": [
+        "12.1"
+      ]
+    },
+    {
+      "number": "13",
+      "title": "Phased Strata Plans",
+      "folder": "part-13",
+      "in_scope": true,
+      "sections": [
+        "13.1",
+        "13.2",
+        "13.3",
+        "13.4",
+        "13.5",
+        "13.6"
+      ]
+    },
+    {
+      "number": "14",
+      "title": "Land Titles",
+      "folder": "part-14",
+      "in_scope": true,
+      "sections": [
+        "14.1",
+        "14.2",
+        "14.3",
+        "14.4",
+        "14.5",
+        "14.6",
+        "14.7",
+        "14.8",
+        "14.9",
+        "14.10",
+        "14.11",
+        "14.12",
+        "14.13",
+        "14.14"
+      ]
+    },
+    {
+      "number": "15",
+      "title": "Strata Plan Amendment and Amalgamation",
+      "folder": null,
+      "in_scope": false,
+      "sections": [],
+      "note": "No current sections in this Part."
+    },
+    {
+      "number": "16",
+      "title": "Cancellation of Strata Plan and Winding Up of Strata Corporation",
+      "folder": "part-16",
+      "in_scope": true,
+      "sections": [
+        "16.1"
+      ]
+    },
+    {
+      "number": "17",
+      "title": "General",
+      "folder": "part-17",
+      "in_scope": true,
+      "sections": [
+        "17.1",
+        "17.2",
+        "17.3",
+        "17.4",
+        "17.6",
+        "17.7",
+        "17.8",
+        "17.9",
+        "17.10",
+        "17.11",
+        "17.12",
+        "17.13",
+        "17.16",
+        "17.17",
+        "17.18",
+        "17.19",
+        "17.20",
+        "17.21",
+        "17.22",
+        "17.23"
+      ]
+    },
+    {
+      "number": "18",
+      "title": "",
+      "folder": null,
+      "in_scope": false,
+      "sections": [],
+      "note": "No current sections in this Part."
+    }
+  ],
+  "omitted": [
+    {
+      "sections": "6.12",
+      "where": "Part 6",
+      "published_text": "Repealed. [B.C. Reg. 68/2014, s. 2.]"
+    },
+    {
+      "sections": "6.13",
+      "where": "Part 6",
+      "published_text": "Repealed. [B.C. Reg. 7/2023, Sch. 2, s. 4.]"
+    },
+    {
+      "sections": "8.1-8.3",
+      "where": "Part 8",
+      "published_text": "Repealed. [B.C. Reg. 6/2023, s. 2.]"
+    },
+    {
+      "sections": "17.5",
+      "where": "Part 17",
+      "published_text": "Repealed. [B.C. Reg. 68/2014, s. 2.]"
+    },
+    {
+      "sections": "17.14",
+      "where": "Part 17",
+      "published_text": "Repealed. [B.C. Reg. 6/2023, s. 5.]"
+    },
+    {
+      "sections": "17.15",
+      "where": "Part 17",
+      "published_text": "Repealed. [B.C. Reg. 312/2009, s. 5.]"
+    },
+    {
+      "sections": "18.1",
+      "where": "Part 18",
+      "published_text": "Repealed. [B.C. Reg. 312/2009, s. 6.]"
+    }
+  ],
+  "not_imported": [
+    {
+      "schedule": "Form A",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form B",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form C",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form D",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form E",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form F",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form G",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form H",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form I",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form J",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form K",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form L",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form M",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form N",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form O",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form P",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form Q",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form R",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form S",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form T",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form U",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form V",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form W",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form X",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form Y",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form Z",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    },
+    {
+      "schedule": "Form Z.1",
+      "reason": "Prescribed forms: not imported yet (see README)."
+    }
+  ],
+  "notes": "Generated by tools/import-bclaws.ts. consolidation_date is the BC Laws \"current to\" date. Repealed and spent sections are not imported; they are listed in omitted[] with the text BC Laws publishes in their place."
 }

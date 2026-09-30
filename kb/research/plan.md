@@ -27,6 +27,7 @@ Reviewer shorthand: **Legal researcher** checks accuracy against the source. **C
 - **Goal:** one item per section of the Act and Regulation, and one per standard bylaw, current to the latest consolidation, with point-in-time history for sections that changed recently.
 - **Sources:** BC Laws consolidations (see `source-register.md`).
 - **Output:** `law/bc/acts/strata-property-act/` (type `act-section`, and `schedule` for the Schedule of Standard Bylaws), `law/bc/regulations/strata-property-regulation/` (type `regulation-section`). Complete `source.json` in each folder, including `consolidation_date`, `retrieved_at` and `parts[]`. Ids follow `bc.spa.s135`, `bc.spa.s135.1` style, `bc.spr.s7.1`, `bc.spa.sched.bylaw3`.
+- **Status (2026-09-30):** imported verbatim as drafts by `tools/import-bclaws.ts` (Act 303 sections, 29 standard bylaws, Regulation 91 sections), each section checked word for word against the BC Laws page by script. Remaining: `cites[]`, `in_force_from` from the Tables of Legislative Changes, transcription of the Act's six image formulas, the Regulation's forms, and the researcher review and 10% counsel spot check.
 - **Done when:** every section in each Part listed in `source.json` has an item; `cites[]` link sections that cross-reference each other; validation passes; a spot check of 10% of items against the source finds no discrepancies.
 - **Reviewed by:** legal researcher (every item), counsel (spot check).
 
@@ -73,8 +74,8 @@ Reviewer shorthand: **Legal researcher** checks accuracy against the source. **C
 
 - **Goal:** what a building needs to get useful answers on day one.
 - **Sources:** R2 (Schedule of Standard Bylaws), common bylaw patterns seen in registered bylaws.
-- **Output:** `building-starter/standard-bylaws/` (type `standard-bylaw`, one per standard bylaw, citing the law item), `building-starter/bylaw-patterns/` (type `bylaw-pattern`, common amendments such as rental restrictions, pet limits, short-term rental bans, with the decisions that tested them), `building-starter/document-checklist.md` (documents to upload and why).
-- **Done when:** every standard bylaw has a building-layer item; at least one pattern per high-traffic topic; the checklist has been used on two real onboarding calls and updated.
+- **Output:** `building-starter/standard-bylaws/` (type `standard-bylaw`: building-facing notes that cite the law-layer `bc.spa.sched.bylaw*` item; the verbatim text stays in the law layer and is not duplicated), `building-starter/bylaw-patterns/` (type `bylaw-pattern`, common amendments such as rental restrictions, pet limits, short-term rental bans, with the decisions that tested them), `building-starter/document-checklist.md` (documents to upload and why).
+- **Done when:** every standard bylaw a building commonly relies on has a building-facing note citing its law item; at least one pattern per high-traffic topic; the checklist has been used on two real onboarding calls and updated.
 - **Reviewed by:** legal researcher, counsel (bylaw patterns), product (checklist).
 
 ## R8. Evals and upkeep

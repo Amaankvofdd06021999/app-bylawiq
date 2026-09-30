@@ -172,3 +172,16 @@ test('crt-decision items must not name the parties', () => {
   const errs = errors([decisionItem('crt-decision', summary, { title: 'Smith v. The Owners, Strata Plan VR 1', citation: 'Smith v. The Owners, Strata Plan VR 1, 2024 BCCRT 1' })]);
   assert.equal(errs.filter((m) => /must not name the parties/.test(m)).length, 2);
 });
+
+test('statute items may leave in_force_from null only with a note', () => {
+  assert.ok(errors([lawItem({ in_force_from: null })]).some((m) => /law items must have in_force_from \(or notes/.test(m)));
+  assert.deepEqual(errors([lawItem({ in_force_from: null, notes: 'The consolidation gives no in-force date.' })]), []);
+  const decision = lawItem({ type: 'crt-decision', in_force_from: null, notes: 'x' });
+  assert.ok(errors([decision]).includes('law items must have in_force_from'));
+});
+
+test('statute items without topics do not warn', () => {
+  const warnings = (items: RawItem[]) => validateItems(items, ctx).filter((i) => i.level === 'warning');
+  assert.equal(warnings([lawItem({ topics: [] })]).length, 0);
+  assert.equal(warnings([item('topics/test.md', { topics: [] })]).length, 1);
+});
