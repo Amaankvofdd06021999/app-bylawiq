@@ -160,3 +160,24 @@ Nothing is invented: a reference to a section the kb does not hold is reported, 
 - Items added: 39 · updated: 3 READMEs, 3 registers.
 - Next: C3 is blocked (no permission; not marked approved). Phase D (topic guides and evals) and
   Phase E (firm starter kit) are unblocked and cite law items the kb already holds.
+
+## 2026-09-30 — session 2 (continued): topic guides and evals for the ten busiest topics
+
+- **Done: D1 for the ten busiest topics** — pets, noise, rentals, short-term-rentals, fines,
+  bylaw-enforcement-s135, hearings, water-leaks, strata-fees-arrears, privacy-records. Six headings
+  each, every factual sentence citing a kb item inline and in `cites[]`. "What decisions have held"
+  says what it is waiting for rather than being left blank. Each guide ends by saying it is not
+  advice about a particular dispute and that a building's own registered bylaws come first.
+- **Done: D2 for the same ten**, 6 cases each, 60 in all. Every set has at least one case whose
+  correct result is "no grounding found", and several of those exist to catch a specific way the
+  assistant could be confidently wrong: the provincial short-term rental registration scheme and
+  the Personal Information Protection Act are not in the kb, and an answer that states what they
+  require would be inventing law. The eval files are excluded from `dist/corpus.jsonl` (473 corpus
+  items, 10 eval items) so expected answers can never be retrieved.
+- The same discipline as Phase B on wording: three sentences that made claims about how often
+  buildings do something, or how cases usually fail, were rewritten to say what the legislation
+  provides. There are no decisions in the kb, so nothing can be said about outcomes.
+- kb 0.5.0, 483 items, 1394 chunks, `pnpm validate` 0 errors, `pnpm test` 77 pass.
+- Items added: 19 (9 guides, 10 eval sets) · updated: 1 (the pets guide skeleton was replaced).
+- **Not done: D1 and D2 for the other 19 topics.** They are unblocked and the pattern is set; the
+  work is the reading, since each guide is written from the sections it cites.

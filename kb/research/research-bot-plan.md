@@ -100,8 +100,8 @@ Tick tasks in this file as you finish them (`- [x]`) and record the commit in th
 
 ### Phase D — Topic guides (licence `bylawiq-original`, layer `topic`)
 
-- [ ] **D1. Guides for the ten busiest topics first:** pets, noise, rentals, short-term-rentals, fines, bylaw-enforcement-s135, hearings, water-leaks, strata-fees-arrears, privacy-records. Then the rest of the taxonomy. Each guide: summary; what the law says; what the standard bylaws say; what decisions have held (only once C3 items exist — otherwise "Decisions: to be added"); common mistakes; related topics. **Every factual sentence cites a kb item** in `cites[]`, and the body references it inline as `[bc.spa.s135]`. No advice to a specific person.
-- [ ] **D2. Evals per topic.** In `evals/<topic>.md`: at least five questions per topic, each with expected answer points, required citation ids, "must not say" items (e.g. a fine amount above the Regulation's maximum), and at least one question whose correct result is "no grounding found". Evals never go into the retrieval corpus.
+- [~] **D1. Guides for the ten busiest topics first:** *(the ten are written; the remaining 19 topics are not)* pets, noise, rentals, short-term-rentals, fines, bylaw-enforcement-s135, hearings, water-leaks, strata-fees-arrears, privacy-records. Then the rest of the taxonomy. Each guide: summary; what the law says; what the standard bylaws say; what decisions have held (only once C3 items exist — otherwise "Decisions: to be added"); common mistakes; related topics. **Every factual sentence cites a kb item** in `cites[]`, and the body references it inline as `[bc.spa.s135]`. No advice to a specific person.
+- [~] **D2. Evals per topic.** *(the same ten topics, 6 cases each; the remaining 19 are not)* In `evals/<topic>.md`: at least five questions per topic, each with expected answer points, required citation ids, "must not say" items (e.g. a fine amount above the Regulation's maximum), and at least one question whose correct result is "no grounding found". Evals never go into the retrieval corpus.
 
 ### Phase E — Firm starter kit (licence `bylawiq-original`, layer `firm`, always `needs counsel review`)
 
