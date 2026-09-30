@@ -64,12 +64,13 @@ pnpm --dir kb validate && pnpm --dir kb build
 
 The importer fetches the whole Act as XML from the CiviX document endpoint (`…/statreg/98043_00_multi/xml`) and the contents page (`…/statreg/98043_00`) for the "current to" date, sequentially with a pause and an identifying User-Agent. Raw downloads stay in `kb/.cache/` (git-ignored).
 
+`cites[]` is filled by `pnpm --dir kb link:cites`, which reads each section's own cross-references; run it after every import (see `tools/README.md`).
+
 On a re-run, an item whose text is unchanged keeps its status, review sign-off, `cites` and `supersedes`. An item whose text changed goes back to `draft` and its `notes` say so; review it, and if the old version matters for past events, keep it as a separate item per `research/open-questions.md` question 5. Sections that disappear from BC Laws are reported, not deleted. Topics come from `tools/lib/bclaws-topics.ts`; change them there. Bump `kb/package.json` after a refresh that changes items.
 
 The importer stops, rather than guessing, on any markup it does not recognise.
 
 ## Not done yet
 
-- `cites[]` is empty. Cross-references between sections ("section 135 (1) (e)") are not linked yet; add them by hand or extend the importer.
 - Formula images are not transcribed (see above).
 - Items are `draft`. A legal researcher reviews each against BC Laws before `reviewed`.

@@ -73,13 +73,18 @@ Tick tasks in this file as you finish them (`- [x]`) and record the commit in th
 
 ### Phase A — Finish the legislation (source: BC Laws, licence `bc-kings-printer`)
 
+> **A2 to A6 are blocked.** `https://www.bclaws.gov.bc.ca/robots.txt` allows only Googlebot and
+> Bingbot and ends `User-agent: *` / `Disallow: /`, so rule 3 ("obey robots.txt") stops every new
+> BC Laws fetch, including the CiviX endpoints the importer uses. See open questions 24 and 25.
+> A1 and A7 were finished from sources already retrieved.
+
 - [x] **A1. Cross-references in the Strata Property Act.** For every SPA and SPR item, fill `cites[]` with the sections its text refers to ("section 135", "Part 7", "section 34.1"). Script it with `tools/lib/` helpers where possible, then spot-check 20 by hand. *Done when:* every explicit "section N" reference in an item resolves to a `cites` id, and unresolvable ones (repealed, other Acts) are listed in the log.
-- [ ] **A2. In-force dates.** Use the BC Laws "Tables of Legislative Changes" for the SPA and SPR to fill `in_force_from` where a section was enacted or amended after 2000-07-01; keep `null` + note where the table gives nothing. *Done when:* every amended section has a date or a logged reason.
-- [ ] **A3. Image formulas.** SPA ss. 99, 195, 227, 247, 273, 278 show formulas as images. Transcribe each formula as text under a `## Formula` heading, marked in `notes` as "formula transcribed from image, needs researcher check". *Done when:* all six transcribed and logged for review.
-- [ ] **A4. Civil Resolution Tribunal Act** — the strata property claims provisions (jurisdiction over strata claims, process, remedies, enforcement, and the general provisions they rely on). Extend `tools/import-bclaws.ts` to import selected parts rather than hand-copying. Record in-scope parts in `source.json` and what was left out (and why) in the folder README.
-- [ ] **A5. Human Rights Code** — the sections on tenancy and accommodation discrimination, protected grounds, and the complaint process as they touch strata corporations. Same approach as A4.
-- [ ] **A6. Residential Tenancy Act** — the sections where tenancies meet strata bylaws and rentals (tenant obligations to follow strata rules, landlord duties, notices). Same approach as A4.
-- [ ] **A7. Scope check.** Look for other BC legislation strata questions routinely reach (e.g. Interpretation Act definitions used by the SPA, Limitation Act periods for strata claims, Land Title Act filing provisions for bylaws, Personal Information Protection Act for records/privacy). For each, add an open question proposing in-scope sections with one line of justification. **Do not import** until a person approves in `open-questions.md`.
+- [ ] ⛔ BLOCKED (open question 24: bclaws.gov.bc.ca robots.txt) — **A2. In-force dates.** Use the BC Laws "Tables of Legislative Changes" for the SPA and SPR to fill `in_force_from` where a section was enacted or amended after 2000-07-01; keep `null` + note where the table gives nothing. *Done when:* every amended section has a date or a logged reason.
+- [ ] ⛔ BLOCKED (open question 24: bclaws.gov.bc.ca robots.txt) — **A3. Image formulas.** SPA ss. 99, 195, 227, 247, 273, 278 show formulas as images. Transcribe each formula as text under a `## Formula` heading, marked in `notes` as "formula transcribed from image, needs researcher check". *Done when:* all six transcribed and logged for review.
+- [ ] ⛔ BLOCKED (open question 24: bclaws.gov.bc.ca robots.txt) — **A4. Civil Resolution Tribunal Act** — the strata property claims provisions (jurisdiction over strata claims, process, remedies, enforcement, and the general provisions they rely on). Extend `tools/import-bclaws.ts` to import selected parts rather than hand-copying. Record in-scope parts in `source.json` and what was left out (and why) in the folder README.
+- [ ] ⛔ BLOCKED (open question 24: bclaws.gov.bc.ca robots.txt) — **A5. Human Rights Code** — the sections on tenancy and accommodation discrimination, protected grounds, and the complaint process as they touch strata corporations. Same approach as A4.
+- [ ] ⛔ BLOCKED (open question 24: bclaws.gov.bc.ca robots.txt) — **A6. Residential Tenancy Act** — the sections where tenancies meet strata bylaws and rentals (tenant obligations to follow strata rules, landlord duties, notices). Same approach as A4.
+- [x] **A7. Scope check.** Look for other BC legislation strata questions routinely reach (e.g. Interpretation Act definitions used by the SPA, Limitation Act periods for strata claims, Land Title Act filing provisions for bylaws, Personal Information Protection Act for records/privacy). For each, add an open question proposing in-scope sections with one line of justification. **Do not import** until a person approves in `open-questions.md`.
 
 ### Phase B — Building starter kit (licence `bylawiq-original`, cites law items)
 

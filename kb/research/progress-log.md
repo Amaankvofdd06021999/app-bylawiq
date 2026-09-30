@@ -76,3 +76,40 @@ Nothing is invented: a reference to a section the kb does not hold is reported, 
 `tools/import-bclaws.ts`, so run it after every BC Laws sync (F1) and after A4 to A6.
 
 - Next: A2, in-force dates from the Tables of Legislative Changes.
+
+## 2026-09-30 — session 2 (continued): Phase A stopped, A7 done
+
+- **Blocked: A2 to A6, and F1.** `https://www.bclaws.gov.bc.ca/robots.txt`, read this session, is:
+  `User-agent: Googlebot / Allow: /`, `User-agent: Bingbot / Allow: /`, then
+  `# Block everything else`, `User-agent: * / Disallow: /`. That covers the CiviX document and
+  content endpoints `tools/import-bclaws.ts` uses. Rule 3 of the operating plan says obey
+  robots.txt, and §8 says stop rather than work around a block, so no BC Laws request was made
+  beyond `robots.txt` itself and a check for a separate API host (`www.bclaws.ca` 301-redirects to
+  the same host; `api.bclaws.ca` does not resolve). Raised as **open question 24** with three ways a
+  person can unblock it. The earlier licensing research checked robots.txt for bccourts.ca,
+  civilresolutionbc.ca and canlii.org but not for bclaws.gov.bc.ca; `licensing-register.md` now
+  records the finding, and the Human Rights Code, Residential Tenancy Act and Civil Resolution
+  Tribunal Act rows in `source-register.md` moved from `planned` to `blocked`.
+  The Strata Property Act and Regulation already in the kb were imported on 2026-09-30, before
+  robots.txt was read; nothing was re-fetched.
+- **A2 specifically.** Checked first whether it could be done from data already in hand: it cannot.
+  The cached Act XML carries only `act:currency` and a pointer to the table
+  (`act:tlcDirPath` = `1527898742/98043/tlc98043_f`), not per-section dates. The Regulation has no
+  table at all; 47 of its 91 items carry an inline history naming the amending regulation
+  (`[en. B.C. Reg. 117/2020, s. 2; …]`) but never an in-force date, so Regulation dates would need a
+  separate lookup per amending regulation. Both recorded in **open question 25**.
+- **Done: A7, scope check.** Six proposals written as open questions 26 to 31, each justified from
+  text read this session rather than from memory. Grounding came from A1: the cross-reference pass
+  now knows exactly which other enactments the Act and Regulation point at, and which of their
+  sections. 48 references to 17 enactments. Proposed high priority: Interpretation Act (Act s. 292
+  depends on its s. 41 for the whole regulation-making power), Limitation Act and Personal
+  Information Protection Act (neither is cited by the Act or Regulation, so no section list is
+  proposed — naming a limitation period without reading the enactment would be inventing law).
+  Medium: Land Title Act. Low: Business Corporations Act. Proposed out of scope: the repealed
+  Condominium Act and eleven single definitional references.
+  One correction to the task list: A7's prompt suggests "Land Title Act filing provisions for
+  bylaws", but filing a bylaw amendment is Act s. 128, already in the kb; the Land Title Act
+  provisions the Act actually cites are about subdivision and registration. Recorded in question 27.
+- Items added: 0 · updated: 0. `pnpm validate` 0 errors.
+- Next: Phase B (B1 standard bylaw notes, B2 document checklist, B3 bylaw patterns). Phase B, D and E
+  are unblocked: they are our own writing citing law items the kb already holds.
