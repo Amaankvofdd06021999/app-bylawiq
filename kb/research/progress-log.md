@@ -181,3 +181,30 @@ Nothing is invented: a reference to a section the kb does not hold is reported, 
 - Items added: 19 (9 guides, 10 eval sets) · updated: 1 (the pets guide skeleton was replaced).
 - **Not done: D1 and D2 for the other 19 topics.** They are unblocked and the pattern is set; the
   work is the reading, since each guide is written from the sections it cites.
+
+## 2026-09-30 — session 2 (continued): firm starter kit
+
+- **Done: E1, E2, E3. Partly done: E4.** 12 firm items, all `draft`, all `needs counsel review`,
+  each carrying a visible banner saying a BC-licensed lawyer has to review it before it is sent to
+  anyone. kb 0.6.0, 494 items, 1478 chunks, `pnpm validate` 0 errors.
+  - **Templates (5):** section 135 notice of complaint; notice to a landlord and owner about a
+    tenant's contravention; response to a hearing request; decision letter after a hearing; notice
+    of decision imposing a fine. Placeholders in `{{double_braces}}`, and every step cites the
+    provision that requires it. Each template has a "before you send it" checklist, because the
+    order of the steps is what section 135 is about.
+  - **Policies (3):** complaint handling, records requests, accommodation requests.
+  - **Guidance (3):** running a section 135 process start to finish, handling an accommodation
+    request, responding to a records request. The section 135 note is organised around where each
+    stage comes apart in practice, since the failure modes are procedural rather than substantive.
+  - **Legal tracker (1 entry):** the 2022 removal of rental restrictions. It states the repeal
+    citations recorded in the consolidation and says explicitly that **the in-force date is not in
+    the kb** and must not be stated until the Tables of Legislative Changes have been read.
+- **Two items are deliberately thin, and say so.** The accommodation policy and guidance give a
+  process only. The *Human Rights Code* is not in the kb (task A5), so they do not state when
+  accommodation is required or what undue hardship means; they say what the Act contributes
+  (a bylaw is unenforceable to the extent it contravenes the Code), which two situations the Act
+  answers outright so they are not accommodation questions at all, and that counsel decides the
+  rest. Writing the test from memory would have been the easy thing and the wrong one.
+- Items added: 12 (11 new, 1 replacing the section 135 notice skeleton) · updated: 4 READMEs.
+- Next: D1 and D2 for the remaining 19 topics. Everything else in the queue is blocked on a person:
+  A2 to A6 and F1 on question 24, C3 on questions 18 and 19, E4 on A2 and C3.

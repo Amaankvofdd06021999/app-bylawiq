@@ -105,10 +105,10 @@ Tick tasks in this file as you finish them (`- [x]`) and record the commit in th
 
 ### Phase E — Firm starter kit (licence `bylawiq-original`, layer `firm`, always `needs counsel review`)
 
-- [ ] **E1. Templates:** s.135 notice of complaint, response to a hearing request, decision letter after a hearing, fine notice, notice of bylaw contravention for a tenant (via landlord). Placeholders in `{{double_braces}}`; each step cites the SPA/SPR section that requires it.
-- [ ] **E2. Policies:** complaint-handling SOP; records request SOP; accommodation request SOP.
-- [ ] **E3. Guidance:** running a s.135 process start to finish; handling a human rights accommodation request; responding to a records request (s.35/s.36).
-- [ ] **E4. Legal tracker:** `firm-starter/legal-tracker/` — one item per notable change (legislation amendments found in A2, and later decisions from C3), with date, what changed, who is affected, what to do.
+- [x] **E1. Templates:** s.135 notice of complaint, response to a hearing request, decision letter after a hearing, fine notice, notice of bylaw contravention for a tenant (via landlord). Placeholders in `{{double_braces}}`; each step cites the SPA/SPR section that requires it.
+- [x] **E2. Policies:** complaint-handling SOP; records request SOP; accommodation request SOP.
+- [x] **E3. Guidance:** running a s.135 process start to finish; handling a human rights accommodation request; responding to a records request (s.35/s.36).
+- [~] **E4. Legal tracker:** *(structure plus one entry; the rest needs A2 and C3)* `firm-starter/legal-tracker/` — one item per notable change (legislation amendments found in A2, and later decisions from C3), with date, what changed, who is affected, what to do.
 
 ### Phase F — Upkeep (recurring, after A–E)
 
