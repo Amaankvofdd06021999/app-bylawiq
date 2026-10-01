@@ -12,14 +12,17 @@
 //
 // Re-running is safe. Topics come from lib/bclaws-topics.ts. For a section whose text is
 // unchanged, status, review sign-off, cites and supersedes are kept. For a section whose text
-// changed, the item goes back to draft and its notes say so. Sections that disappear from
-// BC Laws are reported and left in place for a person to retire (see the folder READMEs).
+// changed, the previous text is kept: it is written to superseded/<section>.<date>.md with
+// in_force_to set and its review sign-off intact, the new item points at it through `supersedes` and
+// goes back to draft, and the report prints what moved (see lib/supersede.ts). Sections that
+// disappear from BC Laws are reported and left in place for a person to retire (see the READMEs).
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { KB_ROOT, loadTopicIds, parseItem } from './lib/kb.ts';
 import { child, parseXml, textContent, type XmlElement } from './lib/xml.ts';
 import { BCLAWS_DOC_BASE, parseBclawsDocument, parseCurrentTo, type Heading, type ParsedDocument, type SectionRecord } from './lib/bclaws.ts';
 import { SPA_TOPICS, SPR_TOPICS, STANDARD_BYLAW_TOPICS } from './lib/bclaws-topics.ts';
+import { archiveItem, changedLines, supersededId, supersededPath } from './lib/supersede.ts';
 
 const USER_AGENT = 'BylawIQ-kb-import/0.2 (+https://bylawiq.app; knowledge base refresh; sequential requests)';
 const PAUSE_MS = 1500;
@@ -181,16 +184,30 @@ function render(fm: Array<[string, string]>, body: string): string {
   return `---\n${fm.map(([k, v]) => `${k}: ${v}`).join('\n')}\n---\n\n${body}`;
 }
 
-type WriteResult = { created: number; changed: number; unchanged: number; paths: Set<string> };
+type Superseded = { id: string; archivePath: string; itemPath: string; diff: string[] };
+type WriteResult = { created: number; changed: number; unchanged: number; paths: Set<string>; superseded: Superseded[] };
 
 function writeItems(src: Source, doc: ParsedDocument, currentTo: string, retrievedAt: string): WriteResult {
-  const result: WriteResult = { created: 0, changed: 0, unchanged: 0, paths: new Set() };
+  const result: WriteResult = { created: 0, changed: 0, unchanged: 0, paths: new Set(), superseded: [] };
   for (const s of doc.sections) {
     const path = itemPath(src, s);
     const existing = readExisting(path);
     const same = existing !== null && existing.body === s.body;
     const changed = existing !== null && !same;
     const keep = same ? existing : null;
+    // The text changed, so keep the previous version before overwriting it. Without this the old
+    // text is lost and a question about an earlier date cannot be answered.
+    let supersedes: string | null = existing?.supersedes ?? null;
+    if (changed) {
+      const priorText = readFileSync(join(KB_ROOT, path), 'utf8');
+      const archiveId = supersededId(itemId(src, s), currentTo);
+      const archivePath = supersededPath(src.folder, path, currentTo);
+      const archiveFull = join(KB_ROOT, archivePath);
+      mkdirSync(dirname(archiveFull), { recursive: true });
+      writeFileSync(archiveFull, archiveItem(priorText, { id: archiveId, inForceTo: currentTo }));
+      supersedes = archiveId;
+      result.superseded.push({ id: archiveId, archivePath, itemPath: path, diff: changedLines(existing.body, s.body) });
+    }
     const topics = topicsFor(src, s);
     const fm: Array<[string, string]> = [
       ['id', itemId(src, s)],
@@ -206,7 +223,7 @@ function writeItems(src: Source, doc: ParsedDocument, currentTo: string, retriev
       ['licence', 'bc-kings-printer'],
       ['topics', `[${topics.join(', ')}]`],
       ['cites', `[${(existing?.cites ?? []).join(', ')}]`],
-      ['supersedes', existing?.supersedes ? existing.supersedes : 'null'],
+      ['supersedes', supersedes ?? 'null'],
       ['status', keep ? keep.status : 'draft'],
       ['reviewed_by', keep?.reviewed_by ? q(keep.reviewed_by) : 'null'],
       ['reviewed_at', keep?.reviewed_at ? keep.reviewed_at : 'null'],
@@ -227,6 +244,8 @@ function staleItems(src: Source, written: Set<string>): string[] {
   const out: string[] = [];
   const root = join(KB_ROOT, src.folder);
   for (const name of readdirSync(root)) {
+    // superseded/ holds previous versions on purpose; they are not current sections and never stale.
+    if (name === 'superseded') continue;
     const dir = join(root, name);
     if (!statSync(dir).isDirectory()) continue;
     for (const f of readdirSync(dir)) {
@@ -330,6 +349,17 @@ async function main() {
         (doc.skippedSchedules.length ? `; ${doc.skippedSchedules.length} schedule(s) of forms not imported` : ''),
     );
     for (const p of stale) console.warn(`  no longer on BC Laws, retire by hand: ${p}`);
+    for (const s of res.superseded) {
+      console.log(`\n  ${s.itemPath} changed. Previous text kept as ${s.id} (${s.archivePath}).`);
+      for (const line of s.diff) console.log(`    ${line}`);
+    }
+    if (res.superseded.length) {
+      console.log(
+        `\n  ${res.superseded.length} section(s) superseded. Each archived item has in_force_to = ${currentTo}, which is ` +
+          `the date the change was found, not the date the amendment came into force. Correct those from the Tables of ` +
+          `Legislative Changes (task A2), re-review the changed sections, and run pnpm link:cites.`,
+      );
+    }
   }
 }
 

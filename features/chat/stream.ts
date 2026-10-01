@@ -36,7 +36,7 @@ export async function generateAnswer(user:SessionUser,chat:z.infer<typeof chatSc
    const payload={answer,sources:result.sources};publication.push({type:'data-answer',id:'grounded-answer',data:payload});parts.push({type:'data-answer',id:'grounded-answer',data:payload});
    const readable=['ANSWER',...answer.answer.map(c=>c.text+' '+c.evidence.map(e=>'['+e.source+']').join(' ')),'\nBASIS',...answer.basis.map(c=>c.text+' '+c.evidence.map(e=>'['+e.source+']').join(' ')),'\nNEXT STEPS',...answer.nextSteps.map(c=>c.text+' '+c.evidence.map(e=>'['+e.source+']').join(' ')),answer.limitations,DISCLAIMER].join('\n');
    parts.push({type:'text',text:readable});
-   checkDb((await user.client.from('retrieval_traces').insert({chat_id:chat.id,candidate_ids:result.candidateIds,used_ids:result.sources.map(s=>s.chunkId),corpus_versions:result.versions})).error);
+   checkDb((await user.client.from('retrieval_traces').insert({chat_id:chat.id,candidate_ids:result.candidateIds,used_ids:result.sources.map(s=>s.chunkId),corpus_versions:result.versions,legal_kb_versions:result.legalKbVersions})).error);
   }
   if(abort.signal.aborted)throw new AppError('cancelled','Generation stopped.');
   const serialized=JSON.stringify(parts);const signature=createHmac('sha256',signingSecret).update(chat.id+':'+id+':'+serialized).digest('hex');

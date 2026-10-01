@@ -234,6 +234,11 @@ create table legal_sources (
   in_force_from date,
   in_force_to   date,                 -- null = current. Enables as-of queries.
   corpus_version int not null,
+  -- Refresh and point-in-time support (20261001090000_legal_corpus_sync.sql).
+  kb_id            text unique,       -- stable kb item id; scripts/ingest-kb.ts upserts on it
+  kb_version       text,              -- kb package version that last wrote the row
+  supersedes_kb_id text,              -- kb id of the version this row replaces
+  content_sha256   text,              -- skip re-embedding a source whose text has not changed
   created_at    timestamptz not null default now()
 );
 
@@ -244,7 +249,9 @@ create table legal_chunks (
   content     text not null,
   section_ref text,                   -- 's.135(1)(a)'
   heading     text,
-  embedding   vector(1536),
+  embedding   vector(1024),          -- voyage-law-2. This doc said 1536; the shipped schema,
+                                      -- lib/ai/embeddings.ts and the ingest script are all 1024.
+                                      -- See kb/research/open-questions.md question 8.
   tsv         tsvector generated always as (to_tsvector('english', content)) stored,
   created_at  timestamptz not null default now()
 );
@@ -252,7 +259,17 @@ create table legal_chunks (
 create index on legal_chunks using hnsw (embedding vector_cosine_ops);
 create index on legal_chunks using gin (tsv);
 create index on legal_sources (jurisdiction, type, in_force_to);
+create unique index on legal_sources (kb_id) where kb_id is not null;
 ```
+
+**Refreshing the legal corpus.** `scripts/ingest-kb.ts` upserts on `kb_id`, so re-running updates a
+source rather than duplicating it, and skips re-embedding any source whose `content_sha256` is
+unchanged. When a section's text changes, `kb/tools/import-bclaws.ts` keeps the previous text as its
+own item with `in_force_to` set, and the new item records `supersedes`. Because
+`hybrid_search_legal` filters both `in_force_from` and `in_force_to` against the question's as-of
+date, the old text stops answering questions about today the moment it is superseded, and starts
+answering questions about the period it covered. `retrieval_traces.legal_kb_versions` records which
+corpus an answer used, so an amendment can be traced to the answers that relied on the old text.
 
 ### Chats and messages
 

@@ -233,3 +233,50 @@ Nothing is invented: a reference to a section the kb does not hold is reported, 
 - Next: nothing in the queue is unblocked. A2 to A6 and F1 wait on question 24; C3 on 18 and 19;
   E4 on A2 and C3; F2 on 19 and 35. Phase B, D and E are complete as drafts and now need review:
   a legal researcher for the law layer and counsel for the firm, building and topic layers.
+
+## 2026-10-01 — session 3: making the corpus updatable
+
+Asked for directly, and app-side rather than kb-only, so this session steps outside the operating
+plan's rule 7 (`stay in kb/`) on instruction. Nothing in the kb task queue moved: A2 to A6 and F1
+are still waiting on question 24, C3 on 18 and 19.
+
+The gap this closes: the kb could be rebuilt, but nothing downstream could be *updated*. Re-running
+the ingest would have inserted duplicate sources, a section whose text changed lost its old text
+entirely, and an answer could not be traced to the legislation version behind it.
+
+- **Previous text is now kept (question 5, answered).** `tools/import-bclaws.ts` writes the old text
+  to `superseded/<section>.<consolidation-date>.md` under a dated id with `in_force_to` set, keeps
+  its review sign-off, points the current item at it through `supersedes`, and prints what moved
+  line by line. The stable id always holds the text in force now. New pure helpers in
+  `tools/lib/supersede.ts` and `tools/lib/frontmatter.ts`, 15 tests; `replaceCitesLine` now shares
+  the frontmatter editor rather than duplicating it. kb tests 77 to 92.
+  Verified end to end by changing one section's text by hand, re-running `import:bclaws --offline`,
+  checking the archive and the current item, then reverting.
+  **The honest limit, repeated in each archived item and in the report:** `in_force_to` is the
+  consolidation date the change was *found* on, not the date the amendment came into force. Leaving
+  it null would be worse — both versions would then answer questions about today.
+- **The corpus can be refreshed (question 6, answered).** Migration
+  `20261001090000_legal_corpus_sync.sql` adds `kb_id` (partial unique index), `kb_version`,
+  `supersedes_kb_id` and `content_sha256` to `legal_sources`. `scripts/ingest-kb.ts` upserts on
+  `kb_id`, skips re-embedding any source whose content hash is unchanged, mirrors `in_force_to` and
+  `supersedes` from the kb, records the sync time on `jurisdictions`, and reports sources in the
+  database that are absent from the build without deleting them.
+- **Embeddings wired (question 8, partly).** `voyage-law-2` at 1024 dimensions with the same
+  contextual header the building corpus uses, because that is what the app and the shipped schema
+  already require. `docs/02-DATA-MODEL.md` said 1536 and now carries a note. Confirming the model
+  long term is still a person's call: changing it means re-embedding everything.
+- **Answers are traceable to a corpus version.** `hybrid_search_legal` returns `kb_version` and
+  `retrieval_traces.legal_kb_versions` records the versions actually used. When a section is
+  amended, the answers and notices that relied on the old text can now be found.
+- **Point-in-time retrieval proved, not assumed.** `hybrid_search_legal` already filtered both dates
+  against the question's as-of date; four new tests in `tests/database.test.ts` pin it against real
+  pgvector, and removing the filter makes exactly those tests fail. `supabase/tests/legal_corpus.test.sql`
+  adds the same guarantees plus the privilege checks against real Postgres — that file has **not**
+  been run locally, because this machine has no Docker or Supabase CLI; it runs in CI.
+- **CI now covers the kb.** A third job runs `kb typecheck`, `test`, `validate`, `build`, and then
+  the ingest dry run against the built corpus, so drift between what the kb emits and what the app
+  reads fails the build.
+- Gate: kb validate 0 errors (532 items), kb test 92 pass, app typecheck clean, lint unchanged
+  (1 pre-existing warning), app tests 310 pass, `next build` succeeds.
+- Not done, and needs a person: the scheduled job that actually runs the sync (F1/F2 are still
+  manual), and surfacing staleness in the UI from `jurisdictions.last_synced_at`.

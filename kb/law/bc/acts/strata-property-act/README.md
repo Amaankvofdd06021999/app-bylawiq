@@ -15,6 +15,8 @@ source.json                       the enactment: citation, urls, consolidation (
                                   retrieved_at, parts[] with divisions and sections, omitted[]
 part-01/ … part-17/               one folder per Part; s<section>.md per section
 schedule-of-standard-bylaws/      bylaw<section>.md per standard bylaw
+superseded/                       previous text of a section, kept when BC Laws publishes a new
+                                  version: <section>.<consolidation-date>.md
 ```
 
 Part and Division membership is recorded in `source.json` (`parts[].sections`, `parts[].divisions`), not in the items, so a section's text holds nothing that is not in the Act.
@@ -66,7 +68,13 @@ The importer fetches the whole Act as XML from the CiviX document endpoint (`…
 
 `cites[]` is filled by `pnpm --dir kb link:cites`, which reads each section's own cross-references; run it after every import (see `tools/README.md`).
 
-On a re-run, an item whose text is unchanged keeps its status, review sign-off, `cites` and `supersedes`. An item whose text changed goes back to `draft` and its `notes` say so; review it, and if the old version matters for past events, keep it as a separate item per `research/open-questions.md` question 5. Sections that disappear from BC Laws are reported, not deleted. Topics come from `tools/lib/bclaws-topics.ts`; change them there. Bump `kb/package.json` after a refresh that changes items.
+On a re-run, an item whose text is unchanged keeps its status, review sign-off, `cites` and `supersedes`.
+
+An item whose text **changed** is handled as question 5 proposed. The previous text is written to `superseded/<section>.<consolidation-date>.md` under a dated id (`bc.spa.s135.2026-09-22`), with `in_force_to` set and its review sign-off kept, because that review was a review of that text. The stable id (`bc.spa.s135`) always holds the text in force now; it goes back to `draft` and records the archived id in `supersedes`. The importer prints what moved, line by line.
+
+The app's retrieval filters `in_force_from` and `in_force_to` against the question's "as of" date, so an archived version stops answering questions about today and starts answering questions about the period it covered.
+
+**The limit to know about:** `in_force_to` is the consolidation date on which the change was *found*, not the date the amendment came into force — we do not hold in-force dates yet (task A2, questions 21 and 25). Leaving it null would be worse, because both versions would then answer questions about today. Each archived item says this in its `notes`, and the import report repeats it. Sections that disappear from BC Laws are reported, not deleted. Topics come from `tools/lib/bclaws-topics.ts`; change them there. Bump `kb/package.json` after a refresh that changes items.
 
 The importer stops, rather than guessing, on any markup it does not recognise.
 

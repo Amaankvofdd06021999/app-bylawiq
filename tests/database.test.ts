@@ -54,6 +54,30 @@ describe('Postgres scope and permissions',()=>{
  it('requires an independent approver for enforcement notices',async()=>{await identity(a);await sql(`select public.transition_artifact('${notice}','pending_review')`);await expect(sql(`select public.transition_artifact('${notice}','approved')`)).rejects.toThrow('self_approval_not_permitted');});
  it('does not permit editing or deleting the audit record',async()=>{await identity(a);await expect(sql('delete from public.audit_log')).rejects.toThrow();await expect(sql("update public.audit_log set action='forged'")).rejects.toThrow();});
  it('enforces a permanent single-building binding',async()=>{await admin();await expect(sql(`insert into public.building_members(building_id,user_id,role) values('${ba}','${b}','building_manager')`)).rejects.toThrow('single_building_bound');});
+ describe('legal corpus point in time',()=>{
+  // Once a section is amended the old text must stop answering questions about today, or an answer
+  // cites law that no longer applies. scripts/ingest-kb.ts sets in_force_to on the superseded source
+  // and relies on hybrid_search_legal's as-of filter to do the rest.
+  beforeAll(async()=>{await admin();
+   await sql(`insert into public.jurisdictions(id,name,level,code,coverage) values('70000000-0000-4000-8000-000000000001','Test BC','provincial','test-bc','full');
+   insert into public.legal_sources(id,jurisdiction_id,type,title,citation,kb_id,kb_version,in_force_from,in_force_to,verified_at) values
+    ('70000000-0000-4000-8000-000000000010','70000000-0000-4000-8000-000000000001','statute','Fines now','TEST s 132 current','test.s132','0.7.0','2026-01-01',null,now()),
+    ('70000000-0000-4000-8000-000000000011','70000000-0000-4000-8000-000000000001','statute','Fines before','TEST s 132 replaced','test.s132.2020-01-01','0.6.0','2020-01-01','2026-01-01',now());
+   insert into public.legal_chunks(source_id,content,section_ref,embedding) values
+    ('70000000-0000-4000-8000-000000000010','testfine the maximum fine is two hundred dollars','Section 132','${embedding}'),
+    ('70000000-0000-4000-8000-000000000011','testfine the maximum fine is fifty dollars','Section 132','${embedding}');`);
+  });
+  const search=(asOf:string|null)=>db.query<{citation:string;kb_version:string|null}>(
+   `select citation,kb_version from public.hybrid_search_legal('testfine','${embedding}','{}'::uuid[],${asOf?`'${asOf}'::date`:'null'})`);
+  it('returns only the text in force today',async()=>{await identity(a);const r=await search(null);
+   expect(r.rows.map(x=>x.citation)).toEqual(['TEST s 132 current']);});
+  it('returns the superseded text for a question asked as of a date when it applied',async()=>{await identity(a);const r=await search('2022-06-01');
+   expect(r.rows.map(x=>x.citation)).toEqual(['TEST s 132 replaced']);});
+  it('reports the kb version of each source so an answer can be traced to its corpus',async()=>{await identity(a);const r=await search(null);
+   expect(r.rows[0].kb_version).toBe('0.7.0');});
+  it('refuses to load the same kb item twice',async()=>{await admin();
+   await expect(sql(`insert into public.legal_sources(jurisdiction_id,type,title,citation,kb_id) values('70000000-0000-4000-8000-000000000001','statute','Dup','TEST dup','test.s132')`)).rejects.toThrow();});
+ });
  it('uses caller security for both hybrid retrieval functions',async()=>{await admin();const r=await db.query<{prosecdef:boolean}>("select prosecdef from pg_proc where proname in ('hybrid_search_building','hybrid_search_legal')");expect(r.rows).toHaveLength(2);expect(r.rows.every(x=>!x.prosecdef)).toBe(true);});
  describe('invitations and existing members',()=>{
   const president='10000000-0000-4000-8000-000000000011',manager='10000000-0000-4000-8000-000000000012',newcomer='10000000-0000-4000-8000-000000000013';

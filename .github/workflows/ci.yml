@@ -38,3 +38,28 @@ jobs:
           version: 2.102.0
       - run: supabase start
       - run: supabase test db
+  knowledge-base:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      # kb/ requires Node 24 (kb/package.json engines) and runs TypeScript directly.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: pnpm --dir kb install --frozen-lockfile
+      - run: pnpm --dir kb typecheck
+      - run: pnpm --dir kb test
+      # Every item against the schema, the topic taxonomy and the licence register. An unresolved
+      # cite or an unknown licence fails here rather than reaching the corpus.
+      - run: pnpm --dir kb validate
+      - run: pnpm --dir kb build
+      # dist/ is the only contract between kb/ and the app, so prove the app can still read what the
+      # kb produces. The dry run writes nothing and needs no secrets.
+      - run: npm ci
+      - run: node scripts/ingest-kb.ts
+        env:
+          KB_DIST_DIR: kb/dist

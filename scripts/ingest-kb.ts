@@ -19,8 +19,18 @@
  *
  * Only law-layer items are loaded. Firm, building and topic items are listed and skipped until we
  * decide where they live (kb/research/open-questions.md, question 7).
+ *
+ * Refreshing. Each source is keyed by its kb id (legal_sources.kb_id), so re-running updates a
+ * source instead of duplicating it. A source whose chunk content is unchanged keeps its embeddings:
+ * re-embedding the corpus is slow and costs money (AGENTS.md section 5), so only changed sources are
+ * re-embedded. The kb is the source of truth for in_force_to and supersedes, which is what makes a
+ * point-in-time question work: hybrid_search_legal will not return a source whose in_force_to has
+ * passed. Sources in the database whose kb id is absent from the build are reported and left alone,
+ * never deleted: an item leaving a build is not a repeal, and deciding what it means is a person's
+ * job (the same rule kb/tools/import-bclaws.ts follows for sections that disappear from BC Laws).
  */
 import { readFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { resolve, join } from 'node:path';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
@@ -44,6 +54,7 @@ const ItemSchema = z.object({
   in_force_to: z.string().nullable(),
   retrieved_at: z.string().nullable(),
   licence: z.string().min(1),
+  supersedes: z.string().nullable(),
   status: z.enum(['draft', 'reviewed', 'approved']),
   path: z.string(),
   chunks: z.array(ChunkSchema),
@@ -62,7 +73,30 @@ const ApplyEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   LEGAL_CORPUS_INGEST_ENABLED: z.literal('true', { message: 'LEGAL_CORPUS_INGEST_ENABLED must be "true" (written approval required)' }),
+  VOYAGE_API_KEY: z.string().min(1),
 });
+
+/**
+ * Must stay identical to lib/ai/models.ts MODEL_IDS.embedding and the vector width of
+ * legal_chunks.embedding. A query is embedded at retrieval time with the same model, so a mismatch
+ * here does not fail loudly — it quietly returns nonsense. The width is asserted at runtime below.
+ * This file cannot import lib/ai/models.ts: that module is 'server-only'.
+ */
+const EMBEDDING_MODEL = 'voyage-law-2';
+const EMBEDDING_DIMENSIONS = 1024;
+
+/** The same contextual header the building corpus uses (lib/ai/chunking.ts contextualText). */
+function contextualText(item: Item, chunk: z.infer<typeof ChunkSchema>): string {
+  return `[${item.title} · effective ${item.in_force_from ?? 'unverified'}]\n[${chunk.heading ?? chunk.section_ref ?? ''}]\n${chunk.content}`;
+}
+
+/** Hash of what was loaded for a source, so an unchanged source is not re-embedded. */
+function contentHash(item: Item): string {
+  return createHash('sha256')
+    .update(JSON.stringify([item.title, item.citation, item.in_force_from, item.in_force_to,
+                            item.chunks.map((c) => [c.section_ref, c.heading, c.content])]))
+    .digest('hex');
+}
 
 /** kb item type -> legal_sources.type (see docs/02-DATA-MODEL.md, legal_source_type). */
 function sourceType(item: Item): string {
@@ -104,47 +138,98 @@ function readDist(dir: string): { manifest: z.infer<typeof ManifestSchema>; item
 }
 
 /**
- * TODO(embeddings): embed chunk content with the same model and dimension as legal_chunks.embedding
- * (see lib/ai/embeddings.ts and kb/research/open-questions.md, question 8), with a contextual header
- * per docs/04-AI-RAG-PIPELINE.md §3. Not wired yet, so --apply stops here before writing anything.
+ * Embeds with the same model, input type and dimension the app uses for the building corpus, so a
+ * legal chunk and a user's query land in the same space. Batched, because the whole corpus is a few
+ * thousand chunks and the service limits request size.
  */
-async function embed(texts: string[]): Promise<number[][]> {
-  void texts;
-  throw new Error('embeddings are not wired yet (TODO(embeddings) in scripts/ingest-kb.ts). Nothing was written.');
+async function embed(texts: string[], apiKey: string): Promise<number[][]> {
+  const out: number[][] = [];
+  for (let i = 0; i < texts.length; i += 64) {
+    const batch = texts.slice(i, i + 64);
+    const response = await fetch('https://api.voyageai.com/v1/embeddings', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input: batch, model: EMBEDDING_MODEL, input_type: 'document', truncation: false }),
+      signal: AbortSignal.timeout(120_000),
+    });
+    if (!response.ok) throw new Error(`embedding request failed: HTTP ${response.status}. Nothing further was written.`);
+    const body = z
+      .object({ data: z.array(z.object({ index: z.number(), embedding: z.array(z.number()).length(EMBEDDING_DIMENSIONS) })) })
+      .parse(await response.json());
+    if (body.data.length !== batch.length) throw new Error('the embedding service returned an incomplete batch. Nothing further was written.');
+    out.push(...body.data.sort((a, b) => a.index - b.index).map((d) => d.embedding));
+    process.stdout.write(`\r  embedded ${out.length}/${texts.length} chunk(s)`);
+  }
+  if (texts.length) process.stdout.write('\n');
+  return out;
 }
 
 async function apply(items: Item[], kbVersion: string): Promise<void> {
   const env = ApplyEnvSchema.parse(process.env);
-  // Embed everything first so a failure never leaves a half-loaded corpus.
-  const embeddings = await embed(items.flatMap((i) => i.chunks.map((c) => c.content)));
 
-  // Service-role client: admin CLI only. See the AGENTS.md §0 note at the top of this file.
+  // Service-role client: admin CLI only. See the AGENTS.md section 0 note at the top of this file.
   const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data: jurisdiction, error: jErr } = await db.from('jurisdictions').select('id').eq('code', 'BC').maybeSingle();
   if (jErr) throw new Error(`could not read jurisdictions: ${jErr.message}`);
+  if (!jurisdiction) throw new Error('no BC jurisdiction row. Seed public.jurisdictions before loading the corpus.');
 
-  // TODO(ingest): legal_sources has no kb id column, so re-running inserts duplicates. Add a unique
-  // kb_id column (kb/research/open-questions.md, question 6) and upsert on it before using --apply.
-  // TODO(ingest): map kb_version to legal_sources.corpus_version (integer) once the scheme is agreed.
+  const { data: existingRows, error: eErr } = await db
+    .from('legal_sources')
+    .select('id,kb_id,content_sha256')
+    .not('kb_id', 'is', null);
+  if (eErr) throw new Error(`could not read legal_sources: ${eErr.message}`);
+  const existing = new Map(
+    z.array(z.object({ id: z.string(), kb_id: z.string(), content_sha256: z.string().nullable() }))
+      .parse(existingRows ?? [])
+      .map((r) => [r.kb_id, r]),
+  );
+
+  const hashes = new Map(items.map((i) => [i.id, contentHash(i)]));
+  const changed = items.filter((i) => existing.get(i.id)?.content_sha256 !== hashes.get(i.id));
+  const unchanged = items.length - changed.length;
+  const orphans = [...existing.keys()].filter((kbId) => !items.some((i) => i.id === kbId));
+
+  console.log(`${unchanged} source(s) unchanged, ${changed.length} to write.`);
+
+  // Embed before writing anything, so a failure part way through never leaves a source row whose
+  // chunks do not match its content hash.
+  const embeddings = changed.length
+    ? await embed(changed.flatMap((i) => i.chunks.map((c) => contextualText(i, c))), env.VOYAGE_API_KEY)
+    : [];
+
   let e = 0;
-  for (const item of items) {
+  let superseded = 0;
+  for (const item of changed) {
     const { data: source, error: sErr } = await db
       .from('legal_sources')
-      .insert({
-        jurisdiction_id: jurisdiction?.id ?? null,
-        type: sourceType(item),
-        title: item.title,
-        citation: item.citation ?? item.id,
-        url: item.source_url,
-        in_force_from: item.in_force_from,
-        in_force_to: item.in_force_to,
-        verified_at: item.retrieved_at,
-      })
+      .upsert(
+        {
+          jurisdiction_id: jurisdiction.id,
+          type: sourceType(item),
+          title: item.title,
+          citation: item.citation ?? item.id,
+          url: item.source_url,
+          in_force_from: item.in_force_from,
+          in_force_to: item.in_force_to,
+          verified_at: item.retrieved_at,
+          kb_id: item.id,
+          kb_version: kbVersion,
+          supersedes_kb_id: item.supersedes,
+          content_sha256: hashes.get(item.id) ?? null,
+        },
+        { onConflict: 'kb_id' },
+      )
       .select('id')
       .single();
-    if (sErr || !source) throw new Error(`insert legal_sources for ${item.id} failed: ${sErr?.message ?? 'no row'}`);
+    if (sErr || !source) throw new Error(`upsert legal_sources for ${item.id} failed: ${sErr?.message ?? 'no row'}`);
+    if (item.in_force_to) superseded++;
+
+    // Replace the chunks wholesale: a section's text changed, so chunk boundaries may have moved and
+    // matching old chunks to new ones would be guesswork.
+    const { error: dErr } = await db.from('legal_chunks').delete().eq('source_id', source.id);
+    if (dErr) throw new Error(`clearing legal_chunks for ${item.id} failed: ${dErr.message}`);
     const rows = item.chunks.map((c) => ({
       source_id: source.id,
       content: c.content,
@@ -152,10 +237,26 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
       heading: c.heading,
       embedding: JSON.stringify(embeddings[e++]),
     }));
-    const { error: cErr } = await db.from('legal_chunks').insert(rows);
-    if (cErr) throw new Error(`insert legal_chunks for ${item.id} failed: ${cErr.message}`);
+    if (rows.length) {
+      const { error: cErr } = await db.from('legal_chunks').insert(rows);
+      if (cErr) throw new Error(`insert legal_chunks for ${item.id} failed: ${cErr.message}`);
+    }
   }
-  console.log(`Loaded ${items.length} source(s) from kb ${kbVersion}.`);
+
+  const { error: syncErr } = await db
+    .from('jurisdictions')
+    .update({ last_synced_at: new Date().toISOString() })
+    .eq('id', jurisdiction.id);
+  if (syncErr) throw new Error(`could not record the sync time: ${syncErr.message}`);
+
+  console.log(`Loaded ${changed.length} source(s) from kb ${kbVersion}; ${unchanged} unchanged.`);
+  if (superseded) {
+    console.log(`${superseded} of them have in_force_to set, so they answer only "as of" questions before that date.`);
+  }
+  if (orphans.length) {
+    console.log(`\n${orphans.length} source(s) in the database are not in this build. Left untouched — an item leaving a build is not a repeal. Decide what each one means:`);
+    for (const kbId of orphans) console.log(`  ${kbId}`);
+  }
 }
 
 async function main(): Promise<void> {

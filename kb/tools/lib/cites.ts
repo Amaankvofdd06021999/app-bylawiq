@@ -1,3 +1,5 @@
+import { setFrontmatterField } from './frontmatter.ts';
+
 // Cross-references in BC statute text: which sections a section's own words point at.
 // Used by tools/link-cites.ts to fill `cites[]` on Act, regulation and Schedule items.
 //
@@ -314,9 +316,5 @@ function compareIds(a: string, b: string): number {
  * later `pnpm import:bclaws` sees no difference. The flow style matches tools/import-bclaws.ts.
  */
 export function replaceCitesLine(text: string, cites: string[]): string {
-  const close = text.startsWith('---\n') ? text.indexOf('\n---', 3) : -1;
-  if (close === -1) throw new Error('missing YAML frontmatter');
-  const head = text.slice(0, close);
-  if (!/^cites: .*$/m.test(head)) throw new Error('frontmatter has no cites field');
-  return head.replace(/^cites: .*$/m, `cites: [${cites.join(', ')}]`) + text.slice(close);
+  return setFrontmatterField(text, 'cites', `[${cites.join(', ')}]`);
 }
