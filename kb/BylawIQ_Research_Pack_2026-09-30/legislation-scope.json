@@ -1,0 +1,320 @@
+[
+  {
+    "id": "L01",
+    "instrument": "Strata Property Act",
+    "phase": "A1–A3",
+    "scope_status": "Core",
+    "research_scope": "Whole Act and Schedule; explicit cross-references; six image formulas listed in the brief; historical version intervals.",
+    "source_refs": [
+      "spa"
+    ],
+    "gap": "Existing 303/29 counts are brief-reported, not checked. No primary import performed.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L02",
+    "instrument": "Strata Property Regulation",
+    "phase": "A1–A3",
+    "scope_status": "Core",
+    "research_scope": "Definitions; records/fees; finances; fine ceilings/frequency; reports; prescribed forms; all internal dependencies.",
+    "source_refs": [
+      "legislation"
+    ],
+    "gap": "Existing 91 count is brief-reported. Read the actual regulation before assigning exact locators.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L03",
+    "instrument": "Civil Resolution Tribunal Act",
+    "phase": "A4",
+    "scope_status": "Core",
+    "research_scope": "Strata jurisdiction, exclusions, standing, process, orders, enforcement, court interface; dependent general provisions and regulations.",
+    "source_refs": [
+      "crt-law",
+      "crt"
+    ],
+    "gap": "Do not import a single isolated jurisdiction provision without dependencies. Exact selection pending source access.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L04",
+    "instrument": "Human Rights Code",
+    "phase": "A5",
+    "scope_status": "Core",
+    "research_scope": "Services under s.8, tenancy interface, protected grounds, accommodation, complaint/remedies and procedural dependencies.",
+    "source_refs": [
+      "hr-services",
+      "hr",
+      "hr-transition"
+    ],
+    "gap": "s.8 read through Tribunal guidance; full primary statute and other section selections pending.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L05",
+    "instrument": "Residential Tenancy Act",
+    "phase": "A6",
+    "scope_status": "Core",
+    "research_scope": "Applicability/exclusions, obligations and notice/service, strata interface, s.47 and dependencies identified by RTB guideline 27.",
+    "source_refs": [
+      "rtb27",
+      "tenants"
+    ],
+    "gap": "s.47 is a guidance-reported locator; not a verified imported section.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L06",
+    "instrument": "Personal Information Protection Act",
+    "phase": "A7",
+    "scope_status": "Approval proposed — high priority",
+    "research_scope": "Accountability; appropriate collection/use/disclosure; access/correction; exceptions; security; retention; complaints/orders.",
+    "source_refs": [
+      "records",
+      "legislation",
+      "oipc-unresolved"
+    ],
+    "gap": "Resolve SPA-records versus personal-information access routes. Exact statutory selection and current guide unresolved.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L07",
+    "instrument": "Limitation Act",
+    "phase": "A7",
+    "scope_status": "Approval proposed — high priority",
+    "research_scope": "Discovery, basic/ultimate periods, acknowledgments, exclusions and proceeding-specific interaction.",
+    "source_refs": [
+      "crt-law"
+    ],
+    "gap": "No blanket two-year collection or fine rule is supported by this pack.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L08",
+    "instrument": "Interpretation Act",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Time computation, definitions and interpretation dependencies expressly cited by the core law.",
+    "source_refs": [
+      "spa"
+    ],
+    "gap": "Import only after exact cross-reference and scope review.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L09",
+    "instrument": "Land Title Act and filing requirements",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Registered plans, title interests, bylaw/section/LCP filings and records relevant to building onboarding.",
+    "source_refs": [
+      "ltsa",
+      "ltsa-index",
+      "amendments"
+    ],
+    "gap": "Registry procedure and legal effect must be separately verified.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L10",
+    "instrument": "Bare Land Strata Regulations",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Bare-land strata dependencies omitted by a main-regulation-only corpus.",
+    "source_refs": [
+      "legislation"
+    ],
+    "gap": "Official index confirms the instrument; full text not read.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L11",
+    "instrument": "Bare Land Strata Plan Cancellation Regulation",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Cancellation process and dependencies for specialist coverage.",
+    "source_refs": [
+      "legislation"
+    ],
+    "gap": "Official index confirms the instrument; full text not read.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L12",
+    "instrument": "Short-Term Rental Accommodations Act and regulations",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Provincial scope/exemptions/registration; municipal interface; avoid importing landlord-tenant rules by analogy.",
+    "source_refs": [
+      "shortterm"
+    ],
+    "gap": "Current instrument text, provincial registry and municipal coverage need dedicated research.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L13",
+    "instrument": "Guide Dog and Service Dog Act",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Certified guide/service dog protection and interaction with broader human-rights accommodation.",
+    "source_refs": [
+      "pets"
+    ],
+    "gap": "Do not treat certification as the entire Human Rights Code test.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L14",
+    "instrument": "Real Estate Services Act, Rules and related regulations",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Strata-management licensing, service agreements, trust/record duties, remuneration and conflicts.",
+    "source_refs": [
+      "bcfsa",
+      "legislation"
+    ],
+    "gap": "Brokerage duties and retention must remain distinct from corporation duties.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L15",
+    "instrument": "Homeowner Protection Act and warranty materials",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "New construction warranty and developer/owner transitions.",
+    "source_refs": [
+      "legislation"
+    ],
+    "gap": "Technical deadlines and coverage unresearched; specialist follow-up.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L16",
+    "instrument": "Real Estate Development Marketing Act",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Developer disclosure and strata purchase interface.",
+    "source_refs": [
+      "legislation"
+    ],
+    "gap": "Primary selection and exact disclosure duties unresearched.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L17",
+    "instrument": "Tobacco, vapour and cannabis legislation",
+    "phase": "A7",
+    "scope_status": "Approval proposed",
+    "research_scope": "Public-law restrictions relevant to smoking; distinct from private bylaw powers.",
+    "source_refs": [
+      "smoking"
+    ],
+    "gap": "Identify exact current instruments and local overlays before importing.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L18",
+    "instrument": "Building/fire/safety and local-government instruments",
+    "phase": "A7",
+    "scope_status": "Approval proposed — bounded jurisdiction",
+    "research_scope": "Municipality-specific permits, short-term rentals, fire/safety and applicable technical standards.",
+    "source_refs": [
+      "shortterm",
+      "smoking",
+      "lawmapping"
+    ],
+    "gap": "No province-wide universal municipal answer; scope jurisdictions explicitly.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "L19",
+    "instrument": "Tribunal rules, regulations, policies and prescribed forms",
+    "phase": "A4/A5/A6 dependencies",
+    "scope_status": "Separate access/licence check",
+    "research_scope": "CRT Standard Rules, fees/enforcement; BCHRT rules/transition; RTB policies/forms.",
+    "source_refs": [
+      "crt-rules",
+      "crt-fees",
+      "hr-transition",
+      "rtb27"
+    ],
+    "gap": "Rules and guidance are not automatically covered by the legislation reproduction licence.",
+    "approved_for_import": false,
+    "verified_production_ids": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+]

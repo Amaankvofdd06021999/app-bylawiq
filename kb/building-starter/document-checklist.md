@@ -10,8 +10,8 @@ in_force_from: null
 in_force_to: null
 retrieved_at: null
 licence: bylawiq-original
-topics: [bylaw-amendment-filing, privacy-records, council-governance, depreciation-report, insurance-deductibles, strata-fees-arrears, repair-maintenance, general-meetings-voting, contingency-reserve-fund]
-cites: [bc.spa.s20, bc.spa.s35, bc.spa.s36, bc.spa.s59, bc.spa.s94, bc.spa.s94.1, bc.spa.s103, bc.spa.s119, bc.spa.s120, bc.spa.s125, bc.spa.s128, bc.spa.s149, bc.spa.s154, bc.spa.sched.bylaw19, bc.spr.s4.1, bc.spr.s6.2, bc.spr.s6.21, bc.spr.s6.22]
+topics: [bylaw-amendment-filing, privacy-records, council-governance, depreciation-report, electrical-planning-reports, insurance-deductibles, strata-fees-arrears, repair-maintenance, general-meetings-voting, contingency-reserve-fund]
+cites: [bc.spa.s20, bc.spa.s35, bc.spa.s36, bc.spa.s59, bc.spa.s94, bc.spa.s94.1, bc.spa.s103, bc.spa.s119, bc.spa.s120, bc.spa.s125, bc.spa.s128, bc.spa.s149, bc.spa.s154, bc.spa.sched.bylaw19, bc.spr.s4.1, bc.spr.s5.4, bc.spr.s5.7, bc.spr.s5.8, bc.spr.s5.10, bc.spr.s6.2, bc.spr.s6.21, bc.spr.s6.22]
 supersedes: null
 status: draft
 reviewed_by: null
@@ -92,6 +92,25 @@ Each entry says why an answer needs the document, which topics it unlocks, and t
 **Topics it unlocks.** `strata-fees-arrears`, `special-levies`, `bylaw-amendment-filing`, `contingency-reserve-fund`.
 
 **Where the law requires it.** The corporation must give an Information Certificate in the prescribed form within one week of a request by an owner, a purchaser or someone authorised by either [bc.spa.s59], and must retain the certificates it issues [bc.spa.s35] for at least 6 years [bc.spr.s4.1]. Note on naming: this document is widely called "Form B". The kb does not hold the Regulation's Schedule of Forms, so it cannot confirm that letter; the Act calls it an Information Certificate, and so does BylawIQ. See open question 23.
+
+## Electrical planning report — essential where it is due
+
+**Why an answer needs it.** It is the only record of what the building's electrical system can carry,
+and it is now a statutory requirement with a deadline. It also decides when owners may start asking
+to install EV charging, because the report date is the gate on those requests [bc.spr.s5.4].
+
+**Topics it unlocks.** `electrical-planning-reports`, `ev-charging`, `repair-maintenance`,
+`contingency-reserve-fund`.
+
+**Where the law requires it.** A strata corporation must obtain an electrical planning report from a
+qualified person by the dates the Regulation sets [bc.spa.s94.1, bc.spr.s5.10], and must retain any
+it obtains [bc.spa.s35] permanently [bc.spr.s4.1]. For a corporation established on or before
+31 December 2023 with a plan that is not phased, the date is 31 December 2026 where the land is
+wholly or partly in the Capital Regional District, the Fraser Valley Regional District or the Metro
+Vancouver Regional District, and 31 December 2028 otherwise; a plan with fewer than 5 strata lots on
+31 December 2023 is exempt [bc.spr.s5.8, bc.spr.s5.7]. If the building has no report yet, upload
+what establishes which group it is in — the strata plan, the establishment date and the lot count —
+so the deadline can be worked out.
 
 ## Engineering and other major-item reports — useful
 

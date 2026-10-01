@@ -1,0 +1,142 @@
+{
+  "research_date": "2026-09-30",
+  "status": "draft",
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "counts": {
+    "source_register_entries": 40,
+    "official_pages_with_relevant_passages_or_index_read": 36,
+    "evidence_notes": 42,
+    "proposed_topics": 52,
+    "legislation_scope_groups": 19,
+    "building_document_categories": 25,
+    "evaluation_seeds": 74,
+    "core_topics_with_five_seeds": 10,
+    "implementation_tasks": 25,
+    "open_questions": 16,
+    "legal_change_watchlist_entries": 11,
+    "verified_crt_candidates": 0,
+    "verified_court_candidates": 0,
+    "decision_summaries": 0,
+    "production_kb_items_created": 0
+  },
+  "files": [
+    {
+      "path": "Building_Documents.md",
+      "bytes": 5549,
+      "sha256": "ac79a95b66945e54a436dd01abf62c0e3c26ef9097b83fd66a9c0c3b1ab08ae9"
+    },
+    {
+      "path": "BylawIQ_KB_Research_Dossier_2026-09-30.md",
+      "bytes": 18133,
+      "sha256": "babcec310955782cb4ab6349fb332979167f1df10e43fe78a539768ad64d8aba"
+    },
+    {
+      "path": "Content_Briefs.md",
+      "bytes": 12022,
+      "sha256": "c1b99a62bd0a5e750635ae34f40e026536efe466a60d5ea15e5fa5ce38fa6ca4"
+    },
+    {
+      "path": "Evidence_and_Sources.md",
+      "bytes": 32309,
+      "sha256": "1cb3bd6da7fb6ad70aa3e5fba464076f982ca9af51b8afda1a00d30e8c8ae2ec"
+    },
+    {
+      "path": "Licensing_and_Access.md",
+      "bytes": 5652,
+      "sha256": "591ee175733fce12346724fbf67b383e62a81a1c90f7263a8e6e0565b5f4da3b"
+    },
+    {
+      "path": "Open_Questions.md",
+      "bytes": 4943,
+      "sha256": "9cd50bab56d3b7a04f5de26d833b0e751d774dca4fba3ac3d16ba80e3ed7e98e"
+    },
+    {
+      "path": "Progress_and_Validation.md",
+      "bytes": 4532,
+      "sha256": "e11f9e5d625e826fdbf9084826a1e0359a2c14a4625c288f5a4c036080597033"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3369,
+      "sha256": "0c39536a951dcf8c849467a39e1e7eb0b024ba99415fd951964d83c352f8fd3d"
+    },
+    {
+      "path": "Retrieval_and_Data_Model.md",
+      "bytes": 10120,
+      "sha256": "36de82e8353cf95a9bf8cde6bf7099aa6e3acf668c65b8221b9e68f3fc15ab1d"
+    },
+    {
+      "path": "Topic_Coverage.md",
+      "bytes": 5689,
+      "sha256": "0e3a49d6d11ef9b6d379b9cb54d5c3df72f02fd6da57dcb55fc05abaef2f1a72"
+    },
+    {
+      "path": "building-document-checklist.json",
+      "bytes": 14294,
+      "sha256": "8ee3e59e39b2094c9b7de9d37c0b4d07e835838e1e61cd7731d34312085769ec"
+    },
+    {
+      "path": "decision-candidate-queues.json",
+      "bytes": 1556,
+      "sha256": "f56539c0af5c7c59ea8e5c3860fd799aa53fdc68d286c65a9915e0fc16813774"
+    },
+    {
+      "path": "evaluation-seeds.json",
+      "bytes": 50827,
+      "sha256": "dc73be077b8f1c1c2aa81231475c3cef0516933829cc69ed1befacc8212ed9c5"
+    },
+    {
+      "path": "evidence-notes.json",
+      "bytes": 17499,
+      "sha256": "9730465255d9143eec275a15fd96b84fb12cb213a7d9650510523b2f30475cb7"
+    },
+    {
+      "path": "implementation-backlog.json",
+      "bytes": 11164,
+      "sha256": "e65ad1b7e00ed097417f8cfaafaa1e59de2a62cfc3b5ae3fc73414fbe0bd794b"
+    },
+    {
+      "path": "legal-change-watchlist.json",
+      "bytes": 5773,
+      "sha256": "9e31959fb7fe0bc8c7f08fe94365fe831cdebcfa339d60423277b962cf2cd6fb"
+    },
+    {
+      "path": "legislation-scope.json",
+      "bytes": 10653,
+      "sha256": "dea2316487bb09e1de21ab95850de16517aede32c4f227adc827b90909553d71"
+    },
+    {
+      "path": "open-questions.json",
+      "bytes": 7925,
+      "sha256": "8c5a15f3b7a9c8de4e716a915c4122695c917be9fb11f9ff1b63b40278119326"
+    },
+    {
+      "path": "proposed-topic-map.json",
+      "bytes": 35284,
+      "sha256": "19b8e2a6b466ea730b5a44d7c78f2f3fcfff2dbbf15ede58aaf243846e8be8fa"
+    },
+    {
+      "path": "research-counts.json",
+      "bytes": 504,
+      "sha256": "24ddd9ce1e1f392c68222123739c9eff5994a77e205ed7854bbfe2e441d5ff58"
+    },
+    {
+      "path": "research-validation.json",
+      "bytes": 533,
+      "sha256": "9a7c0fb28eb1f05313d6fed617731a17f30f2ca5720669fc4939c92288baf1b1"
+    },
+    {
+      "path": "source-register.json",
+      "bytes": 25007,
+      "sha256": "311f1a93bbcfb59d06764974dd340439fd2aaebef95cbb983cc766bb8585df42"
+    }
+  ],
+  "excluded": [
+    "raw source cache",
+    "source-processing scripts",
+    "private building documents",
+    "decision text"
+  ],
+  "production_manifest": false
+}

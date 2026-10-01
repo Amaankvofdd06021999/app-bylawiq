@@ -1,0 +1,384 @@
+[
+  {
+    "id": "P00",
+    "workstream": "Preflight",
+    "priority": "P0",
+    "task": "Obtain the actual KB repository and control files",
+    "acceptance": "README, taxonomy, licensing/source registers, open questions, validators, importer and branch available; baseline recorded.",
+    "dependencies": [],
+    "work_status": "blocked_missing_repository",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "P01",
+    "workstream": "Source access",
+    "priority": "P0",
+    "task": "Resolve lawful automated legislative access",
+    "acceptance": "Record permitted delivery route and licence/robots checks; importer identifies itself; no blocked-host retries.",
+    "dependencies": [
+      "P00"
+    ],
+    "work_status": "blocked_access",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "A1",
+    "workstream": "Legislation",
+    "priority": "P0",
+    "task": "Resolve all explicit SPA/SPR cross-references",
+    "acceptance": "Every link resolves to an existing item or a documented external/repealed target; 20 human-readable spot checks.",
+    "dependencies": [
+      "P00",
+      "P01"
+    ],
+    "work_status": "not_started",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "A2",
+    "workstream": "Legislation",
+    "priority": "P0",
+    "task": "Establish version-specific effective dates",
+    "acceptance": "Each amended provision has reliable commencement/version evidence or an explicit null reason; no section-wide date hiding mixed subsection changes.",
+    "dependencies": [
+      "A1"
+    ],
+    "work_status": "not_started",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "A3",
+    "workstream": "Legislation",
+    "priority": "P0",
+    "task": "Verify the six image formulas identified in the brief",
+    "acceptance": "Read each original image for SPA 99, 195, 227, 247, 273, 278; text transcription and researcher review queued.",
+    "dependencies": [
+      "P00",
+      "P01"
+    ],
+    "work_status": "not_started",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "A4",
+    "workstream": "Legislation",
+    "priority": "P0",
+    "task": "Import scoped CRT legislation and dependencies",
+    "acceptance": "Official titles/citations verified; selected sections and exclusions in source manifest; all cross-references resolved.",
+    "dependencies": [
+      "P00",
+      "P01"
+    ],
+    "work_status": "research_scope_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "A5",
+    "workstream": "Legislation",
+    "priority": "P0",
+    "task": "Import scoped Human Rights Code provisions",
+    "acceptance": "Include services as well as tenancy; complaint/remedy dependencies and procedural sources inventoried.",
+    "dependencies": [
+      "P00",
+      "P01"
+    ],
+    "work_status": "research_scope_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "A6",
+    "workstream": "Legislation",
+    "priority": "P0",
+    "task": "Import scoped tenancy legislation",
+    "acceptance": "Jurisdiction and notice dependencies verified; do not confuse SPA tenant duties with RTA provisions.",
+    "dependencies": [
+      "P00",
+      "P01"
+    ],
+    "work_status": "research_scope_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "A7",
+    "workstream": "Scope",
+    "priority": "P0",
+    "task": "Approve additional instruments",
+    "acceptance": "Human approves bounded scope for PIPA, limitations, filing, interpretation and specialist instruments.",
+    "dependencies": [
+      "P00"
+    ],
+    "work_status": "proposals_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "B1",
+    "workstream": "Building starter",
+    "priority": "P1",
+    "task": "Create notes for every actual Standard Bylaw item",
+    "acceptance": "Counts and repealed provisions checked against repository; one original note per applicable item, with valid citations.",
+    "dependencies": [
+      "A1",
+      "A2"
+    ],
+    "work_status": "blocked_missing_items",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "B2",
+    "workstream": "Building starter",
+    "priority": "P0",
+    "task": "Promote the document checklist",
+    "acceptance": "Map each duty to existing verified statute items; label optional/contextual documents and access rules.",
+    "dependencies": [
+      "A1",
+      "A4",
+      "A5",
+      "A6"
+    ],
+    "work_status": "research_checklist_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "B3",
+    "workstream": "Building starter",
+    "priority": "P1",
+    "task": "Develop nine bylaw-pattern notes",
+    "acceptance": "Rental, STR, pet, noise, smoking, parking, alteration, moving and fine variants; constraints cited; tested_in remains empty.",
+    "dependencies": [
+      "A1",
+      "A2",
+      "B1"
+    ],
+    "work_status": "research_outline_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "C1",
+    "workstream": "Decisions",
+    "priority": "P0",
+    "task": "Build verified CRT candidate queue",
+    "acceptance": "Target 150; coverage minimums per brief; metadata/date/topic and official URL verified; no decision text stored.",
+    "dependencies": [
+      "P00"
+    ],
+    "work_status": "blocked_403",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "C2",
+    "workstream": "Decisions",
+    "priority": "P0",
+    "task": "Build verified BCSC/BCCA candidate queue",
+    "acceptance": "Target 40; leading and contrary authorities; official citations/dates/URLs and procedural history verified.",
+    "dependencies": [
+      "P00"
+    ],
+    "work_status": "not_completed_source_retrieval_incomplete",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "C3",
+    "workstream": "Decisions",
+    "priority": "P0",
+    "task": "Draft permitted decision summaries",
+    "acceptance": "Record relevant permission response or explicit C3 human approval; read full decision; Facts/Issue/Holding/Principle; no private identifiers.",
+    "dependencies": [
+      "C1",
+      "C2"
+    ],
+    "work_status": "blocked_permission",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D1",
+    "workstream": "Topic guides",
+    "priority": "P0",
+    "task": "Write core ten, then every approved topic",
+    "acceptance": "Every factual sentence has a valid, supporting KB citation; current/historical versions separated; decisions only when approved.",
+    "dependencies": [
+      "A1",
+      "A2",
+      "A4",
+      "A5",
+      "A6",
+      "B1"
+    ],
+    "work_status": "research_coverage_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D2",
+    "workstream": "Evaluation",
+    "priority": "P0",
+    "task": "Promote and expand evaluation seeds",
+    "acceptance": "At least five per approved topic, including no-grounding; required IDs resolve; evals physically excluded from retrieval.",
+    "dependencies": [
+      "D1"
+    ],
+    "work_status": "seed_suite_prepared_not_executed",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "E1",
+    "workstream": "Firm templates",
+    "priority": "P1",
+    "task": "Draft five counsel-review templates",
+    "acceptance": "Correct recipients, process stages and placeholders; citation review; notes needs counsel review; never send automatically.",
+    "dependencies": [
+      "D1"
+    ],
+    "work_status": "content_briefs_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "E2",
+    "workstream": "Firm policies",
+    "priority": "P1",
+    "task": "Draft complaint, records and accommodation SOPs",
+    "acceptance": "Case-specific records, role access and handoffs; statutory periods distinct from optional service targets.",
+    "dependencies": [
+      "D1"
+    ],
+    "work_status": "content_briefs_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "E3",
+    "workstream": "Firm guidance",
+    "priority": "P1",
+    "task": "Draft three procedural guides",
+    "acceptance": "s.135 process, accommodation and records response; clear separation of law, building facts and firm procedure.",
+    "dependencies": [
+      "D1"
+    ],
+    "work_status": "content_briefs_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "E4",
+    "workstream": "Legal tracker",
+    "priority": "P1",
+    "task": "Promote date-sensitive research leads",
+    "acceptance": "Verify primary effective dates and transitional exceptions; linked source versions, affected content and evals.",
+    "dependencies": [
+      "A2",
+      "D1"
+    ],
+    "work_status": "tracker_seeds_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "F1",
+    "workstream": "Maintenance",
+    "priority": "P1",
+    "task": "Implement quarterly law sync after source clearance",
+    "acceptance": "Detect changes, preserve version history, resolve supersedes direction, validate then review before release.",
+    "dependencies": [
+      "A1",
+      "A2"
+    ],
+    "work_status": "maintenance_design_only",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "F2",
+    "workstream": "Maintenance",
+    "priority": "P1",
+    "task": "Implement monthly decision review after clearance",
+    "acceptance": "New candidates, appeal/treatment links and stale-summary alerts; no automated approval.",
+    "dependencies": [
+      "C3"
+    ],
+    "work_status": "maintenance_design_only",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "R01",
+    "workstream": "Retrieval",
+    "priority": "P0",
+    "task": "Implement access and temporal filtering",
+    "acceptance": "Tenant/firm/building/section and effective-date filters before search; citations enforce source/version match.",
+    "dependencies": [
+      "P00"
+    ],
+    "work_status": "design_prepared",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "R02",
+    "workstream": "Release",
+    "priority": "P0",
+    "task": "Run repository gates and record manifest",
+    "acceptance": "pnpm --dir kb validate returns zero errors; build succeeds; tests run if tools changed; actual counts and coherent stage commits recorded.",
+    "dependencies": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "A6",
+      "B1",
+      "B2",
+      "B3",
+      "D1",
+      "D2",
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "R01"
+    ],
+    "work_status": "not_run_missing_repository",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+]

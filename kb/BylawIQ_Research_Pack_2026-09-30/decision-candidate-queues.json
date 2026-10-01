@@ -1,0 +1,54 @@
+{
+  "crt": {
+    "target": 150,
+    "verified_count": 0,
+    "candidates": [],
+    "status_detail": "403 on official decision portal; no metadata invented"
+  },
+  "courts": {
+    "target": 40,
+    "verified_count": 0,
+    "candidates": [],
+    "status_detail": "Official candidate discovery incomplete; no unverified cases promoted"
+  },
+  "summaries": {
+    "count": 0,
+    "gate": "Recorded permission response or explicit C3 approval in the operating plan"
+  },
+  "coverage_targets": {
+    "minimum_per_topic": 3,
+    "minimum_for_eight_core_topics": 10,
+    "core_topics": [
+      "pets",
+      "noise",
+      "rentals",
+      "fines",
+      "bylaw-enforcement-s135",
+      "hearings",
+      "water-leaks",
+      "privacy-records"
+    ]
+  },
+  "candidate_fields": [
+    "neutral_citation",
+    "decision_date",
+    "court_or_tribunal",
+    "topics",
+    "official_url",
+    "selection_reason",
+    "verification_date",
+    "subsequent_history_status",
+    "permission_basis"
+  ],
+  "selection_protocol": [
+    "Use official portal and authorized retrieval only.",
+    "Read enough official material to verify citation/date/topic before listing.",
+    "Deduplicate by neutral citation; track appeal and judicial-review links.",
+    "Select outcomes on both sides and factually different applications.",
+    "Do not include private party names, unit numbers, addresses or strata plan numbers.",
+    "Treat candidate metadata as discovery material, never as an answerable holding."
+  ],
+  "status": "draft",
+  "reviewed_by": null,
+  "reviewed_at": null
+}

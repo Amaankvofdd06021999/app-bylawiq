@@ -1,0 +1,253 @@
+[
+  {
+    "id": "Q01",
+    "priority": "P0",
+    "issue": "Missing repository and baseline",
+    "detail": "Provide or connect the actual KB repo and its README/taxonomy/registers. The operating-plan counts cannot be verified here.",
+    "owner_role": "Product/repository owner",
+    "blocks": [
+      "P00",
+      "A1",
+      "A2",
+      "A3",
+      "B1",
+      "D1",
+      "D2",
+      "R02"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q02",
+    "priority": "P0",
+    "issue": "BC Laws automated access",
+    "detail": "Robots returned User-agent:* Disallow:/. The reproduction licence does not override that. Obtain a permitted feed/export or written access arrangement; do not disguise the bot.",
+    "owner_role": "Source-access owner",
+    "blocks": [
+      "P01",
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "A6"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q03",
+    "priority": "P0",
+    "issue": "CRT decisions access",
+    "detail": "Decision portal returned 403. Stop that route; obtain permitted access or authorized human-provided metadata. No candidate count has been fabricated.",
+    "owner_role": "Research/source-access owner",
+    "blocks": [
+      "C1",
+      "C3"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q04",
+    "priority": "P0",
+    "issue": "Decision permissions and C3 approval",
+    "detail": "Record replies to the original plan’s questions 18/19 or explicit human approval of C3. General summary-only language does not override the specific C3 gate.",
+    "owner_role": "Counsel/licensing owner",
+    "blocks": [
+      "C3"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q05",
+    "priority": "P0",
+    "issue": "Court candidate coverage",
+    "detail": "Full court terms timed out and official searches did not yield verified relevant candidates. Complete 40-candidate discovery with official metadata and subsequent-history checks.",
+    "owner_role": "Legal researcher",
+    "blocks": [
+      "C2"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q06",
+    "priority": "P0",
+    "issue": "Current privacy source",
+    "detail": "OIPC guidance/index URLs returned 404. Province refers to May 2022 guidance while an indexed directory lists January 2022. Resolve the exact current document before claims about access exceptions, surveillance or retention.",
+    "owner_role": "Privacy/legal researcher",
+    "blocks": [
+      "A7",
+      "D1",
+      "E2"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q07",
+    "priority": "P0",
+    "issue": "Conflicting tenant-access guidance",
+    "detail": "Province records page still describes family-member tenant access, but newer tenant guidance says automatic assignment ended in 2022. Current SPA s.36 and ss.147–148 require the applicable rights analysis. Suppress stale guidance for this proposition.",
+    "owner_role": "Legal reviewer",
+    "blocks": [
+      "D1",
+      "E2"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q08",
+    "priority": "P0",
+    "issue": "Commercial reuse of non-legislative guidance",
+    "detail": "Verify publisher-specific rights for bulk storage, embeddings, caching and redistribution. No government, tribunal, LTSA or BCFSA page is assumed to inherit the legislation licence.",
+    "owner_role": "Licensing owner",
+    "blocks": [
+      "R01",
+      "D1"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q09",
+    "priority": "P0",
+    "issue": "Primary-law cutoff gap",
+    "detail": "SPA page read was current to September 22, 2026. Research occurred September 30. Verify intervening enactments/commencements before a current-law release.",
+    "owner_role": "Legislation researcher",
+    "blocks": [
+      "A2",
+      "E4",
+      "R02"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q10",
+    "priority": "P1",
+    "issue": "Version semantics",
+    "detail": "Clarify supersedes direction in F1. Normally the new version points to the old; do not change the existing schema without checking README and validator. A judgment date is not a statute commencement date.",
+    "owner_role": "KB technical lead",
+    "blocks": [
+      "A2",
+      "F1"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q11",
+    "priority": "P1",
+    "issue": "Law and taxonomy counts",
+    "detail": "303/29/91 are reported in the brief, not independently reconciled. Count repealed, amended and composite provisions consistently. Proposed topic IDs are not the production taxonomy.",
+    "owner_role": "KB technical lead",
+    "blocks": [
+      "A1",
+      "B1",
+      "D1"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q12",
+    "priority": "P1",
+    "issue": "Additional-instrument approval",
+    "detail": "Approve A7 instrument scope, including PIPA and both additional strata regulations. Also decide whether BCHRT/OIPC decisions and Supreme Court of Canada authorities enter a later phase with their own rights checks.",
+    "owner_role": "Product owner and counsel",
+    "blocks": [
+      "A7"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q13",
+    "priority": "P1",
+    "issue": "Specialist and local scope",
+    "detail": "Select municipalities and boundaries for leasehold, bare-land, mixed-use, developer, safety, title and winding-up questions. Do not claim province-wide local coverage.",
+    "owner_role": "Product owner",
+    "blocks": [
+      "A7",
+      "D1"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q14",
+    "priority": "P1",
+    "issue": "Page-quality anomalies",
+    "detail": "Council-meeting guidance still references historical rental-exemption hearings; amendment wording can blur pet grandfathering date with filing effectiveness; special-levy footer citations need primary verification. Treat these as review flags, not automatic changes to law.",
+    "owner_role": "Legal researcher",
+    "blocks": [
+      "D1",
+      "E4"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q15",
+    "priority": "P0",
+    "issue": "Actual building records and authority",
+    "detail": "Arrange authorized documents and building/section ACLs. Public research cannot establish a building’s current bylaw, ownership designation, policy, account balance or lawful recipient.",
+    "owner_role": "Building onboarding owner",
+    "blocks": [
+      "B2",
+      "R01"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "Q16",
+    "priority": "P1",
+    "issue": "Retrieval tooling controls",
+    "detail": "The web research connector does not expose caller-set User-Agent or its robots decisions. This session is not evidence that a production crawler complies. Use a separate permitted importer with the required UA, pacing and logged access policy.",
+    "owner_role": "Engineering/source-access owner",
+    "blocks": [
+      "P01",
+      "F1"
+    ],
+    "resolution": null,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+]

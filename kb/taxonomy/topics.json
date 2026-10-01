@@ -1,35 +1,353 @@
 {
-  "version": 1,
+  "version": 2,
   "description": "Controlled topic vocabulary for BC strata. Every item's topics[] must use ids from this list. Add a topic here before using it anywhere else.",
   "topics": [
-    { "id": "pets", "label": "Pets", "description": "Pet bylaws, limits on number and type of pets, grandfathering of existing pets, guide and assistance animals.", "aliases": ["animals", "dogs", "cats", "pet restriction", "pet limit"] },
-    { "id": "noise", "label": "Noise", "description": "Unreasonable noise from strata lots or common property, quiet hours, flooring transmission, music and parties.", "aliases": ["loud neighbours", "quiet hours", "sound transmission", "flooring noise"] },
-    { "id": "nuisance", "label": "Nuisance", "description": "Use of a strata lot that causes a nuisance or hazard or unreasonably interferes with others, including odours and smoke drift.", "aliases": ["interference", "odour", "smell", "disturbance"] },
-    { "id": "rentals", "label": "Rentals", "description": "Long-term rental of strata lots, rental restriction bylaws and their limits, Form K and landlord obligations.", "aliases": ["leasing", "tenants", "rental restriction", "Form K", "renting out"] },
-    { "id": "short-term-rentals", "label": "Short-term rentals", "description": "Airbnb-style and other short-term accommodation, bylaws restricting them, provincial short-term rental rules.", "aliases": ["Airbnb", "STR", "vacation rental", "VRBO", "nightly rental"] },
-    { "id": "parking", "label": "Parking", "description": "Parking stalls, visitor parking, assignment and leasing of stalls, towing and vehicle bylaws.", "aliases": ["stall", "visitor parking", "towing", "garage", "EV charging"] },
-    { "id": "smoking-cannabis", "label": "Smoking and cannabis", "description": "Smoking and vaping bylaws, cannabis use and growing, smoke drift between units.", "aliases": ["smoking", "vaping", "cannabis", "marijuana", "second-hand smoke"] },
-    { "id": "alterations-renovations", "label": "Alterations and renovations", "description": "Owner alterations to strata lots and common property, approval requirements, indemnity agreements, flooring and structural changes.", "aliases": ["renovation", "alteration agreement", "flooring change", "reno"] },
-    { "id": "move-in-move-out", "label": "Move-in and move-out", "description": "Moving procedures, elevator bookings, move fees and their limits under the Regulation.", "aliases": ["move fee", "moving", "elevator booking"] },
-    { "id": "fines", "label": "Fines", "description": "Fines for bylaw and rule contraventions, maximum amounts, continuing contraventions and collection limits.", "aliases": ["penalty", "fine amount", "continuing contravention"] },
-    { "id": "bylaw-enforcement-s135", "label": "Bylaw enforcement and s.135", "description": "The procedure a strata corporation must follow before imposing fines or other penalties, including written particulars and the opportunity to answer.", "aliases": ["s.135", "section 135", "enforcement notice", "procedural fairness", "complaint particulars"] },
-    { "id": "hearings", "label": "Hearings", "description": "Owner and tenant hearings before council, how to request one, timing of the hearing and the written decision.", "aliases": ["s.34.1", "council hearing", "hearing request"] },
-    { "id": "council-governance", "label": "Council and governance", "description": "Strata council powers and duties, council meetings, conflicts of interest, delegation and standard of care.", "aliases": ["strata council", "council meeting", "conflict of interest", "council duties"] },
-    { "id": "general-meetings-voting", "label": "General meetings and voting", "description": "Annual and special general meetings, notice, quorum, proxies, majority, 3/4 and 80% votes.", "aliases": ["AGM", "SGM", "quorum", "proxy", "3/4 vote", "resolution"] },
-    { "id": "special-levies", "label": "Special levies", "description": "Approval, calculation, collection and refund of special levies.", "aliases": ["levy", "special assessment"] },
-    { "id": "contingency-reserve-fund", "label": "Contingency reserve fund", "description": "CRF contributions, minimums, and permitted expenditures with and without a vote.", "aliases": ["CRF", "reserve fund"] },
-    { "id": "strata-fees-arrears", "label": "Strata fees and arrears", "description": "Calculation of strata fees, collection of arrears, interest, liens and Certificate of Lien.", "aliases": ["strata fees", "maintenance fees", "arrears", "lien", "collections"] },
-    { "id": "insurance-deductibles", "label": "Insurance and deductibles", "description": "Strata corporation insurance requirements, deductible chargebacks to owners, owner insurance.", "aliases": ["insurance", "deductible", "chargeback", "claim"] },
-    { "id": "repair-maintenance", "label": "Repair and maintenance", "description": "Who must repair and maintain common property, common assets and strata lots, and related bylaws.", "aliases": ["repairs", "maintenance", "duty to repair"] },
-    { "id": "common-property-use", "label": "Common property use", "description": "Use of common property and common assets, amenity rules, short-term exclusive use.", "aliases": ["common property", "amenities", "common area", "CP"] },
-    { "id": "limited-common-property", "label": "Limited common property", "description": "Designation of limited common property, owner rights and responsibilities over LCP such as balconies and patios.", "aliases": ["LCP", "balcony", "patio", "designated area"] },
-    { "id": "human-rights-accommodation", "label": "Human rights and accommodation", "description": "Discrimination and the duty to accommodate under the Human Rights Code, including disability, family status and age.", "aliases": ["accommodation", "discrimination", "disability", "Human Rights Code", "assistance animal"] },
-    { "id": "privacy-records", "label": "Privacy and records", "description": "Records the strata corporation must keep, owner access to records, and privacy obligations for personal information.", "aliases": ["records request", "PIPA", "privacy", "documents request", "s.35", "s.36"] },
-    { "id": "crt-process", "label": "Civil Resolution Tribunal process", "description": "How strata disputes go to the CRT, jurisdiction, remedies, timelines and enforcement of orders.", "aliases": ["CRT", "tribunal", "dispute resolution", "claim"] },
-    { "id": "bylaw-amendment-filing", "label": "Bylaw amendment and filing", "description": "Passing, amending and repealing bylaws, filing with the Land Title Office, and when amendments take effect.", "aliases": ["amend bylaws", "Form I", "LTO filing", "bylaw repeal"] },
-    { "id": "depreciation-report", "label": "Depreciation report", "description": "Depreciation report requirements, timing, exemptions and their use in planning.", "aliases": ["reserve study", "depreciation study"] },
-    { "id": "water-leaks", "label": "Water leaks", "description": "Water ingress and leaks between units or from common property, responsibility, investigation and chargebacks.", "aliases": ["leak", "flood", "water damage", "water ingress"] },
-    { "id": "hoarding-safety", "label": "Hoarding and safety", "description": "Hoarding, fire and life-safety hazards in strata lots, access to lots for inspection and repair.", "aliases": ["hoarding", "fire hazard", "unit access", "safety inspection"] },
-    { "id": "harassment", "label": "Harassment", "description": "Harassment of or by owners, occupants, council members or the property manager, and related bylaws.", "aliases": ["bullying", "threats", "abusive conduct", "intimidation"] }
+    {
+      "id": "pets",
+      "label": "Pets",
+      "description": "Pet bylaws, limits on number and type of pets, grandfathering of existing pets, guide and assistance animals.",
+      "aliases": [
+        "animals",
+        "dogs",
+        "cats",
+        "pet restriction",
+        "pet limit"
+      ]
+    },
+    {
+      "id": "noise",
+      "label": "Noise",
+      "description": "Unreasonable noise from strata lots or common property, quiet hours, flooring transmission, music and parties.",
+      "aliases": [
+        "loud neighbours",
+        "quiet hours",
+        "sound transmission",
+        "flooring noise"
+      ]
+    },
+    {
+      "id": "nuisance",
+      "label": "Nuisance",
+      "description": "Use of a strata lot that causes a nuisance or hazard or unreasonably interferes with others, including odours and smoke drift.",
+      "aliases": [
+        "interference",
+        "odour",
+        "smell",
+        "disturbance"
+      ]
+    },
+    {
+      "id": "rentals",
+      "label": "Rentals",
+      "description": "Long-term rental of strata lots, rental restriction bylaws and their limits, Form K and landlord obligations.",
+      "aliases": [
+        "leasing",
+        "tenants",
+        "rental restriction",
+        "Form K",
+        "renting out"
+      ]
+    },
+    {
+      "id": "short-term-rentals",
+      "label": "Short-term rentals",
+      "description": "Airbnb-style and other short-term accommodation, bylaws restricting them, provincial short-term rental rules.",
+      "aliases": [
+        "Airbnb",
+        "STR",
+        "vacation rental",
+        "VRBO",
+        "nightly rental"
+      ]
+    },
+    {
+      "id": "parking",
+      "label": "Parking",
+      "description": "Parking stalls, visitor parking, assignment and leasing of stalls, towing and vehicle bylaws.",
+      "aliases": [
+        "stall",
+        "visitor parking",
+        "towing",
+        "garage",
+        "EV charging"
+      ]
+    },
+    {
+      "id": "smoking-cannabis",
+      "label": "Smoking and cannabis",
+      "description": "Smoking and vaping bylaws, cannabis use and growing, smoke drift between units.",
+      "aliases": [
+        "smoking",
+        "vaping",
+        "cannabis",
+        "marijuana",
+        "second-hand smoke"
+      ]
+    },
+    {
+      "id": "alterations-renovations",
+      "label": "Alterations and renovations",
+      "description": "Owner alterations to strata lots and common property, approval requirements, indemnity agreements, flooring and structural changes.",
+      "aliases": [
+        "renovation",
+        "alteration agreement",
+        "flooring change",
+        "reno"
+      ]
+    },
+    {
+      "id": "move-in-move-out",
+      "label": "Move-in and move-out",
+      "description": "Moving procedures, elevator bookings, move fees and their limits under the Regulation.",
+      "aliases": [
+        "move fee",
+        "moving",
+        "elevator booking"
+      ]
+    },
+    {
+      "id": "fines",
+      "label": "Fines",
+      "description": "Fines for bylaw and rule contraventions, maximum amounts, continuing contraventions and collection limits.",
+      "aliases": [
+        "penalty",
+        "fine amount",
+        "continuing contravention"
+      ]
+    },
+    {
+      "id": "bylaw-enforcement-s135",
+      "label": "Bylaw enforcement and s.135",
+      "description": "The procedure a strata corporation must follow before imposing fines or other penalties, including written particulars and the opportunity to answer.",
+      "aliases": [
+        "s.135",
+        "section 135",
+        "enforcement notice",
+        "procedural fairness",
+        "complaint particulars"
+      ]
+    },
+    {
+      "id": "hearings",
+      "label": "Hearings",
+      "description": "Owner and tenant hearings before council, how to request one, timing of the hearing and the written decision.",
+      "aliases": [
+        "s.34.1",
+        "council hearing",
+        "hearing request"
+      ]
+    },
+    {
+      "id": "council-governance",
+      "label": "Council and governance",
+      "description": "Strata council powers and duties, council meetings, conflicts of interest, delegation and standard of care.",
+      "aliases": [
+        "strata council",
+        "council meeting",
+        "conflict of interest",
+        "council duties"
+      ]
+    },
+    {
+      "id": "general-meetings-voting",
+      "label": "General meetings and voting",
+      "description": "Annual and special general meetings, notice, quorum, proxies, majority, 3/4 and 80% votes.",
+      "aliases": [
+        "AGM",
+        "SGM",
+        "quorum",
+        "proxy",
+        "3/4 vote",
+        "resolution"
+      ]
+    },
+    {
+      "id": "special-levies",
+      "label": "Special levies",
+      "description": "Approval, calculation, collection and refund of special levies.",
+      "aliases": [
+        "levy",
+        "special assessment"
+      ]
+    },
+    {
+      "id": "contingency-reserve-fund",
+      "label": "Contingency reserve fund",
+      "description": "CRF contributions, minimums, and permitted expenditures with and without a vote.",
+      "aliases": [
+        "CRF",
+        "reserve fund"
+      ]
+    },
+    {
+      "id": "strata-fees-arrears",
+      "label": "Strata fees and arrears",
+      "description": "Calculation of strata fees, collection of arrears, interest, liens and Certificate of Lien.",
+      "aliases": [
+        "strata fees",
+        "maintenance fees",
+        "arrears",
+        "lien",
+        "collections"
+      ]
+    },
+    {
+      "id": "insurance-deductibles",
+      "label": "Insurance and deductibles",
+      "description": "Strata corporation insurance requirements, deductible chargebacks to owners, owner insurance.",
+      "aliases": [
+        "insurance",
+        "deductible",
+        "chargeback",
+        "claim"
+      ]
+    },
+    {
+      "id": "repair-maintenance",
+      "label": "Repair and maintenance",
+      "description": "Who must repair and maintain common property, common assets and strata lots, and related bylaws.",
+      "aliases": [
+        "repairs",
+        "maintenance",
+        "duty to repair"
+      ]
+    },
+    {
+      "id": "common-property-use",
+      "label": "Common property use",
+      "description": "Use of common property and common assets, amenity rules, short-term exclusive use.",
+      "aliases": [
+        "common property",
+        "amenities",
+        "common area",
+        "CP"
+      ]
+    },
+    {
+      "id": "limited-common-property",
+      "label": "Limited common property",
+      "description": "Designation of limited common property, owner rights and responsibilities over LCP such as balconies and patios.",
+      "aliases": [
+        "LCP",
+        "balcony",
+        "patio",
+        "designated area"
+      ]
+    },
+    {
+      "id": "human-rights-accommodation",
+      "label": "Human rights and accommodation",
+      "description": "Discrimination and the duty to accommodate under the Human Rights Code, including disability, family status and age.",
+      "aliases": [
+        "accommodation",
+        "discrimination",
+        "disability",
+        "Human Rights Code",
+        "assistance animal"
+      ]
+    },
+    {
+      "id": "privacy-records",
+      "label": "Privacy and records",
+      "description": "Records the strata corporation must keep, owner access to records, and privacy obligations for personal information.",
+      "aliases": [
+        "records request",
+        "PIPA",
+        "privacy",
+        "documents request",
+        "s.35",
+        "s.36"
+      ]
+    },
+    {
+      "id": "crt-process",
+      "label": "Civil Resolution Tribunal process",
+      "description": "How strata disputes go to the CRT, jurisdiction, remedies, timelines and enforcement of orders.",
+      "aliases": [
+        "CRT",
+        "tribunal",
+        "dispute resolution",
+        "claim"
+      ]
+    },
+    {
+      "id": "bylaw-amendment-filing",
+      "label": "Bylaw amendment and filing",
+      "description": "Passing, amending and repealing bylaws, filing with the Land Title Office, and when amendments take effect.",
+      "aliases": [
+        "amend bylaws",
+        "Form I",
+        "LTO filing",
+        "bylaw repeal"
+      ]
+    },
+    {
+      "id": "depreciation-report",
+      "label": "Depreciation report",
+      "description": "Depreciation report requirements, timing, exemptions and their use in planning.",
+      "aliases": [
+        "reserve study",
+        "depreciation study"
+      ]
+    },
+    {
+      "id": "water-leaks",
+      "label": "Water leaks",
+      "description": "Water ingress and leaks between units or from common property, responsibility, investigation and chargebacks.",
+      "aliases": [
+        "leak",
+        "flood",
+        "water damage",
+        "water ingress"
+      ]
+    },
+    {
+      "id": "hoarding-safety",
+      "label": "Hoarding and safety",
+      "description": "Hoarding, fire and life-safety hazards in strata lots, access to lots for inspection and repair.",
+      "aliases": [
+        "hoarding",
+        "fire hazard",
+        "unit access",
+        "safety inspection"
+      ]
+    },
+    {
+      "id": "harassment",
+      "label": "Harassment",
+      "description": "Harassment of or by owners, occupants, council members or the property manager, and related bylaws.",
+      "aliases": [
+        "bullying",
+        "threats",
+        "abusive conduct",
+        "intimidation"
+      ]
+    },
+    {
+      "id": "electrical-planning-reports",
+      "label": "Electrical planning reports",
+      "description": "The electrical planning report a strata corporation must obtain, who is qualified to prepare it, what it must contain, and the deadlines and exemptions that decide when it is due.",
+      "aliases": [
+        "electrical planning report",
+        "EPR",
+        "electrical capacity",
+        "s.94.1",
+        "section 94.1",
+        "electrical system capacity"
+      ]
+    },
+    {
+      "id": "ev-charging",
+      "label": "EV charging",
+      "description": "Installing and operating electric vehicle charging infrastructure in a strata: an owner's request to alter common property, how the strata corporation must consider it, the vote required, and exclusive use of a stall with charging installed.",
+      "aliases": [
+        "EV charging",
+        "electric vehicle",
+        "charger",
+        "charging station",
+        "s.90.1",
+        "section 90.1"
+      ]
+    }
   ]
 }

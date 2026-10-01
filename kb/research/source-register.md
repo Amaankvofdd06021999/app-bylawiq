@@ -4,6 +4,8 @@ Every source the kb draws on, and where it lands. Add a row before pulling from 
 
 Status values: `planned` (not started), `in progress`, `loaded` (items exist in kb/), `blocked` (licensing or access question open; see `open-questions.md`).
 
+A row whose `Licence id` is `—` has no licence assigned because nothing is imported from it. A licence id must exist in `licensing-register.md` before any item cites that source, and the validator enforces that on items; it does not read this file.
+
 | Source | URL | Layer | Licence id | Status | Output location | Notes |
 |---|---|---|---|---|---|---|
 | Strata Property Act | https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/98043_00 | law | `bc-kings-printer` | loaded | `law/bc/acts/strata-property-act/part-*/` | 303 sections, verbatim, draft. Imported 2026-09-30 from the CiviX XML `98043_00_multi/xml`, consolidation current to 2026-09-22. `98043_01` is Part 1 only; the Act is split into `98043_01` to `98043_18`. |
@@ -16,3 +18,24 @@ Status values: `planned` (not started), `in progress`, `loaded` (items exist in 
 | BC Supreme Court and Court of Appeal judgments | https://www.bccourts.ca/search_judgments.aspx | law | `court-decisions` | blocked | `law/bc/decisions/courts/` | 127 judgments listed in `research/decision-candidates/courts.md` (2026-09-30), citation and link only, no reasons: `/jdb-txt/` is disallowed in robots.txt so the judgments cannot be read by a script. Search URL verified: `/search_judgments.aspx`, exact-phrase, allowed by robots.txt. Full text and excerpts blocked until the courts grant written permission (open question 18). |
 | CanLII | https://www.canlii.org/ | law | `canlii` | planned | links in `source_url` only | Link only. Never scrape, download or store CanLII content (terms of 2026-06-03, cl. 5.1; robots.txt disallows all unnamed bots). |
 | BylawIQ staff writing | n/a | topic, firm, building | `bylawiq-original` | in progress | `topics/`, `firm-starter/`, `building-starter/`, `evals/` | |
+| Province of BC strata housing guidance (gov.bc.ca) | https://www2.gov.bc.ca/gov/content/housing-tenancy/strata-housing | law (verification only) | — | blocked | not imported | ~24 official plain-language pages covering enforcement, records, bylaws and rules, pets, smoking, age restrictions, short-term rentals, council meetings, depreciation reports, electrical planning reports, Form B, insurance, tenants, parking, the contingency reserve fund, fees, the division of repair duties, amendments, special levies and voting. Identified by the ChatGPT research pack (`BylawIQ_Research_Pack_2026-09-30/source-register.json`), not re-read by this bot. **Not King's Printer licensed**: it is explanatory guidance under the general government copyright notice, which the pack could not retrieve (502). Useful for checking our reading of the Act and for seeing which questions the province thinks matter. Do not copy. See open question 36. |
+| Province of BC "Subscribing for updates" | https://www2.gov.bc.ca/gov/content/housing-tenancy/strata-housing | n/a (process) | n/a | planned | n/a | An official notification channel for strata legislation changes. Matters because it detects change without fetching anything from BC Laws, which robots.txt disallows (question 24). Proposed as the trigger for the F1 quarterly sync: see open question 37. |
+| BC Human Rights Tribunal | https://www.bchrt.bc.ca | law | — | blocked | not imported | Strata page, leading cases on services customarily available to the public, and the 2026 transition to amended Rules of Practice and Procedure. Directly relevant to `human-rights-accommodation`, the thinnest guide in the kb because the Human Rights Code is not imported (task A5). Identified by the research pack; rights not established. |
+| Land Title and Survey Authority (LTSA) | https://www.ltsa.ca | n/a (acquisition route) | n/a | planned | n/a | How a building obtains its registered strata plan and filed bylaws. Not a corpus to import: it is the answer to "where do we get the documents the onboarding checklist asks for". Registry documents are paid and carry their own terms. |
+| BC Financial Services Authority (BCFSA) | https://www.bcfsa.ca | firm (reference) | — | blocked | not imported | Guidance on working with a strata management company. Relevant to the firm layer and to the proposed `management-agents` topic, since our users are licensed under the Real Estate Services Act. Rights not established. |
+| Residential Tenancy Branch Policy Guideline 27 (Jurisdiction) | https://www2.gov.bc.ca/gov/content/housing-tenancy/residential-tenancies | law (reference) | — | blocked | not imported | The boundary between the Residential Tenancy Branch and the CRT for a strata tenancy. Relevant to `rentals`; depends on task A6 and on a licence decision. |
+| Office of the Information and Privacy Commissioner (OIPC) | https://www.oipc.bc.ca | law (reference) | — | blocked | not imported | Privacy guidance for strata corporations. The research pack found it in an index but the document URLs returned 404, so its content is unverified. Relevant to `privacy-records` and to open question 29 (PIPA). |
+
+## Sources identified by the ChatGPT research pack
+
+`kb/BylawIQ_Research_Pack_2026-09-30/` is a separate research effort supplied on 2026-10-01. It was
+produced **without access to this repository**, so it asserts no item ids, counts or validation
+results, and its own README says not to index it. Its `source-register.json` lists 40 sources, about
+30 of which were not in this register. They are summarised in the rows above by publisher rather
+than one row per page; the per-page list, with each page's read status and retrieval date, stays in
+the pack.
+
+Nothing from the pack has been treated as verified law. Where it pointed at a provision, that
+provision was read in the Act or Regulation in this kb before anything was written: that is how the
+electrical planning report regime (Act s. 94.1, Regulation Part 5.2) reached the kb, after the pack
+flagged deadlines this register had missed entirely.

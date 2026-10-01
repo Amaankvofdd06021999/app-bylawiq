@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-09-30",
+  "scope": "research_pack_integrity_only",
+  "result": "pass",
+  "errors": [],
+  "json_files_checked": 11,
+  "draft_records_checked": 305,
+  "relative_links_checked": 10,
+  "source_ids": 40,
+  "evidence_ids": 42,
+  "proposed_topics": 52,
+  "core_topics_with_five_tests_and_abstention": 10,
+  "production_validation_run": false,
+  "production_build_run": false,
+  "application_evaluations_run": false,
+  "note": "These integrity checks do not validate legal correctness or complete source coverage."
+}

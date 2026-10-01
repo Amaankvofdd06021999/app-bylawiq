@@ -1,0 +1,1597 @@
+[
+  {
+    "proposed_id": "pets",
+    "label": "Pets",
+    "priority": "P0",
+    "source_refs": [
+      "pets",
+      "hr",
+      "spa"
+    ],
+    "evidence_note_ids": [
+      "F07",
+      "F08"
+    ],
+    "intake_dimensions": [
+      "Pet type",
+      "acquisition date",
+      "applicable bylaw",
+      "accommodation request"
+    ],
+    "building_inputs": [
+      "Current filed bylaws",
+      "amendment dates",
+      "pet-policy records"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "noise",
+    "label": "Noise and nuisance",
+    "priority": "P0",
+    "source_refs": [
+      "bylaws",
+      "enforcement"
+    ],
+    "evidence_note_ids": [
+      "F01",
+      "F05"
+    ],
+    "intake_dimensions": [
+      "Nature, location, frequency and timing",
+      "alleged clause",
+      "evidence"
+    ],
+    "building_inputs": [
+      "Current bylaws",
+      "complaint and response records"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "rentals",
+    "label": "Long-term rentals",
+    "priority": "P0",
+    "source_refs": [
+      "shortterm",
+      "tenants"
+    ],
+    "evidence_note_ids": [
+      "F11",
+      "F13",
+      "F14"
+    ],
+    "intake_dimensions": [
+      "Event date",
+      "residence vs ownership",
+      "tenancy type"
+    ],
+    "building_inputs": [
+      "Current and historical bylaws",
+      "Form K",
+      "tenancy/assignment records"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "short-term-rentals",
+    "label": "Short-term rentals",
+    "priority": "P0",
+    "source_refs": [
+      "shortterm",
+      "enforcement",
+      "rtb27"
+    ],
+    "evidence_note_ids": [
+      "F02",
+      "F11",
+      "F12"
+    ],
+    "intake_dimensions": [
+      "Municipality",
+      "occupancy arrangement",
+      "duration",
+      "date",
+      "building restriction"
+    ],
+    "building_inputs": [
+      "Filed STR bylaw",
+      "local licence information",
+      "lawful incident evidence"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "fines",
+    "label": "Fines",
+    "priority": "P0",
+    "source_refs": [
+      "enforcement",
+      "spa"
+    ],
+    "evidence_note_ids": [
+      "F01",
+      "F02",
+      "F03"
+    ],
+    "intake_dimensions": [
+      "Bylaw vs rule",
+      "actual schedule",
+      "frequency",
+      "person alleged to contravene"
+    ],
+    "building_inputs": [
+      "Fine schedule",
+      "complaints",
+      "response opportunities",
+      "council decision",
+      "ledger"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "bylaw-enforcement-s135",
+    "label": "Bylaw enforcement and procedural fairness",
+    "priority": "P0",
+    "source_refs": [
+      "spa",
+      "enforcement"
+    ],
+    "evidence_note_ids": [
+      "F01"
+    ],
+    "intake_dimensions": [
+      "Allegation",
+      "actor",
+      "notice recipients",
+      "response and hearing history"
+    ],
+    "building_inputs": [
+      "Notice",
+      "delivery evidence",
+      "hearing material",
+      "written decision"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "hearings",
+    "label": "Council hearings",
+    "priority": "P0",
+    "source_refs": [
+      "hearings",
+      "spa"
+    ],
+    "evidence_note_ids": [
+      "F04",
+      "F01"
+    ],
+    "intake_dimensions": [
+      "Request receipt date",
+      "reasons",
+      "whether decision requested"
+    ],
+    "building_inputs": [
+      "Hearing request",
+      "scheduling",
+      "minutes",
+      "decision and delivery"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "water-leaks",
+    "label": "Water leaks and damage",
+    "priority": "P0",
+    "source_refs": [
+      "repair",
+      "insurance"
+    ],
+    "evidence_note_ids": [
+      "F19",
+      "F20"
+    ],
+    "intake_dimensions": [
+      "Source and location",
+      "property category",
+      "policy period",
+      "causation evidence"
+    ],
+    "building_inputs": [
+      "Plan",
+      "bylaws",
+      "reports",
+      "repair history",
+      "insurance",
+      "incident evidence"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "strata-fees-arrears",
+    "label": "Strata fees and arrears",
+    "priority": "P0",
+    "source_refs": [
+      "fees",
+      "crf"
+    ],
+    "evidence_note_ids": [
+      "F29"
+    ],
+    "intake_dimensions": [
+      "Debt category",
+      "due dates",
+      "allocation",
+      "interest bylaw",
+      "disputed amounts"
+    ],
+    "building_inputs": [
+      "Budgets",
+      "resolutions",
+      "unit entitlements",
+      "ledger",
+      "notices"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "privacy-records",
+    "label": "Privacy and records access",
+    "priority": "P0",
+    "source_refs": [
+      "spa",
+      "records",
+      "tenants",
+      "oipc-unresolved"
+    ],
+    "evidence_note_ids": [
+      "F15",
+      "F16",
+      "F14"
+    ],
+    "intake_dimensions": [
+      "Requester capacity",
+      "legal route",
+      "document category",
+      "date range",
+      "authorization"
+    ],
+    "building_inputs": [
+      "Record inventory",
+      "assignment/authorization",
+      "request log",
+      "disclosure record"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "bylaws-rules",
+    "label": "Bylaws versus rules",
+    "priority": "P1",
+    "source_refs": [
+      "bylaws",
+      "spa"
+    ],
+    "evidence_note_ids": [
+      "F05"
+    ],
+    "intake_dimensions": [
+      "Lot or shared area",
+      "adoption and ratification",
+      "conflicts"
+    ],
+    "building_inputs": [
+      "Filed bylaws",
+      "rules",
+      "approving minutes"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "bylaw-amendments",
+    "label": "Amending and filing bylaws",
+    "priority": "P1",
+    "source_refs": [
+      "amendments",
+      "ltsa-index"
+    ],
+    "evidence_note_ids": [
+      "F06"
+    ],
+    "intake_dimensions": [
+      "Proposal date",
+      "strata composition",
+      "voting groups",
+      "filing history"
+    ],
+    "building_inputs": [
+      "Resolution",
+      "vote record",
+      "Form I",
+      "complete registry amendment chain"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "standard-bylaws",
+    "label": "Standard Bylaws applicability",
+    "priority": "P1",
+    "source_refs": [
+      "bylaws",
+      "amendments"
+    ],
+    "evidence_note_ids": [
+      "F03",
+      "F05",
+      "F07"
+    ],
+    "intake_dimensions": [
+      "Which default provisions were replaced",
+      "development stage",
+      "relevant date"
+    ],
+    "building_inputs": [
+      "Full current and historic registered bylaw chain"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "smoking-cannabis",
+    "label": "Smoking, vaping and cannabis",
+    "priority": "P1",
+    "source_refs": [
+      "smoking",
+      "hr"
+    ],
+    "evidence_note_ids": [
+      "F09",
+      "F17"
+    ],
+    "intake_dimensions": [
+      "Area",
+      "smoke migration",
+      "applicable provision",
+      "disability-related need"
+    ],
+    "building_inputs": [
+      "Bylaws",
+      "rules",
+      "complaint evidence",
+      "restricted accommodation file"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "age-restrictions",
+    "label": "Age restrictions",
+    "priority": "P1",
+    "source_refs": [
+      "age"
+    ],
+    "evidence_note_ids": [
+      "F10"
+    ],
+    "intake_dimensions": [
+      "Residency start",
+      "bylaw age",
+      "exemption category",
+      "event date"
+    ],
+    "building_inputs": [
+      "Bylaw version",
+      "minimally necessary exemption evidence"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "human-rights-accommodation",
+    "label": "Human rights and accommodation",
+    "priority": "P1",
+    "source_refs": [
+      "hr",
+      "hr-services",
+      "pets"
+    ],
+    "evidence_note_ids": [
+      "F17",
+      "F18",
+      "F08"
+    ],
+    "intake_dimensions": [
+      "Service affected",
+      "protected need",
+      "adverse effect",
+      "alternatives explored"
+    ],
+    "building_inputs": [
+      "Confidential request",
+      "functional-needs information",
+      "decision trail"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "tenant-rights-form-k",
+    "label": "Tenant rights and Form K",
+    "priority": "P1",
+    "source_refs": [
+      "spa",
+      "tenants"
+    ],
+    "evidence_note_ids": [
+      "F13",
+      "F14"
+    ],
+    "intake_dimensions": [
+      "Tenancy term",
+      "assignment",
+      "notice to strata",
+      "Form K delivery"
+    ],
+    "building_inputs": [
+      "Form K",
+      "assignment/lease evidence",
+      "current rules and bylaws"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "tenancy-disputes",
+    "label": "Strata and tenancy jurisdiction",
+    "priority": "P1",
+    "source_refs": [
+      "rtb27",
+      "tenants",
+      "crt"
+    ],
+    "evidence_note_ids": [
+      "F35",
+      "F36"
+    ],
+    "intake_dimensions": [
+      "Parties",
+      "requested remedy",
+      "existing tenancy proceedings",
+      "order status"
+    ],
+    "building_inputs": [
+      "Tenancy notices",
+      "relevant strata records",
+      "procedural chronology"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "parking-storage",
+    "label": "Parking and storage",
+    "priority": "P1",
+    "source_refs": [
+      "parking",
+      "ltsa",
+      "formb"
+    ],
+    "evidence_note_ids": [
+      "F27",
+      "F25"
+    ],
+    "intake_dimensions": [
+      "Property designation",
+      "assignment instrument",
+      "term",
+      "EV request"
+    ],
+    "building_inputs": [
+      "Plan",
+      "Form B",
+      "lease/licence",
+      "permission",
+      "filed LCP designation"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "common-property",
+    "label": "Common and limited common property",
+    "priority": "P1",
+    "source_refs": [
+      "repair",
+      "parking",
+      "bylaws"
+    ],
+    "evidence_note_ids": [
+      "F19",
+      "F27",
+      "F05"
+    ],
+    "intake_dimensions": [
+      "Boundary",
+      "use right vs ownership",
+      "responsible entity"
+    ],
+    "building_inputs": [
+      "Registered plan",
+      "designations",
+      "agreements",
+      "applicable bylaws"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "alterations-renovations",
+    "label": "Alterations and renovations",
+    "priority": "P1",
+    "source_refs": [
+      "repair",
+      "bylaws",
+      "formb"
+    ],
+    "evidence_note_ids": [
+      "F19",
+      "F25"
+    ],
+    "intake_dimensions": [
+      "Affected component",
+      "lot/CP/LCP",
+      "written permission",
+      "continuing obligations"
+    ],
+    "building_inputs": [
+      "Alteration agreement",
+      "drawings",
+      "approvals",
+      "permits",
+      "bylaw history"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "move-in-move-out",
+    "label": "Moves and user fees",
+    "priority": "P1",
+    "source_refs": [
+      "bylaws",
+      "enforcement"
+    ],
+    "evidence_note_ids": [
+      "F05"
+    ],
+    "intake_dimensions": [
+      "Move fee vs deposit vs fine",
+      "authorized instrument",
+      "schedule"
+    ],
+    "building_inputs": [
+      "Move rules/bylaws",
+      "ratification",
+      "fee resolution",
+      "actual cost evidence"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "repairs-maintenance",
+    "label": "Repair and maintenance",
+    "priority": "P1",
+    "source_refs": [
+      "repair",
+      "insurance"
+    ],
+    "evidence_note_ids": [
+      "F19",
+      "F20"
+    ],
+    "intake_dimensions": [
+      "Component and boundary",
+      "duty",
+      "urgency",
+      "cost allocation"
+    ],
+    "building_inputs": [
+      "Plan",
+      "bylaws",
+      "asset register",
+      "contracts",
+      "engineering reports"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "insurance-deductibles",
+    "label": "Insurance and deductibles",
+    "priority": "P1",
+    "source_refs": [
+      "insurance",
+      "formb"
+    ],
+    "evidence_note_ids": [
+      "F20",
+      "F25"
+    ],
+    "intake_dimensions": [
+      "Insured event",
+      "policy term",
+      "deductible",
+      "responsibility",
+      "recovery basis"
+    ],
+    "building_inputs": [
+      "Current policy",
+      "endorsements",
+      "summary",
+      "appraisal",
+      "incident report"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "emergency-repairs",
+    "label": "Emergency repairs and spending",
+    "priority": "P1",
+    "source_refs": [
+      "repair",
+      "crf",
+      "lawmapping"
+    ],
+    "evidence_note_ids": [
+      "F19"
+    ],
+    "intake_dimensions": [
+      "Immediate risk",
+      "authority",
+      "available funds",
+      "notifications"
+    ],
+    "building_inputs": [
+      "Incident plan",
+      "council authority",
+      "quotations",
+      "spending record"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "depreciation-reports",
+    "label": "Depreciation reports",
+    "priority": "P1",
+    "source_refs": [
+      "depreciation"
+    ],
+    "evidence_note_ids": [
+      "F21",
+      "F22"
+    ],
+    "intake_dimensions": [
+      "Lot count",
+      "region",
+      "island access",
+      "formation and report dates"
+    ],
+    "building_inputs": [
+      "Latest report",
+      "lot count",
+      "first AGM date",
+      "reserve model"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "electrical-planning",
+    "label": "Electrical planning reports",
+    "priority": "P1",
+    "source_refs": [
+      "electrical"
+    ],
+    "evidence_note_ids": [
+      "F23"
+    ],
+    "intake_dimensions": [
+      "Lot count",
+      "region",
+      "island access",
+      "deposit date",
+      "report status"
+    ],
+    "building_inputs": [
+      "EPR",
+      "plan",
+      "phase details",
+      "utility infrastructure records"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "ev-charging",
+    "label": "EV charging requests",
+    "priority": "P1",
+    "source_refs": [
+      "electrical",
+      "parking"
+    ],
+    "evidence_note_ids": [
+      "F24",
+      "F27"
+    ],
+    "intake_dimensions": [
+      "EPR trigger",
+      "complete request",
+      "stall right",
+      "installation/cost proposal"
+    ],
+    "building_inputs": [
+      "EPR",
+      "EV-ready plan if any",
+      "request",
+      "plans",
+      "approval agreement"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "budgets-financial-statements",
+    "label": "Budgets and financial statements",
+    "priority": "P1",
+    "source_refs": [
+      "fees",
+      "crf"
+    ],
+    "evidence_note_ids": [
+      "F29",
+      "F28"
+    ],
+    "intake_dimensions": [
+      "Fiscal year",
+      "operating and reserve budgets",
+      "allocation basis"
+    ],
+    "building_inputs": [
+      "Approved budget",
+      "financial statements",
+      "minutes",
+      "entitlements"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "contingency-reserve-fund",
+    "label": "Contingency reserve fund",
+    "priority": "P1",
+    "source_refs": [
+      "crf",
+      "depreciation"
+    ],
+    "evidence_note_ids": [
+      "F28",
+      "F21"
+    ],
+    "intake_dimensions": [
+      "Annual contribution",
+      "spending purpose",
+      "report recommendations"
+    ],
+    "building_inputs": [
+      "CRF balance",
+      "cash-flow models",
+      "approved spending resolutions"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "special-levies",
+    "label": "Special levies",
+    "priority": "P1",
+    "source_refs": [
+      "special-levies",
+      "voting"
+    ],
+    "evidence_note_ids": [
+      "F30",
+      "F31"
+    ],
+    "intake_dimensions": [
+      "Purpose",
+      "allocation method",
+      "vote",
+      "payment dates",
+      "surplus"
+    ],
+    "building_inputs": [
+      "Resolution",
+      "vote tally",
+      "payment schedule",
+      "levy ledger"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "unit-entitlement",
+    "label": "Unit entitlement and allocation",
+    "priority": "P1",
+    "source_refs": [
+      "fees",
+      "parking",
+      "spa"
+    ],
+    "evidence_note_ids": [
+      "F29"
+    ],
+    "intake_dimensions": [
+      "Registered schedule",
+      "exception",
+      "section/type expenses"
+    ],
+    "building_inputs": [
+      "Registered schedule",
+      "approved allocation resolutions"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "liens-collection",
+    "label": "Liens and collection",
+    "priority": "P1",
+    "source_refs": [
+      "fees",
+      "spa"
+    ],
+    "evidence_note_ids": [
+      "F29"
+    ],
+    "intake_dimensions": [
+      "Debt type",
+      "notices",
+      "limitation issue",
+      "disputed payment"
+    ],
+    "building_inputs": [
+      "Debt-classified ledger",
+      "notices",
+      "payment record",
+      "legal review"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "agm-sgm",
+    "label": "General meetings",
+    "priority": "P1",
+    "source_refs": [
+      "voting",
+      "lawmapping"
+    ],
+    "evidence_note_ids": [
+      "F31"
+    ],
+    "intake_dimensions": [
+      "AGM/SGM",
+      "notice",
+      "quorum",
+      "agenda",
+      "voting capacity"
+    ],
+    "building_inputs": [
+      "Notice package",
+      "agenda",
+      "minutes",
+      "proxies",
+      "meeting bylaws"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "voting-proxies",
+    "label": "Voting and proxies",
+    "priority": "P1",
+    "source_refs": [
+      "voting"
+    ],
+    "evidence_note_ids": [
+      "F31"
+    ],
+    "intake_dimensions": [
+      "Motion type",
+      "eligible votes",
+      "present/proxy",
+      "abstentions",
+      "conflicts"
+    ],
+    "building_inputs": [
+      "Proxy forms",
+      "voter register",
+      "vote tally",
+      "quorum evidence"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "council-governance",
+    "label": "Council governance and conflicts",
+    "priority": "P1",
+    "source_refs": [
+      "hearings",
+      "bcfsa",
+      "lawmapping"
+    ],
+    "evidence_note_ids": [
+      "F04",
+      "F37"
+    ],
+    "intake_dimensions": [
+      "Role",
+      "quorum",
+      "conflict",
+      "delegation",
+      "decision authority"
+    ],
+    "building_inputs": [
+      "Current council bylaws",
+      "minutes",
+      "conflict declarations",
+      "delegations"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "sections-types",
+    "label": "Sections, types and mixed-use stratas",
+    "priority": "P2",
+    "source_refs": [
+      "legislation",
+      "crf",
+      "lawmapping"
+    ],
+    "evidence_note_ids": [
+      "F28",
+      "F42"
+    ],
+    "intake_dimensions": [
+      "Corporation vs section vs type",
+      "expense and service boundaries"
+    ],
+    "building_inputs": [
+      "Section bylaws",
+      "budgets",
+      "plans",
+      "service agreements"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "bare-land",
+    "label": "Bare-land stratas",
+    "priority": "P2",
+    "source_refs": [
+      "legislation",
+      "repair"
+    ],
+    "evidence_note_ids": [
+      "F42",
+      "F19"
+    ],
+    "intake_dimensions": [
+      "Lot boundaries",
+      "building ownership",
+      "shared assets",
+      "insurance"
+    ],
+    "building_inputs": [
+      "Bare-land plan",
+      "bylaws",
+      "infrastructure inventory",
+      "agreements"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "leasehold",
+    "label": "Leasehold stratas",
+    "priority": "P2",
+    "source_refs": [
+      "lawmapping",
+      "legislation"
+    ],
+    "evidence_note_ids": [],
+    "intake_dimensions": [
+      "Ground lease",
+      "reversion",
+      "leasehold terms",
+      "jurisdiction"
+    ],
+    "building_inputs": [
+      "Ground lease",
+      "plan",
+      "title interests",
+      "leasehold bylaws"
+    ],
+    "coverage": "scope_only_further_research_required",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "new-developments",
+    "label": "New developments and turnover",
+    "priority": "P2",
+    "source_refs": [
+      "depreciation",
+      "amendments",
+      "lawmapping"
+    ],
+    "evidence_note_ids": [
+      "F21",
+      "F06"
+    ],
+    "intake_dimensions": [
+      "Creation and first AGM dates",
+      "developer obligations",
+      "warranty"
+    ],
+    "building_inputs": [
+      "Developer disclosure",
+      "first budget",
+      "turnover package",
+      "warranties"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "form-b-disclosure",
+    "label": "Form B and sale disclosure",
+    "priority": "P1",
+    "source_refs": [
+      "formb",
+      "ltsa"
+    ],
+    "evidence_note_ids": [
+      "F25",
+      "F26",
+      "F38"
+    ],
+    "intake_dimensions": [
+      "Request date",
+      "corporation/section",
+      "current attachments",
+      "actual records"
+    ],
+    "building_inputs": [
+      "Form B",
+      "budget",
+      "rules",
+      "reports",
+      "insurance",
+      "parking rights"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "form-f-transfers",
+    "label": "Form F and transfers",
+    "priority": "P2",
+    "source_refs": [
+      "lawmapping",
+      "fees"
+    ],
+    "evidence_note_ids": [],
+    "intake_dimensions": [
+      "Request",
+      "payment or security",
+      "transfer deadline",
+      "disputed debt"
+    ],
+    "building_inputs": [
+      "Ledger",
+      "certificate request",
+      "transfer-related documents"
+    ],
+    "coverage": "scope_only_further_research_required",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "management-agents",
+    "label": "Management agents and agreements",
+    "priority": "P1",
+    "source_refs": [
+      "bcfsa"
+    ],
+    "evidence_note_ids": [
+      "F37"
+    ],
+    "intake_dimensions": [
+      "Licensee role",
+      "client",
+      "authority",
+      "conflicts",
+      "agreed services"
+    ],
+    "building_inputs": [
+      "Management agreement",
+      "disclosures",
+      "delegation",
+      "service schedule"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "crt-process",
+    "label": "CRT process and jurisdiction",
+    "priority": "P1",
+    "source_refs": [
+      "crt",
+      "crt-rules",
+      "crt-fees"
+    ],
+    "evidence_note_ids": [
+      "F32",
+      "F33",
+      "F34"
+    ],
+    "intake_dimensions": [
+      "Claim category",
+      "parties",
+      "remedies",
+      "procedural version"
+    ],
+    "building_inputs": [
+      "Prior hearing record",
+      "dispute chronology",
+      "relevant orders"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "court-remedies",
+    "label": "Court remedies and significant unfairness",
+    "priority": "P2",
+    "source_refs": [
+      "spa",
+      "courts-terms-unresolved"
+    ],
+    "evidence_note_ids": [],
+    "intake_dimensions": [
+      "Remedy",
+      "forum",
+      "standing",
+      "urgency",
+      "appeal/review history"
+    ],
+    "building_inputs": [
+      "Decision record",
+      "relevant orders",
+      "counsel assessment"
+    ],
+    "coverage": "scope_only_further_research_required",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "human-rights-process",
+    "label": "Human rights complaint process",
+    "priority": "P2",
+    "source_refs": [
+      "hr-transition",
+      "hr-services"
+    ],
+    "evidence_note_ids": [
+      "F41",
+      "F18"
+    ],
+    "intake_dimensions": [
+      "Complaint stage",
+      "applicable rules",
+      "disclosure-notice date"
+    ],
+    "building_inputs": [
+      "Tribunal correspondence",
+      "chronology",
+      "restricted evidence"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "limitation-periods",
+    "label": "Limitation periods and service",
+    "priority": "P1",
+    "source_refs": [
+      "crt-law",
+      "spa"
+    ],
+    "evidence_note_ids": [],
+    "intake_dimensions": [
+      "Cause of action",
+      "discovery",
+      "ongoing events",
+      "forum",
+      "service facts"
+    ],
+    "building_inputs": [
+      "Dated chronology",
+      "notices",
+      "orders",
+      "acknowledgment/payment records"
+    ],
+    "coverage": "scope_only_further_research_required",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "surveillance-access-control",
+    "label": "Cameras, fobs and access logs",
+    "priority": "P1",
+    "source_refs": [
+      "records",
+      "oipc-unresolved"
+    ],
+    "evidence_note_ids": [
+      "F16"
+    ],
+    "intake_dimensions": [
+      "Purpose",
+      "collection",
+      "access",
+      "retention",
+      "request route"
+    ],
+    "building_inputs": [
+      "Privacy policy",
+      "camera map",
+      "notices",
+      "vendor contract",
+      "access logs"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "local-government",
+    "label": "Municipal bylaws and permits",
+    "priority": "P2",
+    "source_refs": [
+      "shortterm",
+      "smoking",
+      "rtb27"
+    ],
+    "evidence_note_ids": [
+      "F12",
+      "F09"
+    ],
+    "intake_dimensions": [
+      "Actual municipality",
+      "activity",
+      "permit",
+      "effective date"
+    ],
+    "building_inputs": [
+      "Relevant municipal bylaw",
+      "licence",
+      "permit",
+      "zoning record"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "safety-building-fire",
+    "label": "Building, fire and workplace safety",
+    "priority": "P2",
+    "source_refs": [
+      "lawmapping",
+      "legislation"
+    ],
+    "evidence_note_ids": [],
+    "intake_dimensions": [
+      "Building classification",
+      "work scope",
+      "emergency",
+      "regulator"
+    ],
+    "building_inputs": [
+      "Inspection records",
+      "permits",
+      "emergency plan",
+      "contractor records"
+    ],
+    "coverage": "scope_only_further_research_required",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "legal-changes",
+    "label": "Legal changes and historical answers",
+    "priority": "P1",
+    "source_refs": [
+      "updates",
+      "crt-rules",
+      "hr-transition"
+    ],
+    "evidence_note_ids": [
+      "F40",
+      "F33",
+      "F41"
+    ],
+    "intake_dimensions": [
+      "Event date",
+      "rule effective date",
+      "publication/consolidation date"
+    ],
+    "building_inputs": [
+      "Versioned source history",
+      "change log",
+      "approval evidence"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "proposed_id": "building-onboarding",
+    "label": "Building onboarding and document provenance",
+    "priority": "P1",
+    "source_refs": [
+      "ltsa",
+      "ltsa-index",
+      "formb"
+    ],
+    "evidence_note_ids": [
+      "F38",
+      "F39",
+      "F25"
+    ],
+    "intake_dimensions": [
+      "Authority to supply",
+      "completeness",
+      "version",
+      "building and section scope"
+    ],
+    "building_inputs": [
+      "Document index",
+      "registry chain",
+      "operational and restricted document sets"
+    ],
+    "coverage": "guidance_seeded_primary_and_decisions_pending",
+    "production_taxonomy_match": null,
+    "aliases": [],
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+]

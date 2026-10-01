@@ -1,0 +1,674 @@
+[
+  {
+    "id": "F01",
+    "topic": "bylaw-enforcement-s135",
+    "source_refs": [
+      "spa"
+    ],
+    "locator": "s.135",
+    "promotion_gate": "primary_passage_read; map_existing_item_and_review",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F01 — bylaw-enforcement-s135"
+    }
+  },
+  {
+    "id": "F02",
+    "topic": "fines",
+    "source_refs": [
+      "enforcement"
+    ],
+    "locator": "Fining; maximum fines; frequency",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F02 — fines"
+    }
+  },
+  {
+    "id": "F03",
+    "topic": "fines",
+    "source_refs": [
+      "enforcement"
+    ],
+    "locator": "Fining; Standard Bylaws",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F03 — fines"
+    }
+  },
+  {
+    "id": "F04",
+    "topic": "hearings",
+    "source_refs": [
+      "hearings"
+    ],
+    "locator": "Requesting a council hearing; SPA s.34.1 as identified by guidance",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F04 — hearings"
+    }
+  },
+  {
+    "id": "F05",
+    "topic": "bylaws-rules",
+    "source_refs": [
+      "bylaws"
+    ],
+    "locator": "Rules; bylaws; ratification",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F05 — bylaws-rules"
+    }
+  },
+  {
+    "id": "F06",
+    "topic": "bylaw-amendments",
+    "source_refs": [
+      "amendments"
+    ],
+    "locator": "Voting; filing; getting copies",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F06 — bylaw-amendments"
+    }
+  },
+  {
+    "id": "F07",
+    "topic": "pets",
+    "source_refs": [
+      "pets"
+    ],
+    "locator": "Standard pet bylaw; grandfathering",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F07 — pets"
+    }
+  },
+  {
+    "id": "F08",
+    "topic": "pets",
+    "source_refs": [
+      "pets"
+    ],
+    "locator": "Guide dogs, service dogs and human rights",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F08 — pets"
+    }
+  },
+  {
+    "id": "F09",
+    "topic": "smoking-cannabis",
+    "source_refs": [
+      "smoking"
+    ],
+    "locator": "Scope; nuisance; medical cannabis",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F09 — smoking-cannabis"
+    }
+  },
+  {
+    "id": "F10",
+    "topic": "age-restrictions",
+    "source_refs": [
+      "age"
+    ],
+    "locator": "Permitted age restrictions; exemptions",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F10 — age-restrictions"
+    }
+  },
+  {
+    "id": "F11",
+    "topic": "rentals",
+    "source_refs": [
+      "shortterm"
+    ],
+    "locator": "Distinction from longer-term rentals",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F11 — rentals"
+    }
+  },
+  {
+    "id": "F12",
+    "topic": "short-term-rentals",
+    "source_refs": [
+      "shortterm"
+    ],
+    "locator": "Provincial legislation; data sharing",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F12 — short-term-rentals"
+    }
+  },
+  {
+    "id": "F13",
+    "topic": "tenant-rights-form-k",
+    "source_refs": [
+      "spa"
+    ],
+    "locator": "s.146",
+    "promotion_gate": "primary_passage_read; map_existing_item_and_review",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F13 — tenant-rights-form-k"
+    }
+  },
+  {
+    "id": "F14",
+    "topic": "tenant-rights-form-k",
+    "source_refs": [
+      "tenants"
+    ],
+    "locator": "Assignment of landlord powers and duties",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F14 — tenant-rights-form-k"
+    }
+  },
+  {
+    "id": "F15",
+    "topic": "privacy-records",
+    "source_refs": [
+      "spa"
+    ],
+    "locator": "s.36",
+    "promotion_gate": "primary_passage_read; map_existing_item_and_review",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F15 — privacy-records"
+    }
+  },
+  {
+    "id": "F16",
+    "topic": "privacy-records",
+    "source_refs": [
+      "records"
+    ],
+    "locator": "Access; fees; retention; privacy",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F16 — privacy-records"
+    }
+  },
+  {
+    "id": "F17",
+    "topic": "human-rights-accommodation",
+    "source_refs": [
+      "hr"
+    ],
+    "locator": "What is discrimination; accommodation; justification",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F17 — human-rights-accommodation"
+    }
+  },
+  {
+    "id": "F18",
+    "topic": "human-rights-accommodation",
+    "source_refs": [
+      "hr-services"
+    ],
+    "locator": "Section 8; strata services example",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F18 — human-rights-accommodation"
+    }
+  },
+  {
+    "id": "F19",
+    "topic": "repairs-maintenance",
+    "source_refs": [
+      "repair"
+    ],
+    "locator": "Division of repair and maintenance duties",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F19 — repairs-maintenance"
+    }
+  },
+  {
+    "id": "F20",
+    "topic": "insurance-deductibles",
+    "source_refs": [
+      "insurance"
+    ],
+    "locator": "Required insurance; deductible; owner insurance",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F20 — insurance-deductibles"
+    }
+  },
+  {
+    "id": "F21",
+    "topic": "depreciation-reports",
+    "source_refs": [
+      "depreciation"
+    ],
+    "locator": "Updated requirements; existing strata corporations",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F21 — depreciation-reports"
+    }
+  },
+  {
+    "id": "F22",
+    "topic": "depreciation-reports",
+    "source_refs": [
+      "depreciation"
+    ],
+    "locator": "Transition deadlines",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F22 — depreciation-reports"
+    }
+  },
+  {
+    "id": "F23",
+    "topic": "electrical-planning",
+    "source_refs": [
+      "electrical"
+    ],
+    "locator": "Who needs a report; deadlines",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F23 — electrical-planning"
+    }
+  },
+  {
+    "id": "F24",
+    "topic": "ev-charging",
+    "source_refs": [
+      "electrical"
+    ],
+    "locator": "EV charging requests; EPR compared with EV-ready plan",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F24 — ev-charging"
+    }
+  },
+  {
+    "id": "F25",
+    "topic": "form-b-disclosure",
+    "source_refs": [
+      "formb"
+    ],
+    "locator": "Deadline; information; attachments",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F25 — form-b-disclosure"
+    }
+  },
+  {
+    "id": "F26",
+    "topic": "form-b-disclosure",
+    "source_refs": [
+      "formb"
+    ],
+    "locator": "Fees; sections",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F26 — form-b-disclosure"
+    }
+  },
+  {
+    "id": "F27",
+    "topic": "parking-storage",
+    "source_refs": [
+      "parking"
+    ],
+    "locator": "Ownership; LCP; common property; EV stalls",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F27 — parking-storage"
+    }
+  },
+  {
+    "id": "F28",
+    "topic": "contingency-reserve-fund",
+    "source_refs": [
+      "crf"
+    ],
+    "locator": "Minimum contribution; planning; spending",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F28 — contingency-reserve-fund"
+    }
+  },
+  {
+    "id": "F29",
+    "topic": "strata-fees-arrears",
+    "source_refs": [
+      "fees"
+    ],
+    "locator": "Budget approval; allocation; collection",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F29 — strata-fees-arrears"
+    }
+  },
+  {
+    "id": "F30",
+    "topic": "special-levies",
+    "source_refs": [
+      "special-levies"
+    ],
+    "locator": "Approval; resolution; allocation",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F30 — special-levies"
+    }
+  },
+  {
+    "id": "F31",
+    "topic": "voting-proxies",
+    "source_refs": [
+      "voting"
+    ],
+    "locator": "Voting thresholds; abstentions; exceptions",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F31 — voting-proxies"
+    }
+  },
+  {
+    "id": "F32",
+    "topic": "crt-process",
+    "source_refs": [
+      "crt"
+    ],
+    "locator": "What the CRT can and cannot decide",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F32 — crt-process"
+    }
+  },
+  {
+    "id": "F33",
+    "topic": "crt-process",
+    "source_refs": [
+      "crt-rules"
+    ],
+    "locator": "Current rules; older versions",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F33 — crt-process"
+    }
+  },
+  {
+    "id": "F34",
+    "topic": "crt-process",
+    "source_refs": [
+      "crt-fees"
+    ],
+    "locator": "Strata fees; fee waivers",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F34 — crt-process"
+    }
+  },
+  {
+    "id": "F35",
+    "topic": "tenancy-disputes",
+    "source_refs": [
+      "rtb27"
+    ],
+    "locator": "Section K, PDF pages 14–15; section I, pages 11–12",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F35 — tenancy-disputes"
+    }
+  },
+  {
+    "id": "F36",
+    "topic": "tenancy-disputes",
+    "source_refs": [
+      "rtb27"
+    ],
+    "locator": "Section K, PDF page 15",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F36 — tenancy-disputes"
+    }
+  },
+  {
+    "id": "F37",
+    "topic": "management-agents",
+    "source_refs": [
+      "bcfsa"
+    ],
+    "locator": "Service agreement; disclosures; conflicts; complaints",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F37 — management-agents"
+    }
+  },
+  {
+    "id": "F38",
+    "topic": "building-onboarding",
+    "source_refs": [
+      "ltsa"
+    ],
+    "locator": "Sources of strata records",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F38 — building-onboarding"
+    }
+  },
+  {
+    "id": "F39",
+    "topic": "building-onboarding",
+    "source_refs": [
+      "ltsa-index"
+    ],
+    "locator": "General index; fees",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F39 — building-onboarding"
+    }
+  },
+  {
+    "id": "F40",
+    "topic": "legal-changes",
+    "source_refs": [
+      "updates"
+    ],
+    "locator": "November 2025 update",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F40 — legal-changes"
+    }
+  },
+  {
+    "id": "F41",
+    "topic": "human-rights-process",
+    "source_refs": [
+      "hr-transition"
+    ],
+    "locator": "Application of amendment; transition",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F41 — human-rights-process"
+    }
+  },
+  {
+    "id": "F42",
+    "topic": "legislation-scope",
+    "source_refs": [
+      "legislation"
+    ],
+    "locator": "Strata legislation; other relevant legislation",
+    "promotion_gate": "verify_primary_provision_and_resolve_kb_id",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "claim_text_location": {
+      "file": "Evidence_and_Sources.md",
+      "heading": "F42 — legislation-scope"
+    }
+  }
+]

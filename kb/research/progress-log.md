@@ -280,3 +280,42 @@ entirely, and an answer could not be traced to the legislation version behind it
   (1 pre-existing warning), app tests 310 pass, `next build` succeeds.
 - Not done, and needs a person: the scheduled job that actually runs the sync (F1/F2 are still
   manual), and surfacing staleness in the UI from `jurisdictions.last_synced_at`.
+
+## 2026-10-01 — session 3 (continued): the ChatGPT research pack, and the gap it found
+
+A second research pack was supplied at `kb/BylawIQ_Research_Pack_2026-09-30/`. It was read as leads,
+not findings: it had no access to this repository and says so, so nothing in it was treated as
+verified law. Where it pointed at a provision, that provision was read in the Act or Regulation in
+this kb before anything was written.
+
+- **It found a real gap, and an urgent one.** Its change watchlist named electrical planning report
+  deadlines of 2026-12-31 and 2028-12-31. Checking the kb: Act s. 94.1 and Regulation Part 5.2
+  (ss. 5.7 to 5.12) were **already imported and completely untagged** — `topics: []` — so the whole
+  regime was invisible to topic retrieval and had no guide. The first deadline is three months from
+  today. Verified from the Regulation's own text and acted on:
+  - Two taxonomy topics added, `electrical-planning-reports` and `ev-charging`, and the relevant
+    Act and Regulation sections tagged in `tools/lib/bclaws-topics.ts` (a duplicate-key check was
+    added while doing it: four Regulation keys were being silently overridden).
+  - Two topic guides, two eval sets (12 cases), a legal-tracker entry and a new entry in the
+    onboarding document checklist.
+  - The tracker entry is the only obligation in the kb with a deadline inside three months, and
+    unlike the rental restriction entry its dates come from the Regulation's own text, so they do
+    not wait on the Tables of Legislative Changes.
+- **It independently confirmed the BC Laws robots.txt block** (question 24), using the same
+  identifying User-Agent and stopping for the same reason. Two separate efforts reaching the same
+  stop makes that a settled fact rather than one reading.
+- **It recorded a 403 on the CRT decisions portal** on the same day our request returned 200. So
+  that block is intermittent; the licensing register now says to treat any 403 as a stop whenever it
+  appears, which strengthens question 35 rather than resolving it.
+- **About 30 of its 40 sources were new**, now in `source-register.md` by publisher: the province's
+  ~24 strata guidance pages, the BC Human Rights Tribunal, the LTSA, BCFSA, RTB Policy Guideline 27
+  and the OIPC. None imported; none licensed for us yet.
+- **Four new open questions**: 36 (the guidance pages are not King's Printer licensed, so decide
+  what we may do with them), 37 (the province's own update subscription could trigger the F1 sync
+  **without fetching from BC Laws at all**, which is the first route around question 24 that anyone
+  has found), 38 (eight more instruments for the A7 scope list, including the bare land regulations
+  and the actual Short-Term Rental Accommodations Act that question 33 said was missing), and 39
+  (six more taxonomy gaps the kb already holds law for).
+- kb 0.8.0, 537 items, 1632 chunks, validate 0 errors, 92 tests pass.
+- The pack is committed because the registers now cite it. Its own README says not to index it, and
+  it is not indexed: it sits outside the five content folders, so the loader never sees it.

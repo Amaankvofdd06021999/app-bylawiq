@@ -1,0 +1,374 @@
+[
+  {
+    "id": "D01",
+    "document": "Registered strata plan and amendments",
+    "source_refs": [
+      "ltsa",
+      "parking",
+      "repair"
+    ],
+    "purpose": "Boundary, lot/common/LCP classification; building/section identity",
+    "verification": "Registry copy; keep diagram page references",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D02",
+    "document": "Complete filed bylaws and amendment chain",
+    "source_refs": [
+      "amendments",
+      "ltsa-index"
+    ],
+    "purpose": "Determine operative clause on the relevant date",
+    "verification": "Obtain full index and each operative filing; reconcile repeals",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D03",
+    "document": "Current rules and ratification history",
+    "source_refs": [
+      "bylaws"
+    ],
+    "purpose": "Identify rules still in effect and their scope",
+    "verification": "Signed/current rules plus adopting and ratifying minutes",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D04",
+    "document": "AGM/SGM notices, resolutions and minutes",
+    "source_refs": [
+      "voting",
+      "fees",
+      "amendments"
+    ],
+    "purpose": "Authority for budgets, levies, bylaw changes and votes",
+    "verification": "Match final resolutions to vote records and later filings",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D05",
+    "document": "Council bylaws, membership, minutes and delegations",
+    "source_refs": [
+      "hearings",
+      "bcfsa"
+    ],
+    "purpose": "Decision authority, conflicts and process",
+    "verification": "Restrict confidential attachments; distinguish draft/final minutes",
+    "suggested_access": "role-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D06",
+    "document": "Current budget and financial statements",
+    "source_refs": [
+      "fees",
+      "crf",
+      "formb"
+    ],
+    "purpose": "Fee allocation and operating/reserve context",
+    "verification": "Record fiscal period and approval resolution",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D07",
+    "document": "Unit-entitlement and allocation schedules",
+    "source_refs": [
+      "fees"
+    ],
+    "purpose": "Support allocation rather than assume equal shares",
+    "verification": "Use registered schedule and any valid alternative basis",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D08",
+    "document": "Special-levy resolutions and payment schedules",
+    "source_refs": [
+      "special-levies"
+    ],
+    "purpose": "Identify purpose, authorization, amounts and due dates",
+    "verification": "Separate resolution from individual ledgers",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D09",
+    "document": "Account and arrears ledger",
+    "source_refs": [
+      "fees"
+    ],
+    "purpose": "Distinguish fees, levies, interest, fines and chargebacks",
+    "verification": "Reconcile opening balance; access limited to proper role",
+    "suggested_access": "highly-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D10",
+    "document": "Depreciation report and updates",
+    "source_refs": [
+      "depreciation",
+      "formb"
+    ],
+    "purpose": "Report compliance, asset inventory and long-term funding",
+    "verification": "Record author qualification, report date and supersession",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D11",
+    "document": "Electrical planning report and updates",
+    "source_refs": [
+      "electrical",
+      "formb"
+    ],
+    "purpose": "Deadline classification and owner-request trigger",
+    "verification": "Do not substitute an EV-ready plan for the EPR",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D12",
+    "document": "Insurance policy, endorsements, summary and appraisal",
+    "source_refs": [
+      "insurance",
+      "formb"
+    ],
+    "purpose": "Identify actual coverage, limits, exclusions and deductibles",
+    "verification": "Policy term and endorsements outrank a stale summary for factual extraction",
+    "suggested_access": "role-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D13",
+    "document": "Form B and all attachments",
+    "source_refs": [
+      "formb"
+    ],
+    "purpose": "Transaction-date disclosure and document completeness",
+    "verification": "Record request and issue dates; check section certificate needs",
+    "suggested_access": "authorized-recipient",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D14",
+    "document": "Form F and supporting account record",
+    "source_refs": [
+      "lawmapping",
+      "fees"
+    ],
+    "purpose": "Transfer-related certificate workflow",
+    "verification": "Exact issuance rules and statutory source still to verify",
+    "suggested_access": "authorized-recipient",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D15",
+    "document": "Form K and assignments of owner powers",
+    "source_refs": [
+      "spa",
+      "tenants"
+    ],
+    "purpose": "Tenant status and rights without assuming family assignment",
+    "verification": "Minimize personal data; record effective period",
+    "suggested_access": "highly-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D16",
+    "document": "Parking/storage designations and agreements",
+    "source_refs": [
+      "parking",
+      "formb"
+    ],
+    "purpose": "Differentiate property rights from revocable permission",
+    "verification": "Tie plan reference to lease, licence or permission instrument",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D17",
+    "document": "Alteration approvals, agreements and drawings",
+    "source_refs": [
+      "repair",
+      "formb"
+    ],
+    "purpose": "Approval conditions and ongoing maintenance allocation",
+    "verification": "Keep signed version, affected component and applicable bylaw",
+    "suggested_access": "role-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D18",
+    "document": "Repair contracts, engineering reports and maintenance log",
+    "source_refs": [
+      "repair",
+      "insurance"
+    ],
+    "purpose": "Separate physical facts from disputed legal responsibility",
+    "verification": "Date reports and scope; retain source diagrams as authorized",
+    "suggested_access": "role-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D19",
+    "document": "Complaint, response, hearing and decision records",
+    "source_refs": [
+      "spa",
+      "enforcement",
+      "hearings"
+    ],
+    "purpose": "Reconstruct process and evidence without assuming liability",
+    "verification": "Keep separate restricted case workspace; service/delivery proof",
+    "suggested_access": "highly-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D20",
+    "document": "Accommodation request and decision file",
+    "source_refs": [
+      "hr"
+    ],
+    "purpose": "Track requests and alternatives without overexposing health information",
+    "verification": "Separate functional needs from unnecessary medical details",
+    "suggested_access": "highly-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D21",
+    "document": "Management agreement, disclosures and authority",
+    "source_refs": [
+      "bcfsa"
+    ],
+    "purpose": "Identify the firm’s actual mandate and conflicts",
+    "verification": "Do not infer power from a generic firm template",
+    "suggested_access": "firm-and-council-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D22",
+    "document": "Privacy policy, retention schedule and vendor agreements",
+    "source_refs": [
+      "records",
+      "oipc-unresolved"
+    ],
+    "purpose": "Map purposes, access, safeguards and retention decisions",
+    "verification": "Policy content requires current PIPA/OIPC review",
+    "suggested_access": "role-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D23",
+    "document": "Section/type and shared-facility agreements",
+    "source_refs": [
+      "lawmapping",
+      "crf"
+    ],
+    "purpose": "Identify responsible entity and expense boundaries",
+    "verification": "Keep entity scope distinct in retrieval metadata",
+    "suggested_access": "role-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D24",
+    "document": "Developer turnover, warranty and first-AGM package",
+    "source_refs": [
+      "depreciation",
+      "legislation"
+    ],
+    "purpose": "Creation-stage rules and specialist follow-up",
+    "verification": "Primary source checklist still required for exact duties",
+    "suggested_access": "building-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "D25",
+    "document": "Local permits, licences and inspection records",
+    "source_refs": [
+      "shortterm",
+      "smoking"
+    ],
+    "purpose": "Support municipality-specific and safety questions",
+    "verification": "Store jurisdiction and validity period; rights review before reuse",
+    "suggested_access": "role-restricted",
+    "statutory_requirement": "Exact requirement, exemptions, recipient and retention must be mapped; inclusion here does not mean universally mandatory.",
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+]

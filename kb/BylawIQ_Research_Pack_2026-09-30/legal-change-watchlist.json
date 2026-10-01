@@ -1,0 +1,206 @@
+[
+  {
+    "id": "T01",
+    "date": "2022-11-24",
+    "date_verified_in": "official_guidance_only",
+    "event": "Rental restrictions and tenant powers",
+    "evidence_note_ids": [
+      "F11",
+      "F14"
+    ],
+    "topics": [
+      "rentals",
+      "tenant-rights-form-k",
+      "privacy-records"
+    ],
+    "implementation_implication": "Recheck historic/current bylaw interpretation and assignment logic.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T02",
+    "date": "2023-05-01",
+    "date_verified_in": "official_guidance_only",
+    "event": "Expanded age-bylaw exemptions",
+    "evidence_note_ids": [
+      "F10"
+    ],
+    "topics": [
+      "age-restrictions"
+    ],
+    "implementation_implication": "Keep exemption facts and residency timing separate from ownership.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T03",
+    "date": "2023-11-01",
+    "date_verified_in": "official_guidance_only",
+    "event": "CRF contribution minimum",
+    "evidence_note_ids": [
+      "F28"
+    ],
+    "topics": [
+      "contingency-reserve-fund",
+      "budgets-financial-statements"
+    ],
+    "implementation_implication": "Distinguish annual minimum contribution from reserve adequacy.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T04",
+    "date": "2024-07-01",
+    "date_verified_in": "official_guidance_only",
+    "event": "Depreciation report regime change",
+    "evidence_note_ids": [
+      "F21"
+    ],
+    "topics": [
+      "depreciation-reports"
+    ],
+    "implementation_implication": "Retire annual-waiver logic and use the appropriate transition cohort.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T05",
+    "date": "2025-11",
+    "date_verified_in": "official_guidance_only",
+    "event": "Obsolete provincial guides removed",
+    "evidence_note_ids": [
+      "F40"
+    ],
+    "topics": [
+      "legal-changes"
+    ],
+    "implementation_implication": "Exclude historical 2013 guides from current retrieval.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T06",
+    "date": "2026-02-01",
+    "date_verified_in": "official_guidance_only",
+    "event": "CRT Standard Rules version",
+    "evidence_note_ids": [
+      "F33"
+    ],
+    "topics": [
+      "crt-process"
+    ],
+    "implementation_implication": "Version procedural material and identify claim-stage applicability.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T07",
+    "date": "2026-05-01",
+    "date_verified_in": "official_guidance_only",
+    "event": "BCHRT procedural transition",
+    "evidence_note_ids": [
+      "F41"
+    ],
+    "topics": [
+      "human-rights-process"
+    ],
+    "implementation_implication": "Capture whether disclosure requirements had already been notified.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T08",
+    "date": "2026-07-01",
+    "date_verified_in": "official_guidance_only",
+    "event": "First depreciation-report transition deadline",
+    "evidence_note_ids": [
+      "F22"
+    ],
+    "topics": [
+      "depreciation-reports"
+    ],
+    "implementation_implication": "Already elapsed at research date; classify location/report cohort before flagging.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T09",
+    "date": "2026-12-31",
+    "date_verified_in": "official_guidance_only",
+    "event": "First electrical planning report deadline",
+    "evidence_note_ids": [
+      "F23"
+    ],
+    "topics": [
+      "electrical-planning",
+      "ev-charging"
+    ],
+    "implementation_implication": "Capture lots, location, island exception, creation date and report status.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T10",
+    "date": "2027-07-01",
+    "date_verified_in": "official_guidance_only",
+    "event": "Remaining-BC depreciation transition deadline",
+    "evidence_note_ids": [
+      "F22"
+    ],
+    "topics": [
+      "depreciation-reports"
+    ],
+    "implementation_implication": "Apply the transition cohort and exceptions; do not generalize to all new stratas.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  },
+  {
+    "id": "T11",
+    "date": "2028-12-31",
+    "date_verified_in": "official_guidance_only",
+    "event": "Remaining-BC electrical planning deadline",
+    "evidence_note_ids": [
+      "F23"
+    ],
+    "topics": [
+      "electrical-planning",
+      "ev-charging"
+    ],
+    "implementation_implication": "Keep new-strata timing separate.",
+    "primary_commencement_verification": "pending",
+    "scheduled_automation": false,
+    "status": "draft",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+]
