@@ -319,3 +319,43 @@ this kb before anything was written.
 - kb 0.8.0, 537 items, 1632 chunks, validate 0 errors, 92 tests pass.
 - The pack is committed because the registers now cite it. Its own README says not to index it, and
   it is not indexed: it sits outside the five content folders, so the loader never sees it.
+
+## 2026-10-01 — session 3 (continued): the decision collections, completely this time
+
+Asked directly whether the CRT site had been gone through completely. It had not: the C1 pass ran
+one keyword search per topic and read the first page or two of each. Measured honestly, that was
+777 distinct decisions out of a collection whose individual queries reported hundreds of hits each
+— roughly a quarter, biased towards the words chosen. So both collections were enumerated properly.
+
+- **CRT, now complete.** The Strata Property collection reports 2,842 decisions. Paging it by date
+  rather than by keyword, 114 pages, yields **2,832 distinct decisions, 2016 to 2026**, in
+  `decision-candidates/crt-index.jsonl`: citation, date, decision type, URL. 2,785 are final
+  decisions; the rest are summary, preliminary, under appeal, after appeal, under judicial review or
+  after judicial review. Nine are published **without a neutral citation**, mostly default
+  decisions; they are in `crt-index-uncited.json` by date and type only, since those rows carry a
+  style of cause. A third malformed citation turned up on the site (`2018  BCCRT  779`, double
+  spaces) alongside the two already known.
+- **Courts, as complete as this search allows.** Searching the exact phrase "Strata Property Act"
+  and paging the whole result set gives 739 judgments; adding the 24 found by topical phrases that
+  do not contain that phrase gives **763, 2000 to 2026, 629 BCSC and 134 BCCA**, in
+  `courts-index.jsonl`. The honest limit is stated in the file: a phrase search finds judgments
+  containing a phrase, so a strata judgment that never writes the Act's name and matched none of
+  the topical phrases is not there.
+- **Two transport problems worth recording**, because both looked like blocks and neither was. The
+  court site's paging is an ASP.NET postback whose body runs to 50KB; HTTP/2 fails on it with a
+  framing error, and the form needs a session cookie. Pinning to HTTP/1.1 and carrying a cookie jar
+  fixed it. Neither is evasion — the User-Agent still identifies this bot and the path is one
+  robots.txt allows. Separately, the court site serves both `/jdb-txt/` and `/Jdb-txt/`, and a
+  case-sensitive pattern silently dropped 27 of 739 rows until it was caught by reconciling the
+  parsed count against the site's own total.
+- **No decision document was fetched from either site, in any pass.** Only search result pages.
+- **What else is fetchable, checked and tabulated** in `licensing-register.md`. The short version:
+  rights are the blocker, not access. BC Laws is the one source we are clearly licensed for and may
+  not fetch (question 24). BCHRT and OIPC are fetchable and unlicensed. gov.bc.ca could not be
+  reached by this client at all, on two attempts. BCFSA returns 403. LTSA allows everything but is a
+  paid registry, not a corpus. CanLII is prohibited and was never touched.
+- Both indexes are sorted by date, so a later run appends near the end and `git diff` shows what is
+  new. That is the mechanism for the monthly decisions sweep (F2), which still waits on question 37
+  for its trigger.
+- Politeness throughout: sequential, 2 seconds apart, identifying User-Agent, raw HTML cached in
+  `kb/.cache/` (git-ignored), stop on any non-200.

@@ -1,27 +1,40 @@
 # BC Supreme Court and Court of Appeal strata judgment candidates
 
-Task C2, **partly blocked**. This lists judgments worth reading, found by searching the courts'
-own judgment search. It does not say what any of them decided, and the "why it matters" column
-the task asked for is not here. The reason is access, not effort:
+Task C2. Judgments worth reading. **It does not say what any of them decided**, and the "why it
+matters" column the task asked for is not here. The reason is access, not effort:
 
 - `robots.txt` on bccourts.ca disallows `/jdb-txt/`, which is where every judgment lives. So the
-  judgments cannot be read, and the research plan's rule 3 says obey robots.txt.
-- The search results pages are allowed, and they were used. But they carry only a style of cause,
-  a neutral citation, a date and a court. There is no snippet. Abstracts exist for a handful of
-  Court of Appeal judgments and are mostly about other areas of law.
+  judgments cannot be read by an automated client, and the research plan's rule 3 says obey
+  robots.txt.
+- The search results pages are allowed, and they were used. They carry only a style of cause, a
+  neutral citation, a date and a court. There is no snippet. Abstracts exist for a handful of Court
+  of Appeal judgments and are mostly about other areas of law.
 - Writing a reason from memory instead would break rule 1. Nothing here is written from memory.
-
-So what a phrase search can establish is: *this judgment contains this phrase*. That is the
-signal below. A judgment that contains "section 135 of the Strata Property Act" is about the
-complaint and answer procedure; that is worth knowing, and it is as far as the evidence goes.
 
 **Party names are deliberately absent.** The search results give a style of cause; the research
 plan's rule 6 forbids recording the names of private individuals, so only the neutral citation is
 kept. The neutral citation identifies the judgment on its own.
 
-**Nothing may be summarised from these yet.** The courts require written permission to use
-published decisions in a user-pay legal research tool, and it has not been asked for: open
-question 18. Until then the interim practice is citation and link only.
+**Nothing may be summarised from these yet.** The courts require written permission to use published
+decisions in a user-pay legal research tool, and it has not been asked for: open question 18. Until
+then the interim practice is citation and link only.
+
+## What is here
+
+`courts-index.jsonl` holds **763 judgments, 2000 to 2026**: 629 BC Supreme Court and 134 Court of
+Appeal, one JSON object per line with the neutral citation, court, date, official URL, and which
+search found it.
+
+739 of them were found by searching the exact phrase "Strata Property Act" and paging the entire
+result set, which is as close to complete as this search allows: it is every judgment on the court
+site whose text contains the name of the Act. The other 24 were found by the topical phrase
+searches listed below and do not contain that exact phrase — older judgments, and judgments that
+discuss strata law without naming the Act in those words. 127 judgments carry topic hints from a
+matching topical phrase.
+
+That is the honest limit of the method: a phrase search finds judgments containing a phrase. A
+judgment about a strata dispute that never writes "Strata Property Act" and matched none of the
+topical phrases is not in this file.
 
 ## How to finish C2
 
@@ -32,12 +45,16 @@ permission application has to be made before any of this can become a summary an
 
 ## How the list was built
 
-`POST` to `https://www.bccourts.ca/search_judgments.aspx`, which robots.txt allows, once per
-phrase, sequential, 2 seconds apart, with an identifying User-Agent; raw HTML cached in
-`kb/.cache/bccourts/` (git-ignored). No judgment was requested. The search is exact-phrase: a
-word-bag query such as "pet bylaw strata" returns nothing, while "pet bylaw" returns results.
-Results come back newest first, not by relevance, so these are not "leading" cases in any sense —
-that judgment has to be made by someone who reads them.
+`POST` to `https://www.bccourts.ca/search_judgments.aspx`, which robots.txt allows, sequential,
+2 seconds apart, with an identifying User-Agent; raw HTML cached in `kb/.cache/bccourts/`
+(git-ignored). **No judgment was requested.** Paging is an ASP.NET postback, so each request carries
+the viewstate and session cookie from the previous response, and is pinned to HTTP/1.1 because
+HTTP/2 fails on a body that size against this host. Neither is evasion: the User-Agent still
+identifies this bot and the path is one robots.txt allows.
+
+The search is exact-phrase: a word-bag query such as "pet bylaw strata" returns nothing, while
+"pet bylaw" returns results. Results come back newest first, not by relevance, so these are not
+"leading" cases in any sense — that judgment has to be made by someone who reads them.
 
 Six phrases returned nothing at all and are recorded so nobody repeats them: "section 34.1 of the
 Strata Property Act", "section 121 …", "section 123 …", "section 130 …", "section 141 …" and

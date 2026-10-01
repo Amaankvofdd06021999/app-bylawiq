@@ -23,20 +23,38 @@ person wants it moved back.
   licence (`crt-decisions`, unverified), so Phase C3 waits on open question 19 or on a person
   marking C3 approved.
 
-## How the list was built
+## How the list was built, and how complete it is
 
-One content search per taxonomy topic on the tribunal's own decision search
-(`decisions.civilresolutionbc.ca/crt/en/d/s/index.do`), filtered to the strata collection and to
-final decisions, then the highest-ranked results per topic were taken until the coverage below was
-met. Requests were sequential, 2 seconds apart, with an identifying User-Agent, and the raw HTML
-is cached in `kb/.cache/crt/` (git-ignored). `robots.txt` on that host allows this: it disallows
-one named crawler and two specific document paths, neither of which was requested. 37 requests
-were made in total and every one returned HTTP 200.
+**The 150 below are a curated selection. The complete collection is now indexed separately.**
 
-The earlier licensing research recorded that this site returns 403 to non-browser clients, and the
-folder README said never to fetch it. That premise did not hold on 2026-09-30. The finding is
-recorded in `licensing-register.md` and raised as open question 35 so a person can confirm the
-method rather than have it settled by a bot.
+`crt-index.jsonl` holds **every** decision in the tribunal's Strata Property collection as at
+2026-10-01: **2832 decisions, 2016 to 2026**, one JSON object per line with the neutral citation,
+the decision date, the decision type and the official URL. It was built by paging the collection by
+date, 114 pages, rather than by keyword, so it is not biased towards any choice of search terms and
+a later run can diff it to find what is new (task F2). 9 decisions are published without a neutral
+citation, mostly default decisions; they are counted in `crt-index-uncited.json` by date and type
+only, because those rows carry a style of cause and rule 6 forbids keeping the names of private
+individuals.
+
+Type breakdown: Final Decision 2785, Under Judicial Review 35, Decision After Judicial Review 34, Decision After Appeal 26, Summary Decision 25, Preliminary Decision 22, Under Appeal 9.
+
+The curated 150 in this file came from an earlier pass that ran one keyword search per taxonomy
+topic and read the first page or two of each. That pass saw 777 distinct decisions, about a quarter
+of the collection, and the coverage it gives per topic is what the table below reports. It is still
+the right starting point for C3 — each row carries a reason, which the index does not — but it is a
+sample, and the index is the population.
+
+Three citations are malformed on the tribunal's own site and are normalised in both files, with the
+published form kept alongside: `2018  BCCRT  779` (double spaces), `2022 BCCRT1284` (no space) and
+`2023-BCCRT 207` (hyphen).
+
+Politeness, both passes: sequential requests 2 seconds apart, an identifying User-Agent, raw HTML
+cached in `kb/.cache/crt/` (git-ignored), and a stop on any non-200. `robots.txt` on that host
+disallows one named crawler and two specific document paths; neither was requested, and **no
+decision document was fetched at all** in either pass. The earlier licensing research recorded a 403
+from this host, and the ChatGPT research pack hit one on 2026-09-30; our requests returned 200. The
+block is therefore intermittent, and a 403 is always a stop. The method still needs ratifying:
+open question 35.
 
 Search relevance is not a measure of importance, and a snippet can mislead. Treat the reasons as
 leads.
@@ -76,7 +94,7 @@ leads.
 | `strata-fees-arrears` | 3 |
 | **Total** | **150** |
 
-All 29 taxonomy topics are covered, the eight highest-traffic topics with 10 each. Dates run from 2017-02-28 to 2026-09-01.
+All 29 taxonomy topics are covered by the curated selection, the eight highest-traffic topics with 10 each. Selected dates run from 2017-02-28 to 2026-09-01.
 
 ## Pets (`pets`)
 

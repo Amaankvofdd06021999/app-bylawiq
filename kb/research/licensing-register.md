@@ -18,3 +18,25 @@ The terms below come from the licensing research of 2026-09-30. The full report,
 
 - **Open Government Licence – British Columbia (OGL-BC), version 2.0.** It applies only to records in the B.C. Data Catalogue that specify it. It does not cover BC statutes and regulations (King's Printer Licence), court decisions (the courts' own policy) or CRT decisions (no licence found). The BC Laws API has a Data Catalogue entry, but the API page states that the King's Printer Licence governs the content. It is deliberately not a row above, so the validator rejects it as a licence id. Source: https://www2.gov.bc.ca/gov/content/data/policy-standards/open-data/open-government-licence-bc (archived 2025-04-09). High confidence that it does not apply.
 - **Open Government Licence – Canada.** Federal data only; irrelevant to BC law.
+
+## What is actually fetchable, checked 2026-10-01
+
+Access and rights are different questions, and for most of what is left **rights are the blocker,
+not access**. Checked with the plan's identifying User-Agent.
+
+| Host | robots.txt | Reachable | Rights | Where that leaves us |
+|---|---|---|---|---|
+| `www.bclaws.gov.bc.ca` | **blanket `Disallow: /`** except Googlebot and Bingbot | yes | Licensed (King's Printer) | The one source we are clearly licensed for is the one we may not fetch. Question 24. |
+| `decisions.civilresolutionbc.ca` | allows the search pages; disallows one crawler and two documents | yes, but 403 is intermittent | **Unverified** | Citations, dates and URLs only. The whole collection is now indexed (2,832). Decision text needs question 19. |
+| `www.bccourts.ca` | `/jdb-txt/` disallowed, search allowed | yes | **Permission required** | Citations and URLs only. 763 judgments indexed. The judgments themselves are behind the disallow. Question 18. |
+| `www2.gov.bc.ca` | not retrieved | **no — connection fails** | Unresolved (question 36) | The province's ~24 strata guidance pages could not be reached by this client at all, on two attempts. The research pack read them through a different connector. |
+| `www.bchrt.bc.ca` | no blanket disallow | yes | Unresolved | Fetchable, but we have no licence to store it. Relevant to the thinnest guide in the kb. |
+| `www.oipc.bc.ca` | no blanket disallow | yes | Unresolved | Fetchable, not licensed. The pack's document URLs 404'd. |
+| `ltsa.ca` | `Disallow:` (nothing disallowed) | yes | Paid registry, own terms | Not a corpus. It is where a building obtains its own filed documents. |
+| `www.bcfsa.ca` | not retrieved | **no — 403** | Unresolved | Blocked to this client. |
+| `www.canlii.org` | `Disallow: /` | — | **Prohibited by its terms** | Never fetched, never will be. |
+
+The practical reading: more crawling is not what the kb is short of. Two sources are fetchable and
+unlicensed (BCHRT, OIPC), one is licensed and unfetchable (BC Laws), and the two decision corpora
+are fetchable for citations but not for text. Questions 18, 19, 24 and 36 are worth more than any
+further scraping.
