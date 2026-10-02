@@ -28,8 +28,11 @@ person wants it moved back.
 **The 150 below are a curated selection. The complete collection is now indexed separately.**
 
 `crt-index.jsonl` holds **every** decision in the tribunal's Strata Property collection as at
-2026-10-01: **2832 decisions, 2016 to 2026**, one JSON object per line with the neutral citation,
-the decision date, the decision type and the official URL. It was built by paging the collection by
+2026-10-01: **2,832 decisions, 2016 to 2026**, one JSON object per line with the neutral citation,
+the decision date, the decision type and the official URL. `crt-adjacent-index.jsonl` holds a
+further **957** from the tribunal's other collections that mention strata — 904 small claims and 53
+societies and co-ops — kept separate because they are noisy. See this folder's README before using
+them. It was built by paging the collection by
 date, 114 pages, rather than by keyword, so it is not biased towards any choice of search terms and
 a later run can diff it to find what is new (task F2). 9 decisions are published without a neutral
 citation, mostly default decisions; they are counted in `crt-index-uncited.json` by date and type

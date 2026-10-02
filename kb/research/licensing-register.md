@@ -27,10 +27,10 @@ not access**. Checked with the plan's identifying User-Agent.
 | Host | robots.txt | Reachable | Rights | Where that leaves us |
 |---|---|---|---|---|
 | `www.bclaws.gov.bc.ca` | **blanket `Disallow: /`** except Googlebot and Bingbot | yes | Licensed (King's Printer) | The one source we are clearly licensed for is the one we may not fetch. Question 24. |
-| `decisions.civilresolutionbc.ca` | allows the search pages; disallows one crawler and two documents | yes, but 403 is intermittent | **Unverified** | Citations, dates and URLs only. The whole collection is now indexed (2,832). Decision text needs question 19. |
-| `www.bccourts.ca` | `/jdb-txt/` disallowed, search allowed | yes | **Permission required** | Citations and URLs only. 763 judgments indexed. The judgments themselves are behind the disallow. Question 18. |
+| `decisions.civilresolutionbc.ca` | allows the search pages; disallows one crawler and two documents | yes, but 403 is intermittent | **Unverified** | Citations, dates and URLs only. Strata Property collection indexed completely (2,832), plus 957 strata-mentioning decisions from the small claims and societies collections. Search is AND-of-words, not phrase. Decision text needs question 19. |
+| `www.bccourts.ca` | `/jdb-txt/` disallowed, search allowed | yes | **Permission required** | Citations and URLs only. 4,790 judgments indexed, 1990 to 2026 — the database's full depth. 463 predate neutral citations and are keyed by file id. Search is phrase-based. The judgments themselves are behind the disallow. Question 18. |
 | `www2.gov.bc.ca` | not retrieved | **no — connection fails** | Unresolved (question 36) | The province's ~24 strata guidance pages could not be reached by this client at all, on two attempts. The research pack read them through a different connector. |
-| `www.bchrt.bc.ca` | no blanket disallow | yes | Unresolved | Fetchable, but we have no licence to store it. Relevant to the thinnest guide in the kb. |
+| `www.bchrt.bc.ca` | no blanket disallow | yes | Unresolved for guidance; **decisions out of reach** | Guidance pages fetchable but unlicensed. Its decisions are published only on CanLII — no self-hosted decision files at all — and CanLII is prohibited to us, so BCHRT decisions cannot be indexed by any available route. |
 | `www.oipc.bc.ca` | no blanket disallow | yes | Unresolved | Fetchable, not licensed. The pack's document URLs 404'd. |
 | `ltsa.ca` | `Disallow:` (nothing disallowed) | yes | Paid registry, own terms | Not a corpus. It is where a building obtains its own filed documents. |
 | `www.bcfsa.ca` | not retrieved | **no — 403** | Unresolved | Blocked to this client. |

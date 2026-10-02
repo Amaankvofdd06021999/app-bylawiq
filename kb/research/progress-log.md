@@ -359,3 +359,48 @@ one keyword search per topic and read the first page or two of each. Measured ho
   for its trigger.
 - Politeness throughout: sequential, 2 seconds apart, identifying User-Agent, raw HTML cached in
   `kb/.cache/` (git-ignored), stop on any non-200.
+
+## 2026-10-01 — session 3 (continued): the full depth of both decision corpora
+
+Asked to go back 30+ years and take everything. Two of the three limits turned out to be real, and
+the third was mine.
+
+- **The CRT cannot go back 30 years.** It only acquired strata jurisdiction in 2016, so the
+  2,832 decisions already indexed are its entire history. There is nothing older to find.
+- **The courts go back 36 years, and I had been missing all of it.** The judgment database holds
+  strata-related judgments to **24 January 1990**. The earlier pass found 763 because it searched
+  scattered phrases and read page one of each. Searching "strata" (the broadest term, 4,762 hits)
+  and "Condominium Act" (347, for the pre-2000 regime) and paging both to the end gives
+  **4,790 judgments, 1990 to 2026**: 3,946 BCSC, 844 BCCA; 467 from the 1990s, 1,048 from the
+  2000s, 1,600 from the 2010s, 1,675 from the 2020s.
+- **The oldest data nearly vanished silently.** 463 judgments have no neutral citation, because BC
+  neutral citations only began around 1999. The parser was keyed on citation, so pages 91 to 96 —
+  1990 to 1996, precisely the decade asked for — contributed zero rows and the run looked healthy.
+  It was caught only because the running total stopped moving while pages kept being fetched. Those
+  rows are now keyed by the file id in their URL. The lesson is the one from the `/Jdb-txt/` casing
+  bug earlier the same day: reconcile the parsed count against the source's own total, every time.
+- **The CRT's strata collection is not the whole CRT.** 2024 BCCRT 1181, already in the kb's
+  candidate list, says water leak disputes between owners usually go to the small claims
+  jurisdiction. Searching there found 1,451 strata-mentioning decisions, of which 906 carry a
+  neutral citation; **543 of the 545 without one are default decisions**, where the respondent did
+  not participate, so there is no reasoning to summarise either. With 53 from the societies and
+  co-operatives collection, 957 are indexed in `crt-adjacent-index.jsonl`, kept **separate** from
+  the strata index because sampling showed many are not strata matters at all — they cite
+  `Downing v. Strata Plan VR2356` for an unrelated point about oral hearings. 704 also match a more
+  discriminating term and are flagged.
+- **The two search engines differ, which changes what a result means.** bccourts.ca is phrase-based
+  ("pet bylaw strata" returns nothing, "pet bylaw" returns results). The CRT is AND-of-words
+  ("strata zebra" returns 0). That is why `strata fees` matched 1,445 of 1,451 small claims
+  decisions and was discarded as a confidence signal rather than trusted.
+- **Breadth has a cost, and it is recorded.** "strata" matches the word in any sense; the earliest
+  1990 hit is a mining case using it geologically. Every row carries `found_by`, so a reader can
+  filter to the 739 judgments containing "Strata Property Act" or the 234 containing
+  "Condominium Act".
+- **BCHRT remains out of reach.** It self-hosts no decisions; every link on its law-library page
+  points at CanLII, which we may not touch. Recorded in both registers.
+- **8,588 rows across four files, about 1.8 MB.** All sorted by date, so a refresh appends near the
+  end and `git diff` shows what is new — the F2 mechanism, which still waits on question 37.
+- Still no decision document fetched from either site, in any pass. Only search result pages.
+- One job was stopped at its time limit mid-run: the narrow-phrase confidence pass. Three of its
+  five terms had completed and were cached, so the signal was built from those with no further
+  requests; the two outstanding terms were the useless ones and were dropped deliberately.

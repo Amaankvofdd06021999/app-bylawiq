@@ -21,20 +21,31 @@ then the interim practice is citation and link only.
 
 ## What is here
 
-`courts-index.jsonl` holds **763 judgments, 2000 to 2026**: 629 BC Supreme Court and 134 Court of
-Appeal, one JSON object per line with the neutral citation, court, date, official URL, and which
-search found it.
+`courts-index.jsonl` holds **4,790 judgments, 1990 to 2026**: 3,946 BC Supreme Court and 844 Court
+of Appeal, one JSON object per line with the neutral citation where one exists, the court, the date,
+the official URL, and which search found it.
 
-739 of them were found by searching the exact phrase "Strata Property Act" and paging the entire
-result set, which is as close to complete as this search allows: it is every judgment on the court
-site whose text contains the name of the Act. The other 24 were found by the topical phrase
-searches listed below and do not contain that exact phrase — older judgments, and judgments that
-discuss strata law without naming the Act in those words. 127 judgments carry topic hints from a
-matching topical phrase.
+| Decade | Judgments |
+|---|---|
+| 1990s | 467 |
+| 2000s | 1,048 |
+| 2010s | 1,600 |
+| 2020s | 1,675 |
 
-That is the honest limit of the method: a phrase search finds judgments containing a phrase. A
-judgment about a strata dispute that never writes "Strata Property Act" and matched none of the
-topical phrases is not in this file.
+Built by searching "strata" — the broadest term, and a superset of the narrower strata phrases —
+and paging the entire result set, then the same for "Condominium Act", which covers the pre-2000
+regime and does not always contain the word strata. The topical phrase searches from the earlier
+pass are merged in, and 127 judgments carry topic hints from them.
+
+**463 judgments have no neutral citation** and are keyed by their file id instead. BC neutral
+citations began around 1999, so these are the oldest rows in the set, back to 24 January 1990. A
+citation-keyed parser drops them silently; that happened on the first pass and was caught only by
+reconciling the parsed count against the site's own total.
+
+**The breadth has a cost.** "strata" matches the word in any sense, and in the older years that
+includes geology: the earliest hit, from January 1990, is a mining case. Filter `found_by` to
+`phrase:Strata Property Act` (739) or `phrase:Condominium Act` (234) for judgments that are
+certainly about strata or its predecessor regime.
 
 ## How to finish C2
 
