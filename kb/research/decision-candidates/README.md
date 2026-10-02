@@ -12,22 +12,28 @@ complete for the method named and a later run can diff it to find what is new (t
 |---|---|---|---|
 | `crt-index.jsonl` | 2,832 | 2016–2026 | **Every** decision in the CRT's Strata Property collection. |
 | `crt-index-uncited.json` | 9 | — | Strata Property decisions published with no neutral citation, by date and type only. |
-| `crt-adjacent-index.jsonl` | 957 | 2017–2026 | Decisions in the CRT's **other** collections that mention strata: 904 small claims, 53 societies and co-ops. |
-| `courts-index.jsonl` | 4,790 | **1990–2026** | BC Supreme Court and Court of Appeal judgments, 3,946 BCSC and 844 BCCA. |
+| `crt-adjacent-index.jsonl` | 998 | 2017–2026 | Decisions in **every other** CRT collection that mention strata: 904 small claims, 53 societies and co-ops, 23 accident benefits, 9 accident claims, 6 accident responsibility, 3 intimate images. |
+| `courts-index.jsonl` | 7,447 | **1990–2026** | BC Supreme Court and Court of Appeal judgments, 6,272 BCSC and 1,175 BCCA. |
 
-**8,588 rows in total.** Each is citation (where one exists), date, court or collection, official
+**11,286 rows in total.** Each is citation (where one exists), date, court or collection, official
 URL, and which search found it.
 
-## Three things to know before using them
+## Five things to know before using them
 
 **The CRT's Strata Property collection is not the whole CRT story.** 2024 BCCRT 1181 notes that
 water leak disputes between owners are usually decided in the tribunal's small claims jurisdiction.
 That is why `crt-adjacent-index.jsonl` exists. It is kept separate because it is noisy: many of
 those decisions are not about strata at all and merely cite a case whose style of cause contains
 "Strata Plan" — `Downing v. Strata Plan VR2356` appeared in three of six sampled snippets, cited for
-whether an oral hearing is needed on credibility. 704 of the 957 also match a more discriminating
-term (`strata corporation`, `strata lot` or `Strata Property Act`), and those carry
-`matched_narrow`. Treat a row without it as unverified.
+whether an oral hearing is needed on credibility. 739 of the 998 also match a more discriminating
+term (`strata corporation`, `strata lot`, `common property` or `Strata Property Act`), and those
+carry `matched_narrow`. Treat a row without it as unverified.
+
+All seven CRT collections have now been searched, not just the three that looked relevant. The
+four accident and intimate-images collections were checked on 2026-10-01 and contributed 41 rows
+between them, of which only 3 mention the *Strata Property Act* — almost all are accidents that
+happened on strata property or claims where a strata corporation's insurer is a party, not strata
+law. The point of running them was to replace an assumption with a number.
 
 **The two sites search differently, and it matters.** bccourts.ca is phrase-based: a word-bag query
 such as "pet bylaw strata" returns nothing while "pet bylaw" returns results. The CRT is
@@ -35,7 +41,13 @@ AND-of-words: "strata zebra" returns 0, so all words must appear but need not be
 why `strata fees` matched 1,445 of 1,451 small claims decisions and is no signal at all, and why it
 was left out of the confidence terms.
 
-**463 judgments have no neutral citation.** BC neutral citations began around 1999, so everything
+**The bare word `condominium` is not redundant with `strata`.** Searching it on 2026-10-01 returned
+3,938 judgments, 2,657 of which no strata phrase had reached — 672 of those from the 1990s. BC's
+pre-2000 regime was the *Condominium Act*, and many of those judgments never use the word strata.
+This is the single largest correction the index has had, and it is a warning about the method:
+"searched the obvious term to exhaustion" is not the same as "searched exhaustively".
+
+**1,123 judgments have no neutral citation.** BC neutral citations began around 1999, so everything
 older is keyed by its file id instead. They are the oldest and most easily lost rows in the set: a
 citation-keyed parser drops them silently, which is exactly what happened on the first pass before
 the running total was reconciled against the site's own count.
