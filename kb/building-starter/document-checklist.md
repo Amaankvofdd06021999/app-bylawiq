@@ -11,7 +11,7 @@ in_force_to: null
 retrieved_at: null
 licence: bylawiq-original
 topics: [bylaw-amendment-filing, privacy-records, council-governance, depreciation-report, electrical-planning-reports, insurance-deductibles, strata-fees-arrears, repair-maintenance, general-meetings-voting, contingency-reserve-fund]
-cites: [bc.spa.s20, bc.spa.s35, bc.spa.s36, bc.spa.s59, bc.spa.s94, bc.spa.s94.1, bc.spa.s103, bc.spa.s119, bc.spa.s120, bc.spa.s125, bc.spa.s128, bc.spa.s149, bc.spa.s154, bc.spa.sched.bylaw19, bc.spr.s4.1, bc.spr.s5.4, bc.spr.s5.7, bc.spr.s5.8, bc.spr.s5.10, bc.spr.s6.2, bc.spr.s6.21, bc.spr.s6.22]
+cites: [bc.spr.form.b, bc.spa.s20, bc.spa.s35, bc.spa.s36, bc.spa.s59, bc.spa.s94, bc.spa.s94.1, bc.spa.s103, bc.spa.s119, bc.spa.s120, bc.spa.s125, bc.spa.s128, bc.spa.s149, bc.spa.s154, bc.spa.sched.bylaw19, bc.spr.s4.1, bc.spr.s5.4, bc.spr.s5.7, bc.spr.s5.8, bc.spr.s5.10, bc.spr.s6.2, bc.spr.s6.21, bc.spr.s6.22]
 supersedes: null
 status: draft
 reviewed_by: null
@@ -91,7 +91,7 @@ Each entry says why an answer needs the document, which topics it unlocks, and t
 
 **Topics it unlocks.** `strata-fees-arrears`, `special-levies`, `bylaw-amendment-filing`, `contingency-reserve-fund`.
 
-**Where the law requires it.** The corporation must give an Information Certificate in the prescribed form within one week of a request by an owner, a purchaser or someone authorised by either [bc.spa.s59], and must retain the certificates it issues [bc.spa.s35] for at least 6 years [bc.spr.s4.1]. Note on naming: this document is widely called "Form B". The kb does not hold the Regulation's Schedule of Forms, so it cannot confirm that letter; the Act calls it an Information Certificate, and so does BylawIQ. See open question 23.
+**Where the law requires it.** The corporation must give an Information Certificate in the prescribed form within one week of a request by an owner, a purchaser or someone authorised by either [bc.spa.s59], and must retain the certificates it issues [bc.spa.s35] for at least 6 years [bc.spr.s4.1]. Note on naming: this document is widely called "Form B", and that is right — the Schedule of Forms of the Regulation prescribes Form B, INFORMATION CERTIFICATE, for section 59 [bc.spr.form.b]. The Act calls it an Information Certificate, and so does BylawIQ.
 
 ## Electrical planning report — essential where it is due
 

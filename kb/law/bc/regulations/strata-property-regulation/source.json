@@ -317,114 +317,195 @@
       "published_text": "Repealed. [B.C. Reg. 312/2009, s. 6.]"
     }
   ],
-  "not_imported": [
+  "forms": [
     {
-      "schedule": "Form A",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "A",
+      "title": "Proxy Appointment",
+      "reference": "Section 56",
+      "repealed": false,
+      "id": "bc.spr.form.a"
     },
     {
-      "schedule": "Form B",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "B",
+      "title": "Information Certificate",
+      "reference": "Section 59",
+      "repealed": false,
+      "id": "bc.spr.form.b"
     },
     {
-      "schedule": "Form C",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "C",
+      "title": "Mortgagee's Request for Notification",
+      "reference": "Section 60; Regulation section 4.5",
+      "repealed": false,
+      "id": "bc.spr.form.c"
     },
     {
-      "schedule": "Form D",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "D",
+      "title": "Strata Corporation Change of Mailing Address",
+      "reference": "Section 62 (3)",
+      "repealed": false,
+      "id": "bc.spr.form.d"
     },
     {
-      "schedule": "Form E",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "E",
+      "title": "Certificate of Strata Corporation",
+      "reference": "Sections 78, 79, 80, 100, 214, 257, 259, 261, 262, 263, 266, 269, 274, 283 of the Act and sections 17.20 to 17.22 of the Regulation",
+      "repealed": false,
+      "id": "bc.spr.form.e"
     },
     {
-      "schedule": "Form F",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "F",
+      "title": "Certificate of Payment",
+      "reference": "Section 115",
+      "repealed": false,
+      "id": "bc.spr.form.f"
     },
     {
-      "schedule": "Form G",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "G",
+      "title": "Certificate of Lien",
+      "reference": "Section 116",
+      "repealed": false,
+      "id": "bc.spr.form.g"
     },
     {
-      "schedule": "Form H",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "H",
+      "title": "Acknowledgement of Payment",
+      "reference": "Section 116 (6)",
+      "repealed": false,
+      "id": "bc.spr.form.h"
     },
     {
-      "schedule": "Form I",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "I",
+      "title": "Amendment to Bylaws",
+      "reference": "Section 128",
+      "repealed": false,
+      "id": "bc.spr.form.i"
     },
     {
-      "schedule": "Form J",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "J",
+      "title": null,
+      "reference": null,
+      "repealed": true,
+      "id": "bc.spr.form.j"
     },
     {
-      "schedule": "Form K",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "K",
+      "title": "Notice of Tenant's Responsibilities",
+      "reference": "Section 146",
+      "repealed": false,
+      "id": "bc.spr.form.k"
     },
     {
-      "schedule": "Form L",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "L",
+      "title": "Notice Beginning Arbitration",
+      "reference": "Section 179",
+      "repealed": false,
+      "id": "bc.spr.form.l"
     },
     {
-      "schedule": "Form M",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "M",
+      "title": "Notice of Reply",
+      "reference": "Section 179",
+      "repealed": false,
+      "id": "bc.spr.form.m"
     },
     {
-      "schedule": "Form N",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "N",
+      "title": "Notice Responding to Reply",
+      "reference": "Section 179",
+      "repealed": false,
+      "id": "bc.spr.form.n"
     },
     {
-      "schedule": "Form O",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "O",
+      "title": "Leasehold Strata Plan Schedules",
+      "reference": "Sections 206, 214",
+      "repealed": false,
+      "id": "bc.spr.form.o"
     },
     {
-      "schedule": "Form P",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "P",
+      "title": "Phased Strata Plan Declaration",
+      "reference": "Sections 221, 222",
+      "repealed": false,
+      "id": "bc.spr.form.p"
     },
     {
-      "schedule": "Form Q",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "Q",
+      "title": "Endorsement of Approval for Phased Strata Plan",
+      "reference": "Section 224; Regulation section 14.5 (1)",
+      "repealed": false,
+      "id": "bc.spr.form.q"
     },
     {
-      "schedule": "Form R",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "R",
+      "title": "Endorsement for Common Facilities in Phased Strata Plan",
+      "reference": "Section 225; Regulation section 14.5 (2)",
+      "repealed": false,
+      "id": "bc.spr.form.r"
     },
     {
-      "schedule": "Form S",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "S",
+      "title": "Endorsement of Nonoccupancy",
+      "reference": "Section 241, Regulation section 14.5 (3)",
+      "repealed": false,
+      "id": "bc.spr.form.s"
     },
     {
-      "schedule": "Form T",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "T",
+      "title": "Endorsement by Approving Authority",
+      "reference": "Section 242; Regulation section 14.5 (4)",
+      "repealed": false,
+      "id": "bc.spr.form.t"
     },
     {
-      "schedule": "Form U",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "U",
+      "title": "Endorsement of Surveyor",
+      "reference": "Section 244 (1) (f); Regulation section 14.5 (5)",
+      "repealed": false,
+      "id": "bc.spr.form.u"
     },
     {
-      "schedule": "Form V",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "V",
+      "title": "Schedule of Unit Entitlement",
+      "reference": "Sections 245 (a), 246, 264",
+      "repealed": false,
+      "id": "bc.spr.form.v"
     },
     {
-      "schedule": "Form W",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "W",
+      "title": "Schedule of Voting Rights",
+      "reference": "Sections 245 (b), 247, 248, 264",
+      "repealed": false,
+      "id": "bc.spr.form.w"
     },
     {
-      "schedule": "Form X",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "X",
+      "title": "Strata Corporation Mailing Address",
+      "reference": "Section 245 (c); Regulation section 14.6 (1)",
+      "repealed": false,
+      "id": "bc.spr.form.x"
     },
     {
-      "schedule": "Form Y",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "Y",
+      "title": "Owner Developers' Notice of Different Bylaws",
+      "reference": "Section 245 (d), Regulation section 14.6 (2)",
+      "repealed": false,
+      "id": "bc.spr.form.y"
     },
     {
-      "schedule": "Form Z",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "Z",
+      "title": "Application to Deposit Strata Plan",
+      "reference": "Regulation section 14.9",
+      "repealed": false,
+      "id": "bc.spr.form.z"
     },
     {
-      "schedule": "Form Z.1",
-      "reason": "Prescribed forms: not imported yet (see README)."
+      "form": "Z.1",
+      "title": "Amended Schedule of Interest on Destruction",
+      "reference": "Sections 17.20 and 17.21 of the Regulation",
+      "repealed": false,
+      "id": "bc.spr.form.z.1"
     }
   ],
   "notes": "Generated by tools/import-bclaws.ts. consolidation_date is the BC Laws \"current to\" date. Repealed and spent sections are not imported; they are listed in omitted[] with the text BC Laws publishes in their place."

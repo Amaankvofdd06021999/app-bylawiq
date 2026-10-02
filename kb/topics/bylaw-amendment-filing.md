@@ -11,7 +11,7 @@ in_force_to: null
 retrieved_at: null
 licence: bylawiq-original
 topics: [bylaw-amendment-filing, general-meetings-voting, council-governance]
-cites: [bc.spa.s119, bc.spa.s120, bc.spa.s121, bc.spa.s125, bc.spa.s126, bc.spa.s127, bc.spa.s128, bc.spa.s197, bc.spa.s59, topic.general-meetings-voting]
+cites: [bc.spr.form.i, bc.spa.s119, bc.spa.s120, bc.spa.s121, bc.spa.s125, bc.spa.s126, bc.spa.s127, bc.spa.s128, bc.spa.s197, bc.spa.s59, topic.general-meetings-voting]
 supersedes: null
 status: draft
 reviewed_by: null
@@ -23,7 +23,7 @@ notes: "needs counsel review. Written from the Strata Property Act, the Strata P
 
 ## Summary
 
-An amendment takes effect on **filing**, not on the vote: it must be approved at a general meeting and an Amendment to Bylaws in the prescribed form filed in the land title office, and until that filing the amendment has no effect [bc.spa.s128]. Before the second annual general meeting, a wholly residential or bare land strata plan needs a unanimous vote to amend at all [bc.spa.s127].
+An amendment takes effect on **filing**, not on the vote: it must be approved at a general meeting and an Amendment to Bylaws in the prescribed form — Form I of the Schedule of Forms [bc.spr.form.i] — filed in the land title office, and until that filing the amendment has no effect [bc.spa.s128]. Before the second annual general meeting, a wholly residential or bare land strata plan needs a unanimous vote to amend at all [bc.spa.s127].
 
 ## What the law says
 

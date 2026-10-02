@@ -34,10 +34,15 @@ As for the Act (see `law/bc/acts/strata-property-act/README.md`): `# Section 7.1
 - The history note BC Laws prints at the end of a section (for example `[en. B.C. Reg. 162/2018; am. B.C. Reg. 6/2023, s. 1.]`) is kept as the last paragraph, exactly as published. It records which regulations enacted or amended the section.
 - **Formulas.** Sections 6.4, 6.5, 11.2 and 11.3 contain formulas that BC Laws publishes as small tables of text (a fraction bar and a multiplier). The item lays each formula out as plain text inside a ```` ```text ```` block, arranged like the page; every word is kept, and `notes` flag the layout for review.
 
-## Repealed sections and forms
+## Repealed sections, and the Schedule of Forms
 
 - Whole repealed sections are **not imported**; they are listed in `source.json` `omitted[]` with the placeholder text BC Laws shows: 6.12, 6.13, 8.1–8.3, 17.5, 17.14, 17.15 and 18.1.
-- The **Schedule of Forms (Forms A to Z.1) is not imported.** The forms are layout-heavy (tables, signature lines, images), and the licence excludes the government's fillable forms (open question 15). They are listed in `source.json` `not_imported[]`. TODO: decide with counsel whether and how to import the prescribed form content.
+- The **Schedule of Forms (Forms A to Z.1) is imported**, as 27 items under `forms/`, ids `bc.spr.form.<letter>`. What is imported is the prescribed form *content* in the Regulation, which the King's Printer Licence covers; the government's own fillable form products are a separate thing the licence excludes (cl. 8.1(a), open question 15), and nothing here is a substitute for filing one.
+  - Every word is kept, in published order. The layout is simplified: a table is one line per row with cells separated by `" | "`, a tick box is `[ ]`, and a rule dividing one part of a form from the next is `---`. A form item answers *what the form asks for and in what words*, not *what the form looks like on the page*, and each item's `notes` says so.
+  - The only image in the Schedule is the 12px tick-box, written as `[ ]` rather than linked. Any other graphic stops the import: a diagram or a Provincial symbol must not pass silently, and the licence does not cover the coat of arms or government logos (cl. 4.1).
+  - **Form J is repealed** (B.C. Reg. 6/2023, s. 7) and still occupies its letter. It is imported as `bc.spr.form.j` with the published "Repealed." text, so a question about Form J is answered rather than met with silence. `in_force_to` is `null`: the consolidation does not give the date the repeal took effect.
+  - `cites[]` on a form comes from the reference BC Laws prints under its name, not from `pnpm link:cites`. That reference says plainly which sections are the Act's and which the Regulation's — a bare "Section 59" inside a Regulation item would otherwise be read as the Regulation's section 59, which is the wrong enactment.
+  - Forms are listed in `source.json` `forms[]`.
 
 ## Dates
 
@@ -57,5 +62,4 @@ Behaviour on re-runs (kept review sign-off, changed text back to draft, topics f
 ## Not done yet
 
 - `cites[]` is empty; references such as "section 132 of the Act" are not linked to `bc.spa.*` items yet.
-- Forms are not imported (above).
 - Items are `draft` until a legal researcher reviews them against BC Laws.

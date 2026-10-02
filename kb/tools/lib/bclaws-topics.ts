@@ -140,3 +140,23 @@ export const SPR_TOPICS: TopicMap = {
   '17.19': ['parking'],
   '17.23': ['general-meetings-voting'],
 };
+
+/**
+ * Strata Property Regulation, Schedule of Forms, keyed by the form letter as published.
+ * Tagged only where the form is plainly about the topic. Forms with no tag are still found by
+ * their letter, their name and their full text.
+ */
+export const FORM_TOPICS: TopicMap = {
+  'A': ['general-meetings-voting'],
+  'B': ['privacy-records', 'strata-fees-arrears', 'insurance-deductibles', 'depreciation-report', 'electrical-planning-reports'],
+  'E': ['privacy-records'],
+  'F': ['strata-fees-arrears'],
+  'G': ['strata-fees-arrears'],
+  'H': ['strata-fees-arrears'],
+  'I': ['bylaw-amendment-filing'],
+  'K': ['rentals', 'bylaw-enforcement-s135'],
+  'L': ['crt-process'],
+  'M': ['crt-process'],
+  'N': ['crt-process'],
+  'Y': ['bylaw-amendment-filing'],
+};

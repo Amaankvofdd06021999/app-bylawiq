@@ -11,7 +11,7 @@ in_force_to: null
 retrieved_at: null
 licence: bylawiq-original
 topics: [special-levies, contingency-reserve-fund, strata-fees-arrears]
-cites: [bc.spa.s99, bc.spa.s108, bc.spa.s109, bc.spa.s116, bc.spa.s158, bc.spa.s195, bc.spr.s6.8, topic.strata-fees-arrears]
+cites: [bc.spr.form.g, bc.spa.s99, bc.spa.s108, bc.spa.s109, bc.spa.s116, bc.spa.s158, bc.spa.s195, bc.spr.s6.8, topic.strata-fees-arrears]
 supersedes: null
 status: draft
 reviewed_by: null
@@ -31,7 +31,7 @@ A special levy is approved by 3/4 vote where each lot's share is calculated by t
 
 **Sale of a lot.** Where a levy is approved before a strata lot is conveyed, the seller owes the portion payable before the conveyance date and the buyer owes the portion payable on or after it [bc.spa.s109].
 
-**Collection.** An unpaid special levy is one of the amounts a Certificate of Lien may secure [bc.spa.s116], and a bylaw may set interest on a late special levy up to the regulated maximum of 10% per annum compounded annually [bc.spr.s6.8].
+**Collection.** An unpaid special levy is one of the amounts a Certificate of Lien, Form G [bc.spr.form.g], may secure [bc.spa.s116], and a bylaw may set interest on a late special levy up to the regulated maximum of 10% per annum compounded annually [bc.spr.s6.8].
 
 **Deductibles.** Approval is not required for a special levy to cover an insurance deductible the corporation must pay to repair or replace damaged property, unless it has decided not to repair or replace [bc.spa.s158].
 

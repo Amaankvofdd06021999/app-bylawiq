@@ -20,8 +20,9 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { dirname, join, relative } from 'node:path';
 import { KB_ROOT, loadTopicIds, parseItem } from './lib/kb.ts';
 import { child, parseXml, textContent, type XmlElement } from './lib/xml.ts';
+import { parseForms, parseFormReference, type FormRecord } from './lib/forms.ts';
 import { BCLAWS_DOC_BASE, parseBclawsDocument, parseCurrentTo, type Heading, type ParsedDocument, type SectionRecord } from './lib/bclaws.ts';
-import { SPA_TOPICS, SPR_TOPICS, STANDARD_BYLAW_TOPICS } from './lib/bclaws-topics.ts';
+import { SPA_TOPICS, SPR_TOPICS, STANDARD_BYLAW_TOPICS, FORM_TOPICS } from './lib/bclaws-topics.ts';
 import { archiveItem, changedLines, supersededId, supersededPath } from './lib/supersede.ts';
 
 const USER_AGENT = 'BylawIQ-kb-import/0.2 (+https://bylawiq.app; knowledge base refresh; sequential requests)';
@@ -187,27 +188,47 @@ function render(fm: Array<[string, string]>, body: string): string {
 type Superseded = { id: string; archivePath: string; itemPath: string; diff: string[] };
 type WriteResult = { created: number; changed: number; unchanged: number; paths: Set<string>; superseded: Superseded[] };
 
+type Prior = { existing: Existing | null; keep: Existing | null; changed: boolean; supersedes: string | null };
+
+/**
+ * Looks at what is already on disk for an item and, when the text has changed, keeps the previous
+ * version before it is overwritten. Without this the old text is lost and a question about an
+ * earlier date cannot be answered. Shared by sections and by the prescribed forms.
+ */
+function supersedePrior(src: Source, id: string, path: string, body: string, currentTo: string, result: WriteResult): Prior {
+  const existing = readExisting(path);
+  const same = existing !== null && existing.body === body;
+  const changed = existing !== null && !same;
+  let supersedes: string | null = existing?.supersedes ?? null;
+  if (changed) {
+    const priorText = readFileSync(join(KB_ROOT, path), 'utf8');
+    const archiveId = supersededId(id, currentTo);
+    const archivePath = supersededPath(src.folder, path, currentTo);
+    const archiveFull = join(KB_ROOT, archivePath);
+    mkdirSync(dirname(archiveFull), { recursive: true });
+    writeFileSync(archiveFull, archiveItem(priorText, { id: archiveId, inForceTo: currentTo }));
+    supersedes = archiveId;
+    result.superseded.push({ id: archiveId, archivePath, itemPath: path, diff: changedLines(existing.body, body) });
+  }
+  return { existing, keep: same ? existing : null, changed, supersedes };
+}
+
+function commit(path: string, fm: Array<[string, string]>, body: string, prior: Prior, result: WriteResult) {
+  const full = join(KB_ROOT, path);
+  mkdirSync(dirname(full), { recursive: true });
+  writeFileSync(full, render(fm, body));
+  result.paths.add(path);
+  if (!prior.existing) result.created++;
+  else if (prior.changed) result.changed++;
+  else result.unchanged++;
+}
+
 function writeItems(src: Source, doc: ParsedDocument, currentTo: string, retrievedAt: string): WriteResult {
   const result: WriteResult = { created: 0, changed: 0, unchanged: 0, paths: new Set(), superseded: [] };
   for (const s of doc.sections) {
     const path = itemPath(src, s);
-    const existing = readExisting(path);
-    const same = existing !== null && existing.body === s.body;
-    const changed = existing !== null && !same;
-    const keep = same ? existing : null;
-    // The text changed, so keep the previous version before overwriting it. Without this the old
-    // text is lost and a question about an earlier date cannot be answered.
-    let supersedes: string | null = existing?.supersedes ?? null;
-    if (changed) {
-      const priorText = readFileSync(join(KB_ROOT, path), 'utf8');
-      const archiveId = supersededId(itemId(src, s), currentTo);
-      const archivePath = supersededPath(src.folder, path, currentTo);
-      const archiveFull = join(KB_ROOT, archivePath);
-      mkdirSync(dirname(archiveFull), { recursive: true });
-      writeFileSync(archiveFull, archiveItem(priorText, { id: archiveId, inForceTo: currentTo }));
-      supersedes = archiveId;
-      result.superseded.push({ id: archiveId, archivePath, itemPath: path, diff: changedLines(existing.body, s.body) });
-    }
+    const prior = supersedePrior(src, itemId(src, s), path, s.body, currentTo, result);
+    const { existing, keep, changed, supersedes } = prior;
     const topics = topicsFor(src, s);
     const fm: Array<[string, string]> = [
       ['id', itemId(src, s)],
@@ -229,13 +250,80 @@ function writeItems(src: Source, doc: ParsedDocument, currentTo: string, retriev
       ['reviewed_at', keep?.reviewed_at ? keep.reviewed_at : 'null'],
       ['notes', q(notesFor(src, s, currentTo, changed))],
     ];
-    const full = join(KB_ROOT, path);
-    mkdirSync(dirname(full), { recursive: true });
-    writeFileSync(full, render(fm, s.body));
-    result.paths.add(path);
-    if (!existing) result.created++;
-    else if (changed) result.changed++;
-    else result.unchanged++;
+    commit(path, fm, s.body, prior, result);
+  }
+  return result;
+}
+
+/** "B" -> "b", "Z.1" -> "z.1": the form letter as it appears in an item id. */
+function formKey(num: string): string {
+  return num.toLowerCase();
+}
+
+function formTitle(f: FormRecord): string {
+  return f.title ? `Form ${f.num} \u2014 ${f.title}` : `Form ${f.num}`;
+}
+
+function formNotes(f: FormRecord, currentTo: string, changed: boolean): string {
+  const parts = [
+    `Imported verbatim by tools/import-bclaws.ts from the Schedule of Forms of the BC Laws consolidation current to ${currentTo}.`,
+    'Every word of the form is kept, in published order. The layout is simplified: a table is written as one line per row with cells separated by " | ", a tick box as "[ ]", and a rule dividing one part of the form from the next as "---". Use it to answer what the form asks for and in what words, not to reproduce the form. File the version published by the Land Title and Survey Authority or BC Laws, not this text.',
+  ];
+  if (f.repealed) {
+    parts.push('This form has been repealed and is kept because it still occupies its letter in the Schedule. Do not use it. in_force_to is null because the consolidation does not state the date the repeal took effect; check the Tables of Legislative Changes.');
+  } else {
+    parts.push('in_force_from is null because the consolidation does not state when this version of the form came into force; check the Tables of Legislative Changes before relying on a date.');
+  }
+  if (f.history) parts.push(`Amendment history as published: ${f.history}`);
+  if (changed) parts.push('The text changed on the last import; re-review it against the source.');
+  return parts.join(' ');
+}
+
+/** The ids of the sections a form's printed reference names, in published order. */
+function formCites(f: FormRecord): string[] {
+  const { act, reg } = parseFormReference(f.reference);
+  return [...act.map((n) => `bc.spa.s${n}`), ...reg.map((n) => `bc.spr.s${n}`)];
+}
+
+/**
+ * The prescribed forms, written as items of their own. They are not sections, so they do not go
+ * through writeItems: a form has a letter rather than a number and a name rather than a marginal
+ * note, and its citation names the Schedule of Forms.
+ */
+function writeForms(src: Source, forms: FormRecord[], currentTo: string, retrievedAt: string): WriteResult {
+  const result: WriteResult = { created: 0, changed: 0, unchanged: 0, paths: new Set(), superseded: [] };
+  for (const f of forms) {
+    const id = `${src.idPrefix}.form.${formKey(f.num)}`;
+    const path = `${src.folder}/forms/form-${formKey(f.num).replace('.', '-')}.md`;
+    const body = `# ${formTitle(f)}\n\n${f.body}`;
+    const prior = supersedePrior(src, id, path, body, currentTo, result);
+    const { keep, changed, supersedes } = prior;
+    const citation = `${src.citation}, Schedule of Forms, Form ${f.num}`;
+    const fm: Array<[string, string]> = [
+      ['id', id],
+      ['layer', 'law'],
+      ['type', 'schedule'],
+      ['title', q(formTitle(f))],
+      ['citation', q(citation)],
+      ['jurisdiction', 'BC'],
+      ['source_url', `${BCLAWS_DOC_BASE}${src.xmlDocId}`],
+      ['in_force_from', 'null'],
+      ['in_force_to', 'null'],
+      ['retrieved_at', retrievedAt],
+      ['licence', 'bc-kings-printer'],
+      ['topics', `[${(FORM_TOPICS[f.num] ?? []).join(', ')}]`],
+      // Unlike a section's cites, these are not left to pnpm link:cites. They come from the
+      // reference BC Laws prints under the form's name, which says plainly which sections are
+      // the Act's and which the Regulation's — something the prose scanner cannot tell from a
+      // bare "Section 59" sitting inside a Regulation item.
+      ['cites', `[${formCites(f).join(', ')}]`],
+      ['supersedes', supersedes ?? 'null'],
+      ['status', keep ? keep.status : 'draft'],
+      ['reviewed_by', keep?.reviewed_by ? q(keep.reviewed_by) : 'null'],
+      ['reviewed_at', keep?.reviewed_at ? keep.reviewed_at : 'null'],
+      ['notes', q(formNotes(f, currentTo, changed))],
+    ];
+    commit(path, fm, body, prior, result);
   }
   return result;
 }
@@ -272,7 +360,19 @@ function checkTopics(src: Source, doc: ParsedDocument) {
 // ---------------------------------------------------------------------------
 // source.json
 
-function updateSourceJson(src: Source, doc: ParsedDocument, currentTo: string, retrievedAt: string) {
+/** Every letter tagged in FORM_TOPICS must be a form that was actually imported. */
+function checkFormTopics(src: Source, forms: FormRecord[]) {
+  if (src.key !== 'spr') return;
+  const known = loadTopicIds();
+  for (const [letter, topics] of Object.entries(FORM_TOPICS)) {
+    if (!forms.some((f) => f.num === letter)) {
+      throw new Error(`lib/bclaws-topics.ts tags Form ${letter}, which was not imported`);
+    }
+    for (const t of topics) if (!known.has(t)) throw new Error(`lib/bclaws-topics.ts uses unknown topic ${t}`);
+  }
+}
+
+function updateSourceJson(src: Source, doc: ParsedDocument, forms: FormRecord[], currentTo: string, retrievedAt: string) {
   const path = join(KB_ROOT, src.folder, 'source.json');
   const prior = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
   const parts = doc.parts.map((p) => {
@@ -310,7 +410,17 @@ function updateSourceJson(src: Source, doc: ParsedDocument, currentTo: string, r
       where: o.schedule ? 'Schedule of Standard Bylaws' : o.part?.num ? `Part ${o.part.num}` : null,
       published_text: o.text.replace(/^\*(.*)\*$/, '$1'),
     })),
-    ...(doc.skippedSchedules.length ? { not_imported: doc.skippedSchedules.map((t) => ({ schedule: t, reason: 'Prescribed forms: not imported yet (see README).' })) } : {}),
+    ...(forms.length
+      ? {
+          forms: forms.map((f) => ({
+            form: f.num,
+            title: f.title,
+            reference: f.reference,
+            repealed: f.repealed,
+            id: `${src.idPrefix}.form.${formKey(f.num)}`,
+          })),
+        }
+      : {}),
     notes: `Generated by tools/import-bclaws.ts. consolidation_date is the BC Laws "current to" date. Repealed and spent sections are not imported; they are listed in omitted[] with the text BC Laws publishes in their place.`,
   };
   writeFileSync(path, JSON.stringify(next, null, 2) + '\n');
@@ -340,13 +450,26 @@ async function main() {
     const currentTo = parseCurrentTo(f.page);
     const retrievedAt = f.fetchedAt.slice(0, 10);
     const res = writeItems(src, doc, currentTo, retrievedAt);
-    updateSourceJson(src, doc, currentTo, retrievedAt);
+    // The Regulation's Schedule of Forms. The section parser leaves it alone because a form is a
+    // document rather than a provision; it is parsed and written separately here.
+    const forms = src.key === 'spr' ? parseForms(root) : [];
+    if (forms.length) {
+      const fres = writeForms(src, forms, currentTo, retrievedAt);
+      res.created += fres.created;
+      res.changed += fres.changed;
+      res.unchanged += fres.unchanged;
+      for (const path of fres.paths) res.paths.add(path);
+      res.superseded.push(...fres.superseded);
+    }
+    checkFormTopics(src, forms);
+    updateSourceJson(src, doc, forms, currentTo, retrievedAt);
     const stale = staleItems(src, res.paths);
     const sched = doc.sections.filter((s) => s.schedule).length;
     console.log(
-      `${src.key}: ${doc.sections.length - sched} sections${sched ? ` and ${sched} standard bylaws` : ''} (current to ${currentTo}); ` +
-        `${res.created} new, ${res.changed} changed, ${res.unchanged} unchanged; ${doc.omitted.length} repealed or spent group(s) skipped` +
-        (doc.skippedSchedules.length ? `; ${doc.skippedSchedules.length} schedule(s) of forms not imported` : ''),
+      `${src.key}: ${doc.sections.length - sched} sections${sched ? ` and ${sched} standard bylaws` : ''}` +
+        (forms.length ? ` and ${forms.length} prescribed forms (${forms.filter((f) => f.repealed).length} repealed)` : '') +
+        ` (current to ${currentTo}); ` +
+        `${res.created} new, ${res.changed} changed, ${res.unchanged} unchanged; ${doc.omitted.length} repealed or spent group(s) skipped`,
     );
     for (const p of stale) console.warn(`  no longer on BC Laws, retire by hand: ${p}`);
     for (const s of res.superseded) {

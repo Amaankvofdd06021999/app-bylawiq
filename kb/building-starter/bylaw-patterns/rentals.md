@@ -11,7 +11,7 @@ in_force_to: null
 retrieved_at: null
 licence: bylawiq-original
 topics: [rentals]
-cites: [bc.spa.s119, bc.spa.s121, bc.spa.s128, bc.spa.s141, bc.spa.s146, bc.spa.s147, bc.spa.s148, bc.spa.s131, bc.spa.s138]
+cites: [bc.spr.form.k, bc.spa.s119, bc.spa.s121, bc.spa.s128, bc.spa.s141, bc.spa.s146, bc.spa.s147, bc.spa.s148, bc.spa.s131, bc.spa.s138]
 supersedes: null
 status: draft
 reviewed_by: null
@@ -27,7 +27,7 @@ The pattern to look for first is a bylaw that is on file and no longer does anyt
 
 ## What the Act and Regulation allow
 
-The first family is now unenforceable, and this is the most consequential single point in the rental area: a strata corporation must not screen tenants, establish screening criteria, require the approval of tenants, require the insertion of terms in tenancy agreements, or otherwise restrict the rental of a strata lot [bc.spa.s141]. Sections 142 to 145, which held the old rental restriction bylaw machinery, were repealed in 2022 and are not in the kb. A bylaw is unenforceable to the extent it contravenes the Act [bc.spa.s121], so a rental restriction bylaw that is still filed is still unenforceable, and filing is not what makes a bylaw good. The second family is generally open to a building under the ordinary bylaw power [bc.spa.s119], but much of it duplicates duties the Act already imposes: the landlord must give the tenant the current bylaws and rules and a Notice of Tenant's Responsibilities in the prescribed form, and give the corporation the signed notice within two weeks [bc.spa.s146]; a landlord may assign powers and duties to a tenant, effective only on written notice to the corporation [bc.spa.s147, bc.spa.s148]; and a landlord and owner remain responsible for a tenant's fines and the costs of remedying a contravention [bc.spa.s131]. Eviction by the strata corporation is a statutory route with its own conditions, not something a bylaw creates [bc.spa.s138]. Amendments still need a 3/4 vote and filing [bc.spa.s128].
+The first family is now unenforceable, and this is the most consequential single point in the rental area: a strata corporation must not screen tenants, establish screening criteria, require the approval of tenants, require the insertion of terms in tenancy agreements, or otherwise restrict the rental of a strata lot [bc.spa.s141]. Sections 142 to 145, which held the old rental restriction bylaw machinery, were repealed in 2022 and are not in the kb. A bylaw is unenforceable to the extent it contravenes the Act [bc.spa.s121], so a rental restriction bylaw that is still filed is still unenforceable, and filing is not what makes a bylaw good. The second family is generally open to a building under the ordinary bylaw power [bc.spa.s119], but much of it duplicates duties the Act already imposes: the landlord must give the tenant the current bylaws and rules and a Notice of Tenant's Responsibilities in the prescribed form, which is Form K [bc.spr.form.k], and give the corporation the signed notice within two weeks [bc.spa.s146]; a landlord may assign powers and duties to a tenant, effective only on written notice to the corporation [bc.spa.s147, bc.spa.s148]; and a landlord and owner remain responsible for a tenant's fines and the costs of remedying a contravention [bc.spa.s131]. Eviction by the strata corporation is a statutory route with its own conditions, not something a bylaw creates [bc.spa.s138]. Amendments still need a 3/4 vote and filing [bc.spa.s128].
 
 ## Where these bylaws go wrong
 

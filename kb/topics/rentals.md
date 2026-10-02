@@ -11,7 +11,7 @@ in_force_to: null
 retrieved_at: null
 licence: bylawiq-original
 topics: [rentals, bylaw-enforcement-s135, fines, short-term-rentals]
-cites: [bc.spa.s119, bc.spa.s121, bc.spa.s128, bc.spa.s131, bc.spa.s135, bc.spa.s137, bc.spa.s138, bc.spa.s141, bc.spa.s146, bc.spa.s147, bc.spa.s148, building.bylaw-pattern.rentals]
+cites: [bc.spr.form.k, bc.spa.s119, bc.spa.s121, bc.spa.s128, bc.spa.s131, bc.spa.s135, bc.spa.s137, bc.spa.s138, bc.spa.s141, bc.spa.s146, bc.spa.s147, bc.spa.s148, building.bylaw-pattern.rentals]
 supersedes: null
 status: draft
 reviewed_by: null
@@ -29,7 +29,7 @@ A strata corporation cannot restrict the rental of a strata lot. It must not scr
 
 **No rental restrictions.** Section 141 is short and absolute in its terms: the strata corporation must not screen tenants, establish screening criteria, require the approval of tenants, require the insertion of terms in tenancy agreements or otherwise restrict the rental of a strata lot [bc.spa.s141]. The sections that used to support rental restriction bylaws, ss. 142 to 145, were repealed in 2022 and are not in the kb. A bylaw is unenforceable to the extent it contravenes the Act [bc.spa.s121], so an old rental restriction bylaw is unenforceable even though it remains on file; filing is not what makes a bylaw good [bc.spa.s128].
 
-**What a landlord must do.** Before renting all or part of a residential strata lot, the landlord must give the prospective tenant the current bylaws and rules and a Notice of Tenant's Responsibilities in the prescribed form, and within two weeks of renting must give the strata corporation a copy of the notice signed by the tenant. If the landlord does not, the tenant is still bound by the bylaws and rules but may end the tenancy without penalty within 90 days of learning of the failure, and the landlord must then pay the tenant's reasonable moving expenses up to one month's rent [bc.spa.s146].
+**What a landlord must do.** Before renting all or part of a residential strata lot, the landlord must give the prospective tenant the current bylaws and rules and a Notice of Tenant's Responsibilities in the prescribed form, which is Form K of the Schedule of Forms [bc.spr.form.k], and within two weeks of renting must give the strata corporation a copy of the notice signed by the tenant. If the landlord does not, the tenant is still bound by the bylaws and rules but may end the tenancy without penalty within 90 days of learning of the failure, and the landlord must then pay the tenant's reasonable moving expenses up to one month's rent [bc.spa.s146].
 
 **Assigning a landlord's rights.** A landlord may assign some or all of the powers and duties arising under the Act, the bylaws or the rules to a tenant, but may not assign the responsibility for fines or the costs of remedying a contravention. The assignment takes effect only when the corporation has written notice naming the tenant, the powers and duties assigned and the period [bc.spa.s147, bc.spa.s148].
 

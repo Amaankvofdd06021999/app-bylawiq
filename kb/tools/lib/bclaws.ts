@@ -85,14 +85,30 @@ function wrap(marker: string, inner: string): string {
   return core ? `${lead}${marker}${core}${marker}${trail}` : `${lead}${trail}`;
 }
 
+/**
+ * An element handler the caller supplies. It is tried before the built-in rules fail, so a
+ * document kind with its own markup (the prescribed forms) can render it without loosening the
+ * rules for the Act and the Regulation, where that markup appearing would mean a parse is wrong.
+ * Returning undefined means "not mine", and the element is rejected as before.
+ */
+export type InlineExtra = (node: XmlElement, inner: () => string) => string | undefined;
+
 /** Inline content of a text-bearing element, as one line of Markdown. */
-export function inline(node: XmlNode): string {
-  return collapse(inlineRaw(node)).trim();
+export function inline(node: XmlNode, extra?: InlineExtra): string {
+  return collapse(inlineRaw(node, extra)).trim();
 }
 
-function inlineRaw(node: XmlNode): string {
+/**
+ * The same, but without trimming: for a node that is one fragment of a longer line rather than
+ * the whole of it. Trimming a fragment deletes the space that separates it from the next one.
+ */
+export function inlineFragment(node: XmlNode, extra?: InlineExtra): string {
+  return collapse(inlineRaw(node, extra));
+}
+
+function inlineRaw(node: XmlNode, extra?: InlineExtra): string {
   if (typeof node === 'string') return escapeText(collapse(node));
-  const inner = () => node.children.map(inlineRaw).join('');
+  const inner = () => node.children.map((c) => inlineRaw(c, extra)).join('');
   switch (node.name) {
     case 'bcl:text':
     case 'bcl:hnote':
@@ -109,8 +125,11 @@ function inlineRaw(node: XmlNode): string {
       return wrap('**', inner());
     case 'in:br':
       return ' ';
-    default:
+    default: {
+      const custom = extra?.(node, inner);
+      if (custom !== undefined) return custom;
       throw new Error(`unsupported inline element <${node.name}>`);
+    }
   }
 }
 
@@ -383,7 +402,7 @@ export function parseBclawsDocument(root: XmlElement, opts: ParseOptions): Parse
     const heading = inline(child(sec, 'bcl:marginalnote') ?? '');
     if (heading === '[No Sections]') return;
     if (isOmitted(num, heading)) {
-      const text = elements(sec, 'bcl:text').map(inline).join(' ');
+      const text = elements(sec, 'bcl:text').map((t) => inline(t)).join(' ');
       doc.omitted.push({ num, heading, text, part: ctx.part, schedule: ctx.schedule });
       return;
     }
