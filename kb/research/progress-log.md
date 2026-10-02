@@ -404,3 +404,60 @@ the third was mine.
 - One job was stopped at its time limit mid-run: the narrow-phrase confidence pass. Three of its
   five terms had completed and were cached, so the signal was built from those with no further
   requests; the two outstanding terms were the useless ones and were dropped deliberately.
+
+## 2026-10-01 — The Schedule of Forms, and two coverage claims that were guesses
+
+Asked to make sure all the laws and decisions had been gathered. Two things had been asserted
+without being measured, and both were wrong.
+
+### Law: the forms were the last gap, and they are now closed
+
+- **All 27 prescribed forms imported** (Forms A to Z.1, under `forms/`, ids `bc.spr.form.<letter>`).
+  The Act and Regulation are now complete: nothing in either is unheld.
+- Parsed by a separate parser, `tools/lib/forms.ts`, because a form is a document and not a
+  provision — a letter rather than a number, a name rather than a marginal note, free text and
+  tables with dotted blanks. Every word is kept in published order; the layout is simplified and
+  each item's `notes` says so, so nobody mistakes an item for a filable form.
+- **Three items had been hedging, and all three were right to.** The kb could not confirm that the
+  Information Certificate is "Form B" because it did not hold the Schedule. It is, for section 59.
+  Certificate of Payment is Form F (s 115), Notice of Tenant's Responsibilities is Form K (s 146),
+  Amendment to Bylaws is Form I (s 128). Those hedges are gone.
+- **Form J is repealed** (B.C. Reg. 6/2023, s. 7) and still occupies its letter. Imported with its
+  published "Repealed." text, so the question is answered rather than met with silence.
+- A form's `cites` come from the reference BC Laws prints under its name, not from `link:cites`.
+  That reference distinguishes the Act's sections from the Regulation's; a bare "Section 59" inside
+  a Regulation item would otherwise resolve to the wrong enactment.
+- Only one image exists in the Schedule, the 12px tick box, written as `[ ]`. Any other graphic
+  stops the import: the licence does not cover the coat of arms or government logos.
+- Two faults in shared code found on the way: `inline()` trimmed every fragment, deleting the space
+  that separates it from the next one; and `.map(inline)` was passing the array index into the new
+  handler argument. Both fixed, 123 tests green.
+- While in the fees guide: **section 115 was not covered at all.** The Certificate of Payment, its
+  60-day currency, its $15 cap, the bar on including undetermined damages claims, and the one-week
+  duty to discharge a lien with an Acknowledgement of Payment are now there.
+
+### Decisions: "strata" was never the whole net
+
+- **The bare word `condominium` added 2,657 judgments** no strata phrase had reached, 672 of them
+  from the 1990s. BC's pre-2000 regime was the *Condominium Act* and many of those judgments never
+  use the word strata. The courts index goes 4,790 → **7,447**. This is the largest correction it
+  has had. "Searched the obvious term to exhaustion" is not "searched exhaustively".
+- **All seven CRT collections are now swept**, not the three that looked relevant. The four left
+  over contributed 41 rows, only 3 of which mention the *Strata Property Act*. The reasoning for
+  skipping them was sound; skipping them on reasoning alone was not.
+- Two more silent parser faults, both caught by reconciling the parsed count against the site's own
+  total rather than by reading code. `bcc_all.py` still keyed rows on the neutral citation, losing
+  775 pre-1999 judgments while the page counter climbed. The CRT serves `/crt/abc/` for accident
+  collections and writes `publicationDate`, so a lowercase pattern parsed all 41 rows as zero.
+  **Reconciling counts has now caught every data-loss bug in this project. Reading the code has
+  caught none of them.**
+- **Provincial Court of BC is a hard stop**: every judgment link on its own site points at CanLII.
+  Same shape as the BCHRT. Question 39 raised rather than worked around.
+- Collection scripts moved to `decision-candidates/scripts/` with a README recording the faults.
+
+### The answer to the question
+
+`research/coverage.md`. The law we are permitted to hold is complete and currently frozen by the
+BC Laws robots.txt block (question 24). The decisions are completely indexed — 11,286 rows — and
+**zero of them can ship**, because no reuse permission exists for either body (questions 18, 19).
+That permission is the single largest blocked asset in the project.
