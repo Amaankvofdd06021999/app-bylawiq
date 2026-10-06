@@ -74,6 +74,7 @@ If you believe a substitution is warranted, write the argument in the PR descrip
 - Route handlers: `app/api/<resource>/route.ts`. Server actions: `features/<name>/actions.ts`, each exported fn suffixed `Action`.
 
 ### Data access
+- Screens (`app/_screens/`) read only through the `DataSource` contract in `data/source.ts` (real: `data/supabase.ts`, demo: `mock/data-source.ts`). UI components in `features/*/components/` take props and never fetch. See `docs/HANDOFF.md`.
 - **All reads and writes go through a Data Access Layer** in `features/<name>/queries.ts` / `actions.ts`. Components never construct a Supabase client.
 - Every server action starts with three lines, in this order:
   ```ts
@@ -95,7 +96,7 @@ If you believe a substitution is warranted, write the argument in the PR descrip
 
 A task is not done until all of these are true:
 
-- [ ] `pnpm typecheck && pnpm lint && pnpm test` pass.
+- [ ] `npm run format:check && npm run typecheck && npm run lint && npm test` pass.
 - [ ] New tables have RLS enabled **and** a pgTAP test proving a user from Building A cannot read Building B's rows.
 - [ ] New columns referenced in RLS policies have indexes.
 - [ ] Every user-facing string is sentence case, active voice, and names things the user recognises (doc 06 §7).

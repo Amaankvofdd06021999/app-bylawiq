@@ -1,10 +1,10 @@
-# BylawIQ webapp — source snapshot
+# BylawIQ webapp
 
-Exported 14 September 2026. This is the application code available after the coding workspace was restored. It is an implementation in progress, not a production release. The earlier marketing website is a separate project.
+An AI assistant for British Columbia strata property law. Implementation in progress, not a production release. **Start with [`docs/HANDOFF.md`](docs/HANDOFF.md)**: current status, how the code is organized, and how to connect the database. The earlier marketing website is a separate project.
 
 ## Run locally
 
-Use Node.js 22.13 or later and npm. The included `package-lock.json` is the reproducible dependency lock used by CI.
+Use Node.js 22.18 or later and npm. The included `package-lock.json` is the reproducible dependency lock used by CI.
 
 ```sh
 npm ci
@@ -12,7 +12,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000/preview/ask` to explore the fictional, read-only sample workspace. It does not need live AI credentials. Open `/login` or `/signup` for the real authentication flows once the required services are configured. Sample buttons intentionally cannot persist changes.
+Set `DEMO_MODE=on` in `.env.local`, then open `http://localhost:3000/demo` to use the interactive demo: five sample people, sample buildings and documents, an in-memory store per browser session, and no model calls or live credentials. Open `/login` or `/signup` for the real authentication flows once the required services are configured.
 
 ## What the source contains
 
@@ -22,7 +22,9 @@ Open `http://localhost:3000/preview/ask` to explore the fictional, read-only sam
 - Private conversations with persistent messages, citation drawers, scoped retrieval, generation cancellation and replay of persisted stream events.
 - Configurable building agents and versioned deployments, document parsing and chunking, website ingestion, Voyage embeddings and PostgreSQL hybrid retrieval with pgvector.
 - Row Level Security, live membership checks, constrained database writes, citation verification, audit records and server-attested assistant messages.
-- Eight database migrations, application tests, database isolation tests, Playwright tests and the supplied product and architecture specifications.
+- Role home screens (platform admin, firm owner, strata manager, building manager), a resident's paid tools, firm knowledge and answers grouped by knowledge layer — in the demo today; `docs/HANDOFF.md` lists what each needs in the database.
+- The knowledge base in `kb/`: the Strata Property Act, Regulation and prescribed forms, standard bylaws, topic guides, eval sets and firm/building starter kits, all as drafts awaiting counsel review.
+- Database migrations (21), application tests, database isolation tests, Playwright tests and the supplied product and architecture specifications.
 
 ## Service configuration
 
@@ -43,7 +45,7 @@ Set `NEXT_PUBLIC_APP_URL` to the deployed app origin. Use a dedicated database f
 
 ## Database and deployment
 
-The packaged migration filenames match the eight migrations already applied to the dedicated ByLaw-IQ Supabase project. The seven recovered local migration bodies were compared with the recorded cloud migration bodies; the final `security_review` migration was recovered from that history. No database rows or credential values are included.
+The first eight migration filenames match the migrations already applied to the dedicated ByLaw-IQ Supabase project. The seven recovered local migration bodies were compared with the recorded cloud migration bodies; the final `security_review` migration was recovered from that history. No database rows or credential values are included.
 
 For a new Supabase instance, initialize the Supabase CLI configuration for this directory, then apply the migrations in filename order. Configure Auth and job settings separately. If working with an existing database, review its migration history before applying anything. The archive does not include a generated `supabase/config.toml`; the database CI job needs that configuration before it can run independently.
 
@@ -52,30 +54,36 @@ For Vercel, import this directory as a Next.js project with `npm ci` as the inst
 ## Checks
 
 ```sh
+npm run format:check
 npm run typecheck
 npm run lint
 npm test
 npm run build
 npx playwright install chromium
-npm run test:e2e
+E2E_START=1 E2E_PORT=3107 DEMO_MODE=on npm run test:e2e
 ```
 
-The export-time results and remaining work are in `SNAPSHOT-STATUS.md`. The Playwright tests cover the sample interface; they do not establish that live authentication, provider calls or background ingestion work end to end.
+The Playwright tests drive the demo; they do not establish that live authentication, provider calls or background ingestion work end to end. Current status and known gaps are in `docs/HANDOFF.md`.
 
 ## Project map
 
 | Directory | Purpose |
 | --- | --- |
-| `app/` | Pages, layouts, API routes and authentication callback. |
-| `components/` | Shared shell and interface primitives. |
-| `features/` | Feature screens, server actions, data access and chat orchestration. |
-| `lib/` | Shared authentication, AI, security, export and database utilities. |
+| `app/` | Route files (thin: pick a data source, render a screen), API routes and the auth callback. `app/demo/` and `app/api/demo/` are the demo. |
+| `app/_screens/` | The pages, written once against the `DataSource` contract and shared by the real app and the demo. |
+| `features/` | Feature UI (`components/`, presentational, never fetch), real server actions and queries. |
+| `components/` | Shared shell, UI primitives and the client-side write seam (`backend.tsx`). |
+| `data/` | The `DataSource` read contract and its Supabase implementation. |
+| `mock/` | The demo's data: seed, in-memory store, RLS-mirroring rules, demo actions and API. |
+| `lib/` | Shared auth, AI, security, export, error and schema utilities. |
 | `inngest/` | Background document ingestion. |
 | `supabase/` | Database migrations and pgTAP tests. |
+| `kb/` | The knowledge base package: BC strata law, starter kits, topic guides, evals and their tooling. |
+| `scripts/` | `ingest-kb.ts`, which loads the built knowledge base into the legal corpus (`npm run kb:ingest`). |
 | `tests/` | Vitest and Playwright suites. |
-| `docs/` | Original product brief, architecture, security, API and build specifications. |
+| `docs/` | Product and engineering specifications, and the developer handover. |
 | `public/` | Fonts and an illustrative building photograph; see asset credits. |
 
 ## Legal and product limits
 
-The preview contains fictional buildings and examples. It is not a legal corpus. Live answers require reviewed, authorized sources. The app is designed to present applicable information for human review, not make legal determinations. No automated BC Laws/CiviX ingestion or CanLII website scraping is enabled in this snapshot. Follow the source licensing and legal requirements in the supplied specifications.
+The preview contains fictional buildings and examples. It is not a legal corpus. Live answers require reviewed, authorized sources. The app is designed to present applicable information for human review, not make legal determinations. The app does not fetch BC Laws/CiviX or CanLII at runtime; legislation reaches the legal corpus only through the reviewed `kb/` build and `scripts/ingest-kb.ts`. Follow the source licensing and legal requirements in the supplied specifications.
