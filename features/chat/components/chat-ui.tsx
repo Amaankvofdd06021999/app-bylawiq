@@ -1,76 +1,907 @@
 'use client';
-import {useState,useRef,useEffect,useMemo} from 'react';
-import {useChat} from '@ai-sdk/react';
-import {DefaultChatTransport} from 'ai';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import Link from 'next/link';
-import {useRouter} from 'next/navigation';
-import {ArrowUp,ArrowUpRight,Plus,Sparkles,FileText,BookOpen,ShieldCheck,Clock,Building2,ChevronRight,Square,GitBranch,Copy,MessageSquare,Search,CheckCircle2,Scale} from 'lucide-react';
-import {Button,PageHeading,Badge,Modal,TrustNote,Empty} from '@/components/ui';
-import {useBackend} from '@/components/backend';
-import {str} from '@/features/workspace/components/resource-form';
-import type {Building,Profile,Row} from '@/lib/schema';
-import type {BylawMessage,AnswerData} from '@/lib/chat-types';
-import {sourceSchema,type Source} from '@/lib/ai/citations';
-import {groupClaims,firmNameOf,buildingNameOf} from '@/features/chat/group-claims';
-type Layer=Source['kind'];
-type NamedBuilding=Pick<Building,'id'|'name'>;
+import { useRouter } from 'next/navigation';
+import {
+  ArrowUp,
+  ArrowUpRight,
+  Plus,
+  Sparkles,
+  FileText,
+  BookOpen,
+  ShieldCheck,
+  Clock,
+  Building2,
+  ChevronRight,
+  Square,
+  GitBranch,
+  Copy,
+  MessageSquare,
+  Search,
+  CheckCircle2,
+  Scale,
+} from 'lucide-react';
+import { Button, PageHeading, Badge, Modal, TrustNote, Empty } from '@/components/ui';
+import { useBackend } from '@/components/backend';
+import { str } from '@/features/workspace/components/resource-form';
+import type { Building, Profile, Row } from '@/lib/schema';
+import type { BylawMessage, AnswerData } from '@/lib/chat-types';
+import { sourceSchema, type Source } from '@/lib/ai/citations';
+import { groupClaims, firmNameOf, buildingNameOf } from '@/features/chat/group-claims';
+type Layer = Source['kind'];
+type NamedBuilding = Pick<Building, 'id' | 'name'>;
 // Knowledge layers in the order answers are grouped and chips are shown. Only the demo passes
 // `availableLayers` today: the real chat route answers from building and legal sources and has no layer
 // filter yet, so the real app shows no chips rather than chips that change nothing.
-const LAYER_ORDER:readonly Layer[]=['building','legal','firm'];
-const LAYER_CHIP:Record<Layer,string>={building:'Building',firm:'Firm',legal:'Law'};
+const LAYER_ORDER: readonly Layer[] = ['building', 'legal', 'firm'];
+const LAYER_CHIP: Record<Layer, string> = { building: 'Building', firm: 'Firm', legal: 'Law' };
 // A building source is labelled with its own building's name, or "Another building" when this page can't name it.
-function sourceBadge(s:Source,buildings:readonly NamedBuilding[]):string{return s.kind==='building'?(buildingNameOf(s.buildingId,buildings)??'Another building'):s.kind==='firm'?firmNameOf(s)+' internal':'Legal source';}
-const layersQuery=(layers:readonly Layer[]|undefined,chosen:readonly Layer[])=>layers&&chosen.length?'?layers='+chosen.join(','):'';
+function sourceBadge(s: Source, buildings: readonly NamedBuilding[]): string {
+  return s.kind === 'building'
+    ? (buildingNameOf(s.buildingId, buildings) ?? 'Another building')
+    : s.kind === 'firm'
+      ? firmNameOf(s) + ' internal'
+      : 'Legal source';
+}
+const layersQuery = (layers: readonly Layer[] | undefined, chosen: readonly Layer[]) =>
+  layers && chosen.length ? '?layers=' + chosen.join(',') : '';
 // The demo answers a 402 `{code:'paywall'}` when a resident is out of credits; the transport surfaces the body as
 // the error message.
-function isPaywall(e:Error):boolean{try{const v:unknown=JSON.parse(e.message);return !!v&&typeof v==='object'&&'code' in v&&v.code==='paywall';}catch{return false;}}
+function isPaywall(e: Error): boolean {
+  try {
+    const v: unknown = JSON.parse(e.message);
+    return !!v && typeof v === 'object' && 'code' in v && v.code === 'paywall';
+  } catch {
+    return false;
+  }
+}
 /** Building · Firm · Law toggles under the question box. At least one stays on. The Firm chip only appears when
  * the page says the person may see firm knowledge. */
-function LayerChips({available,value,onChange}:{available:readonly Layer[];value:Layer[];onChange:(v:Layer[])=>void}){return <span className="layer-chips" role="group" aria-label="Search these sources">{LAYER_ORDER.filter(l=>available.includes(l)).map(l=>{const on=value.includes(l);return <button key={l} type="button" className="scope-chip layer-chip" aria-pressed={on} disabled={on&&value.length===1} title={on&&value.length===1?'Keep at least one source on':undefined} onClick={()=>onChange(on?value.filter(x=>x!==l):LAYER_ORDER.filter(x=>x===l||value.includes(x)))}>{LAYER_CHIP[l]}</button>;})}</span>;}
-import {DISCLAIMER,pretty} from '@/lib/constants';
+function LayerChips({
+  available,
+  value,
+  onChange,
+}: {
+  available: readonly Layer[];
+  value: Layer[];
+  onChange: (v: Layer[]) => void;
+}) {
+  return (
+    <span className="layer-chips" role="group" aria-label="Search these sources">
+      {LAYER_ORDER.filter((l) => available.includes(l)).map((l) => {
+        const on = value.includes(l);
+        return (
+          <button
+            key={l}
+            type="button"
+            className="scope-chip layer-chip"
+            aria-pressed={on}
+            disabled={on && value.length === 1}
+            title={on && value.length === 1 ? 'Keep at least one source on' : undefined}
+            onClick={() =>
+              onChange(
+                on ? value.filter((x) => x !== l) : LAYER_ORDER.filter((x) => x === l || value.includes(x)),
+              )
+            }
+          >
+            {LAYER_CHIP[l]}
+          </button>
+        );
+      })}
+    </span>
+  );
+}
+import { DISCLAIMER, pretty } from '@/lib/constants';
 /** `wallet` (demo only) is a paying resident's free questions left and credits, checked before a chat is created so a
  * resident who can't pay sees the paywall without leaving an empty conversation behind. `askPaused` (demo only)
  * is a resident whose Ask BylawIQ has switched off. */
-export function AskHome({building,profile,documents,chats,permissions,buildings,agentId=null,availableLayers,initialScope,wallet,askPaused=false}:{building:Building;profile:Profile;documents:Row[];chats:Row[];permissions:string[];buildings:Building[];agentId?:string|null;availableLayers?:Layer[];initialScope?:'portfolio';wallet?:{freeLeft:number;credits:number};askPaused?:boolean}){
- const router=useRouter(),backend=useBackend();const[text,setText]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');const input=useRef<HTMLTextAreaElement>(null);const[scope,setScope]=useState(initialScope==='portfolio'&&permissions.includes('chat.use_portfolio')&&buildings.length>1?'portfolio':'building'),[asOf,setAsOf]=useState(''),[source,setSource]=useState('all');const ready=documents.filter(d=>d.status==='ready');const root=backend.base+'/b/'+building.id;const[layers,setLayers]=useState<Layer[]>(()=>[...(availableLayers??[])]);const staff=permissions.includes('chat.use'),resident=!staff&&permissions.includes('chat.resident');const[purse,setPurse]=useState(wallet),[paywall,setPaywall]=useState(false),[buying,setBuying]=useState(false),[buyError,setBuyError]=useState('');
- const suggestions=ready.flatMap(d=>Array.isArray(d.parsed_sections)?d.parsed_sections.map(s=>({title:String(s.heading||'').slice(0,65),prompt:'What does our '+String(s.heading||'document')+' provision say?'})):[]).filter(s=>s.title).slice(0,3);
- async function send(paid=false){if(!text.trim())return;if(!paid&&resident&&purse&&purse.freeLeft<1&&purse.credits<1){setPaywall(true);return;}setBusy(true);setError('');const r=await backend.createChat({buildingId:building.id,scope,buildingIds:scope==='portfolio'?buildings.map(b=>b.id):[],asOf:asOf||null,sourceTypes:source==='all'?[]:[source],agentId});setBusy(false);if(!r.ok){setError(r.error||'The conversation could not start.');return;}sessionStorage.setItem('bylawiq-prompt:'+r.id,text);router.push(root+'/chat/'+r.id+layersQuery(availableLayers,layers));}
- // Buying from the paywall starts the conversation with the question still in the box, in the same click.
- async function buyAndAsk(){setBuying(true);setBuyError('');const r=await backend.buyCredits({buildingId:building.id});setBuying(false);if(!r.ok){setBuyError(r.error);return;}setPurse(p=>({freeLeft:p?.freeLeft??0,credits:r.credits}));setPaywall(false);await send(true);}
- if(askPaused)return <><PageHeading eyebrow={building.strata_plan_no||'BUILDING WORKSPACE'} title="Ask BylawIQ" description={'Questions about '+building.name+'’s bylaws.'}/><Empty icon={<Sparkles size={22}/>} title="Ask is paused" description="BylawIQ has switched off questions for residents for now. No credits are used while it’s off — check back later."/></>;
- return <><PageHeading eyebrow={building.strata_plan_no||'BUILDING WORKSPACE'} title={'Good to see you, '+(profile.display_name.split(' ')[0]||'there')+'.'} description={'A little more clarity for '+building.name+'.'} action={permissions.includes('vault.upload')?<Link className="button button-secondary" href={root+'/documents'}><Plus size={15}/>Add documents</Link>:undefined}/>
- <div className="hero-ask"><div className="ai-emblem"><Sparkles size={23} strokeWidth={1.4}/></div><h2>What does your building need to know?</h2><p>Ask a question. Find the source. Move forward with confidence.</p><form className="composer" onSubmit={e=>{e.preventDefault();send();}}><textarea ref={input} aria-label="Ask BylawIQ" value={text} onChange={e=>setText(e.target.value)} placeholder={'Ask anything about '+building.name+'’s bylaws…'} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}/><div className="composer-bottom">{permissions.includes('vault.upload')&&<Link className="icon-button" aria-label="Add a source document" href={root+'/documents'}><Plus size={18}/></Link>}<label className="scope-chip"><Building2 size={12}/><select aria-label="Question scope" value={scope} onChange={e=>setScope(e.target.value)}><option value="building">{building.name}</option>{staff&&<option value="general">General BC sources</option>}{permissions.includes('chat.use_portfolio')&&<option value="portfolio">Portfolio · {buildings.length} buildings</option>}</select></label><label className="scope-chip"><BookOpen size={12}/><select aria-label="Source type" value={source} onChange={e=>setSource(e.target.value)}><option value="all">All sources</option><option value="bylaws">Our bylaws</option><option value="rules">Our rules</option><option value="council_minutes">Council minutes</option></select></label><label className="scope-chip"><Clock size={12}/><input aria-label="As of date" className="date-input" type="date" value={asOf} onChange={e=>setAsOf(e.target.value)}/></label>{availableLayers&&availableLayers.length>0&&<LayerChips available={availableLayers} value={layers} onChange={setLayers}/>}<Button className="send-button" size="icon" type="submit" busy={busy} disabled={!text.trim()} aria-label="Send question"><ArrowUp size={18}/></Button></div></form>
- {scope==='portfolio'&&<p className="inline-callout" style={{marginTop:10}}>Explicit portfolio query: {buildings.map(b=>b.name).join(', ')}. Sources remain labelled by building.</p>}{error&&<p className="form-error" role="alert" style={{marginTop:14}}>{error}</p>}{resident&&<p className="form-note" style={{marginTop:10}}>Answers use {building.name}’s owner documents and the law. Your first 2 questions are free, then each question uses 1 credit.</p>}
- {suggestions.length>0&&<div className="suggestion-grid">{suggestions.map((s,i)=><button key={i} className="suggestion" onClick={()=>{setText(s.prompt);input.current?.focus();}}>{i===0?<Search size={17}/>:i===1?<BookOpen size={17}/>:<Scale size={17}/>}<span>{s.prompt}</span></button>)}</div>}<p className="disclaimer">{DISCLAIMER}</p><TrustNote/></div>
- <div className="stats-grid" style={{marginTop:24}}>{[[String(documents.length),'Documents in your vault','Your building’s source of truth',FileText],[String(ready.length),'Sources ready to search','Verified structure and indexed text',CheckCircle2],[String(chats.filter(c=>!c.archived).length),'Your conversations','Private, persistent history',MessageSquare],['BC','Jurisdiction','Municipal layer: not yet verified',Building2]].map(([value,label,note,Icon])=>{const C=Icon as typeof FileText;return <div className="card" key={String(label)}><span className="stat-label">{String(label)}<C size={16}/></span><div className="stat-value">{String(value)}</div><p className="stat-note">{String(note)}</p></div>;})}</div>
- <div className="split-grid"><section><div className="section-title"><h2>Recent conversations</h2><span className="form-note">Only you can see these</span></div><div className="card">{chats.filter(c=>!c.archived).slice(0,4).map(c=><Link key={c.id} className="activity-row" href={root+'/chat/'+c.id}><span className="file-icon"><MessageSquare size={16}/></span><div><h3>{str(c,'title')}</h3><p>{building.name} · {pretty(str(c,'scope'))}</p></div><ChevronRight size={16}/></Link>)}{!chats.length&&<div style={{padding:'22px 5px'}}><p className="form-note">Your first conversation starts above. Each answer keeps its sources with it.</p></div>}</div><div className="section-title"><h2>Your latest documents</h2><Link href={root+'/documents'}>View all<ArrowUpRight size={13}/></Link></div><div className="card">{documents.slice(0,3).map(d=><Link className="activity-row" key={d.id} href={root+'/documents'}><span className="file-icon"><FileText size={16}/></span><div><h3>{str(d,'title')}</h3><p>{pretty(str(d,'type'))} · {str(d,'created_at').slice(0,10)}</p></div><Badge tone={d.status==='ready'?'green':'warning'}>{pretty(str(d,'status'))}</Badge></Link>)}{!documents.length&&<Link className="activity-row" href={root+'/documents'}><span className="file-icon"><Plus size={17}/></span><div><h3>Add your registered bylaws</h3><p>Start with the current filed set and amendments.</p></div><ArrowUpRight size={16}/></Link>}</div></section><section><div className="section-title"><h2>Your knowledge, at a glance</h2><ShieldCheck size={16} color="#9cabb9"/></div><div className="card"><span className="eyebrow">BUILDING KNOWLEDGE</span><h3 style={{fontSize:16,fontWeight:400}}>{building.name}</h3><p className="form-note" style={{marginTop:8}}>A complete picture starts with the right documents.</p><div className="health-list">{[['Registered bylaws',ready.some(d=>d.type==='bylaws')],['Building rules',ready.some(d=>d.type==='rules')],['Council records',ready.some(d=>d.type==='council_minutes')]].map(([t,complete])=><div key={String(t)}><CheckCircle2 size={15}/><span>{String(t)}</span><Badge tone={complete?'green':'neutral'}>{complete?'Ready':'Needed'}</Badge></div>)}</div><div className="inline-callout" style={{marginTop:25}}><strong>Keep the full amendment chain.</strong><br/>The latest amendment alone may not represent your complete current bylaws.</div><Link className="button button-ghost" style={{marginTop:15,paddingLeft:0}} href={root+'/documents'}>Manage your sources<ArrowUpRight size={14}/></Link></div></section></div>
- <Modal open={paywall} onOpenChange={v=>{setPaywall(v);setBuyError('');}} title="You’re out of credits" description="Your question wasn’t sent and no credit was used."><div className="form-stack"><p className="form-note">Each question uses 1 credit once your free questions are used. Your question stays in the box — buy credits and it’s sent straight away.</p><p className="form-note"><strong>Demo — no real charge.</strong> No card is asked for or charged.</p>{buyError&&<p className="form-error" role="alert">{buyError}</p>}<div className="form-footer"><Link className="button button-secondary" href={root+'/credits'}>See credit options</Link><Button busy={buying} onClick={buyAndAsk}>Buy 100 credits · $20 and ask</Button></div></div></Modal></>;
+export function AskHome({
+  building,
+  profile,
+  documents,
+  chats,
+  permissions,
+  buildings,
+  agentId = null,
+  availableLayers,
+  initialScope,
+  wallet,
+  askPaused = false,
+}: {
+  building: Building;
+  profile: Profile;
+  documents: Row[];
+  chats: Row[];
+  permissions: string[];
+  buildings: Building[];
+  agentId?: string | null;
+  availableLayers?: Layer[];
+  initialScope?: 'portfolio';
+  wallet?: { freeLeft: number; credits: number };
+  askPaused?: boolean;
+}) {
+  const router = useRouter(),
+    backend = useBackend();
+  const [text, setText] = useState(''),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  const input = useRef<HTMLTextAreaElement>(null);
+  const [scope, setScope] = useState(
+      initialScope === 'portfolio' && permissions.includes('chat.use_portfolio') && buildings.length > 1
+        ? 'portfolio'
+        : 'building',
+    ),
+    [asOf, setAsOf] = useState(''),
+    [source, setSource] = useState('all');
+  const ready = documents.filter((d) => d.status === 'ready');
+  const root = backend.base + '/b/' + building.id;
+  const [layers, setLayers] = useState<Layer[]>(() => [...(availableLayers ?? [])]);
+  const staff = permissions.includes('chat.use'),
+    resident = !staff && permissions.includes('chat.resident');
+  const [purse, setPurse] = useState(wallet),
+    [paywall, setPaywall] = useState(false),
+    [buying, setBuying] = useState(false),
+    [buyError, setBuyError] = useState('');
+  const suggestions = ready
+    .flatMap((d) =>
+      Array.isArray(d.parsed_sections)
+        ? d.parsed_sections.map((s) => ({
+            title: String(s.heading || '').slice(0, 65),
+            prompt: 'What does our ' + String(s.heading || 'document') + ' provision say?',
+          }))
+        : [],
+    )
+    .filter((s) => s.title)
+    .slice(0, 3);
+  async function send(paid = false) {
+    if (!text.trim()) return;
+    if (!paid && resident && purse && purse.freeLeft < 1 && purse.credits < 1) {
+      setPaywall(true);
+      return;
+    }
+    setBusy(true);
+    setError('');
+    const r = await backend.createChat({
+      buildingId: building.id,
+      scope,
+      buildingIds: scope === 'portfolio' ? buildings.map((b) => b.id) : [],
+      asOf: asOf || null,
+      sourceTypes: source === 'all' ? [] : [source],
+      agentId,
+    });
+    setBusy(false);
+    if (!r.ok) {
+      setError(r.error || 'The conversation could not start.');
+      return;
+    }
+    sessionStorage.setItem('bylawiq-prompt:' + r.id, text);
+    router.push(root + '/chat/' + r.id + layersQuery(availableLayers, layers));
+  }
+  // Buying from the paywall starts the conversation with the question still in the box, in the same click.
+  async function buyAndAsk() {
+    setBuying(true);
+    setBuyError('');
+    const r = await backend.buyCredits({ buildingId: building.id });
+    setBuying(false);
+    if (!r.ok) {
+      setBuyError(r.error);
+      return;
+    }
+    setPurse((p) => ({ freeLeft: p?.freeLeft ?? 0, credits: r.credits }));
+    setPaywall(false);
+    await send(true);
+  }
+  if (askPaused)
+    return (
+      <>
+        <PageHeading
+          eyebrow={building.strata_plan_no || 'BUILDING WORKSPACE'}
+          title="Ask BylawIQ"
+          description={'Questions about ' + building.name + '’s bylaws.'}
+        />
+        <Empty
+          icon={<Sparkles size={22} />}
+          title="Ask is paused"
+          description="BylawIQ has switched off questions for residents for now. No credits are used while it’s off — check back later."
+        />
+      </>
+    );
+  return (
+    <>
+      <PageHeading
+        eyebrow={building.strata_plan_no || 'BUILDING WORKSPACE'}
+        title={'Good to see you, ' + (profile.display_name.split(' ')[0] || 'there') + '.'}
+        description={'A little more clarity for ' + building.name + '.'}
+        action={
+          permissions.includes('vault.upload') ? (
+            <Link className="button button-secondary" href={root + '/documents'}>
+              <Plus size={15} />
+              Add documents
+            </Link>
+          ) : undefined
+        }
+      />
+      <div className="hero-ask">
+        <div className="ai-emblem">
+          <Sparkles size={23} strokeWidth={1.4} />
+        </div>
+        <h2>What does your building need to know?</h2>
+        <p>Ask a question. Find the source. Move forward with confidence.</p>
+        <form
+          className="composer"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
+          <textarea
+            ref={input}
+            aria-label="Ask BylawIQ"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={'Ask anything about ' + building.name + '’s bylaws…'}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+          />
+          <div className="composer-bottom">
+            {permissions.includes('vault.upload') && (
+              <Link className="icon-button" aria-label="Add a source document" href={root + '/documents'}>
+                <Plus size={18} />
+              </Link>
+            )}
+            <label className="scope-chip">
+              <Building2 size={12} />
+              <select aria-label="Question scope" value={scope} onChange={(e) => setScope(e.target.value)}>
+                <option value="building">{building.name}</option>
+                {staff && <option value="general">General BC sources</option>}
+                {permissions.includes('chat.use_portfolio') && (
+                  <option value="portfolio">Portfolio · {buildings.length} buildings</option>
+                )}
+              </select>
+            </label>
+            <label className="scope-chip">
+              <BookOpen size={12} />
+              <select aria-label="Source type" value={source} onChange={(e) => setSource(e.target.value)}>
+                <option value="all">All sources</option>
+                <option value="bylaws">Our bylaws</option>
+                <option value="rules">Our rules</option>
+                <option value="council_minutes">Council minutes</option>
+              </select>
+            </label>
+            <label className="scope-chip">
+              <Clock size={12} />
+              <input
+                aria-label="As of date"
+                className="date-input"
+                type="date"
+                value={asOf}
+                onChange={(e) => setAsOf(e.target.value)}
+              />
+            </label>
+            {availableLayers && availableLayers.length > 0 && (
+              <LayerChips available={availableLayers} value={layers} onChange={setLayers} />
+            )}
+            <Button
+              className="send-button"
+              size="icon"
+              type="submit"
+              busy={busy}
+              disabled={!text.trim()}
+              aria-label="Send question"
+            >
+              <ArrowUp size={18} />
+            </Button>
+          </div>
+        </form>
+        {scope === 'portfolio' && (
+          <p className="inline-callout" style={{ marginTop: 10 }}>
+            Explicit portfolio query: {buildings.map((b) => b.name).join(', ')}. Sources remain labelled by
+            building.
+          </p>
+        )}
+        {error && (
+          <p className="form-error" role="alert" style={{ marginTop: 14 }}>
+            {error}
+          </p>
+        )}
+        {resident && (
+          <p className="form-note" style={{ marginTop: 10 }}>
+            Answers use {building.name}’s owner documents and the law. Your first 2 questions are free, then
+            each question uses 1 credit.
+          </p>
+        )}
+        {suggestions.length > 0 && (
+          <div className="suggestion-grid">
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
+                className="suggestion"
+                onClick={() => {
+                  setText(s.prompt);
+                  input.current?.focus();
+                }}
+              >
+                {i === 0 ? <Search size={17} /> : i === 1 ? <BookOpen size={17} /> : <Scale size={17} />}
+                <span>{s.prompt}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="disclaimer">{DISCLAIMER}</p>
+        <TrustNote />
+      </div>
+      <div className="stats-grid" style={{ marginTop: 24 }}>
+        {[
+          [String(documents.length), 'Documents in your vault', 'Your building’s source of truth', FileText],
+          [
+            String(ready.length),
+            'Sources ready to search',
+            'Verified structure and indexed text',
+            CheckCircle2,
+          ],
+          [
+            String(chats.filter((c) => !c.archived).length),
+            'Your conversations',
+            'Private, persistent history',
+            MessageSquare,
+          ],
+          ['BC', 'Jurisdiction', 'Municipal layer: not yet verified', Building2],
+        ].map(([value, label, note, Icon]) => {
+          const C = Icon as typeof FileText;
+          return (
+            <div className="card" key={String(label)}>
+              <span className="stat-label">
+                {String(label)}
+                <C size={16} />
+              </span>
+              <div className="stat-value">{String(value)}</div>
+              <p className="stat-note">{String(note)}</p>
+            </div>
+          );
+        })}
+      </div>
+      <div className="split-grid">
+        <section>
+          <div className="section-title">
+            <h2>Recent conversations</h2>
+            <span className="form-note">Only you can see these</span>
+          </div>
+          <div className="card">
+            {chats
+              .filter((c) => !c.archived)
+              .slice(0, 4)
+              .map((c) => (
+                <Link key={c.id} className="activity-row" href={root + '/chat/' + c.id}>
+                  <span className="file-icon">
+                    <MessageSquare size={16} />
+                  </span>
+                  <div>
+                    <h3>{str(c, 'title')}</h3>
+                    <p>
+                      {building.name} · {pretty(str(c, 'scope'))}
+                    </p>
+                  </div>
+                  <ChevronRight size={16} />
+                </Link>
+              ))}
+            {!chats.length && (
+              <div style={{ padding: '22px 5px' }}>
+                <p className="form-note">
+                  Your first conversation starts above. Each answer keeps its sources with it.
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="section-title">
+            <h2>Your latest documents</h2>
+            <Link href={root + '/documents'}>
+              View all
+              <ArrowUpRight size={13} />
+            </Link>
+          </div>
+          <div className="card">
+            {documents.slice(0, 3).map((d) => (
+              <Link className="activity-row" key={d.id} href={root + '/documents'}>
+                <span className="file-icon">
+                  <FileText size={16} />
+                </span>
+                <div>
+                  <h3>{str(d, 'title')}</h3>
+                  <p>
+                    {pretty(str(d, 'type'))} · {str(d, 'created_at').slice(0, 10)}
+                  </p>
+                </div>
+                <Badge tone={d.status === 'ready' ? 'green' : 'warning'}>{pretty(str(d, 'status'))}</Badge>
+              </Link>
+            ))}
+            {!documents.length && (
+              <Link className="activity-row" href={root + '/documents'}>
+                <span className="file-icon">
+                  <Plus size={17} />
+                </span>
+                <div>
+                  <h3>Add your registered bylaws</h3>
+                  <p>Start with the current filed set and amendments.</p>
+                </div>
+                <ArrowUpRight size={16} />
+              </Link>
+            )}
+          </div>
+        </section>
+        <section>
+          <div className="section-title">
+            <h2>Your knowledge, at a glance</h2>
+            <ShieldCheck size={16} color="#9cabb9" />
+          </div>
+          <div className="card">
+            <span className="eyebrow">BUILDING KNOWLEDGE</span>
+            <h3 style={{ fontSize: 16, fontWeight: 400 }}>{building.name}</h3>
+            <p className="form-note" style={{ marginTop: 8 }}>
+              A complete picture starts with the right documents.
+            </p>
+            <div className="health-list">
+              {[
+                ['Registered bylaws', ready.some((d) => d.type === 'bylaws')],
+                ['Building rules', ready.some((d) => d.type === 'rules')],
+                ['Council records', ready.some((d) => d.type === 'council_minutes')],
+              ].map(([t, complete]) => (
+                <div key={String(t)}>
+                  <CheckCircle2 size={15} />
+                  <span>{String(t)}</span>
+                  <Badge tone={complete ? 'green' : 'neutral'}>{complete ? 'Ready' : 'Needed'}</Badge>
+                </div>
+              ))}
+            </div>
+            <div className="inline-callout" style={{ marginTop: 25 }}>
+              <strong>Keep the full amendment chain.</strong>
+              <br />
+              The latest amendment alone may not represent your complete current bylaws.
+            </div>
+            <Link
+              className="button button-ghost"
+              style={{ marginTop: 15, paddingLeft: 0 }}
+              href={root + '/documents'}
+            >
+              Manage your sources
+              <ArrowUpRight size={14} />
+            </Link>
+          </div>
+        </section>
+      </div>
+      <Modal
+        open={paywall}
+        onOpenChange={(v) => {
+          setPaywall(v);
+          setBuyError('');
+        }}
+        title="You’re out of credits"
+        description="Your question wasn’t sent and no credit was used."
+      >
+        <div className="form-stack">
+          <p className="form-note">
+            Each question uses 1 credit once your free questions are used. Your question stays in the box —
+            buy credits and it’s sent straight away.
+          </p>
+          <p className="form-note">
+            <strong>Demo — no real charge.</strong> No card is asked for or charged.
+          </p>
+          {buyError && (
+            <p className="form-error" role="alert">
+              {buyError}
+            </p>
+          )}
+          <div className="form-footer">
+            <Link className="button button-secondary" href={root + '/credits'}>
+              See credit options
+            </Link>
+            <Button busy={buying} onClick={buyAndAsk}>
+              Buy 100 credits · $20 and ask
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
 }
-export function Conversation({id,initialMessages,building,buildings=[],scope='building',asOf,availableLayers,initialLayers,canDraft=false}:{id:string;initialMessages:BylawMessage[];building:Building;buildings?:NamedBuilding[];scope?:string;asOf?:string|null;availableLayers?:Layer[];initialLayers?:Layer[];canDraft?:boolean}){
- // Every building this person can see, by name, so each cited building is labelled as itself (AGENTS.md §0).
- const known=useMemo(()=>[building,...buildings.filter(b=>b.id!==building.id)],[building,buildings]);
- const router=useRouter(),backend=useBackend();const root=backend.base+'/b/'+building.id;const[input,setInput]=useState(''),[progress,setProgress]=useState(''),[source,setSource]=useState<Source|null>(null),[errorText,setErrorText]=useState('');const bottom=useRef<HTMLDivElement>(null);const started=useRef(false);const[layers,setLayers]=useState<Layer[]>(()=>{const all=availableLayers??[];const chosen=all.filter(l=>initialLayers?.includes(l));return chosen.length?chosen:[...all];}),[paywall,setPaywall]=useState(false);
- // `layers` travels only when the page offers layer chips (the demo); the real route ignores unknown fields.
- const transport=useMemo(()=>new DefaultChatTransport<BylawMessage>({api:backend.api+'/chat',prepareSendMessagesRequest:({id,messages,body})=>({body:{...body,id,message:messages[messages.length-1]}})}),[backend.api]);
- const hasLayers=!!availableLayers;const options=useMemo(()=>hasLayers?{body:{layers}}:undefined,[hasLayers,layers]);
- const {messages,sendMessage,status,error,stop,setMessages,clearError}=useChat<BylawMessage>({id,messages:initialMessages,resume:true,transport,
-  // A resident out of credits: nothing was saved, so take the question back out of the thread and put it in the box.
-  onError:e=>{if(!isPaywall(e))return;const last=messages.findLast(m=>m.role==='user');if(last){setInput(last.parts.filter(p=>p.type==='text').map(p=>p.text).join('\n'));setMessages(m=>m.filter(x=>x.id!==last.id));}clearError();setPaywall(true);},onData:p=>{if(p.type==='data-progress')setProgress(p.data.label);},onFinish:()=>{setProgress('');router.refresh();}});
-  useEffect(()=>{if(started.current)return;started.current=true;const prompt=sessionStorage.getItem('bylawiq-prompt:'+id);if(prompt){sessionStorage.removeItem('bylawiq-prompt:'+id);sendMessage({id:crypto.randomUUID(),role:'user',parts:[{type:'text',text:prompt}]},options);}},[id,sendMessage,options]);
- useEffect(()=>{bottom.current?.scrollIntoView({behavior:'auto',block:'end'});},[messages.length,status]);
- const waiting=status==='streaming'||status==='submitted';async function send(){if(!input.trim())return;const value=input;setInput('');await sendMessage({id:crypto.randomUUID(),role:'user',parts:[{type:'text',text:value}]},options);}
- // Buying from the paywall (resident Ask, demo only) sends the question that was put back in the box, in the same click.
- const[buying,setBuying]=useState(false),[buyError,setBuyError]=useState('');
- async function buyAndAsk(){setBuying(true);setBuyError('');const r=await backend.buyCredits({buildingId:building.id});setBuying(false);if(!r.ok){setBuyError(r.error);return;}setPaywall(false);await send();}
- return <div className="chat-view"><PageHeading eyebrow={building.name} title="Ask BylawIQ" description={'Scope: '+pretty(scope)+(asOf?' · As of '+asOf:' · Current sources')}/><div className="chat-scroll">{messages.map(m=>{const data=m.parts.find(p=>p.type==='data-answer');const text=m.parts.filter(p=>p.type==='text').map(p=>p.text).join('\n');return <article key={m.id} className={'chat-message '+m.role}>{m.role==='user'?<div><div className="user-bubble">{text}</div><button className="button button-ghost button-small" onClick={async()=>{const r=await backend.branchChat({chatId:id,messageId:m.id});if(r.ok){sessionStorage.setItem('bylawiq-prompt:'+r.id,text);router.push(root+'/chat/'+r.id+layersQuery(availableLayers,layers));}else setErrorText(r.error||'Unable to branch.');}}><GitBranch size={12}/>Branch from here</button></div>:<div><div className="assistant-heading"><span className="ai-emblem"><Sparkles size={16}/></span>BylawIQ <Badge tone="ai">AI draft</Badge></div>{data?.type==='data-answer'?<GroundedResponse data={data.data} buildings={known} activeBuildingId={building.id} onSource={setSource}/>:<div className="answer-body">{text}</div>}<div className="action-line" style={{marginTop:15,paddingLeft:35}}><Button variant="ghost" size="small" onClick={()=>navigator.clipboard.writeText(text||JSON.stringify(data?.data))}><Copy size={13}/>Copy</Button>{canDraft&&<Link className="button button-ghost button-small" href={root+'/notices'}><FileText size={13}/>Draft correspondence</Link>}</div></div>}</article>;})}{waiting&&<div className="activity-row" role="status"><Sparkles className="spin" size={17}/><span className="form-note">{progress||'Opening your sources…'}</span></div>}{((error&&!isPaywall(error))||errorText)&&<div className="form-error" role="alert">{errorText||'The answer could not complete. Your saved conversation remains available. Try again shortly.'}</div>}<div ref={bottom}/></div><div className="chat-composer"><form className="composer" onSubmit={e=>{e.preventDefault();send();}}><textarea value={input} onChange={e=>setInput(e.target.value)} aria-label="Message BylawIQ" placeholder="Ask a follow-up question…" onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}/><div className="composer-bottom"><span className="scope-chip"><Building2 size={13}/>{scope==='general'?'General BC sources':building.name}</span><span className="scope-chip"><ShieldCheck size={13}/>Sources required</span>{availableLayers&&availableLayers.length>0&&<LayerChips available={availableLayers} value={layers} onChange={setLayers}/>}{waiting?<Button size="icon" className="send-button" aria-label="Stop generation" type="button" onClick={async()=>{await fetch(backend.api+'/chat/'+id+'/stop',{method:'POST'});await stop();setProgress('');}}><Square size={15}/></Button>:<Button size="icon" className="send-button" aria-label="Send message" disabled={!input.trim()}><ArrowUp size={18}/></Button>}</div></form><p className="disclaimer">{DISCLAIMER}</p></div><Modal open={!!source} onOpenChange={v=>!v&&setSource(null)} title="Verify the source" description="Read the original passage behind this answer.">{source&&<div className="source-drawer"><div className="action-line"><Badge tone={source.kind==='firm'?'warning':source.kind==='legal'?'ai':'blue'}>{sourceBadge(source,known)}</Badge><Badge>{source.sectionRef||'Document passage'}</Badge></div><h3>{source.title}</h3><div className="source-card"><blockquote>{source.content}</blockquote><small>Effective: {source.effectiveDate||'Not verified'}{source.page?' · Page '+source.page:''}</small></div><p className="form-note">{source.citation||'Check the complete provision and amendment history before relying on an extract.'}</p>{source.kind==='firm'&&<p className="inline-callout">Internal practice — not law or bylaw. The building’s own bylaws govern.</p>}</div>}</Modal>
- <Modal open={paywall} onOpenChange={v=>{setPaywall(v);setBuyError('');}} title="You’re out of credits" description="Your question wasn’t sent and no credit was used."><div className="form-stack"><p className="form-note">Each question uses 1 credit once your free questions are used. Your question is back in the box — buy credits and it’s sent straight away.</p><p className="form-note"><strong>Demo — no real charge.</strong> No card is asked for or charged.</p>{buyError&&<p className="form-error" role="alert">{buyError}</p>}<div className="form-footer"><Link className="button button-secondary" href={root+'/credits'}>See credit options</Link><Button busy={buying} onClick={buyAndAsk}>Buy 100 credits · $20 and ask</Button></div></div></Modal></div>;
+export function Conversation({
+  id,
+  initialMessages,
+  building,
+  buildings = [],
+  scope = 'building',
+  asOf,
+  availableLayers,
+  initialLayers,
+  canDraft = false,
+}: {
+  id: string;
+  initialMessages: BylawMessage[];
+  building: Building;
+  buildings?: NamedBuilding[];
+  scope?: string;
+  asOf?: string | null;
+  availableLayers?: Layer[];
+  initialLayers?: Layer[];
+  canDraft?: boolean;
+}) {
+  // Every building this person can see, by name, so each cited building is labelled as itself (AGENTS.md §0).
+  const known = useMemo(
+    () => [building, ...buildings.filter((b) => b.id !== building.id)],
+    [building, buildings],
+  );
+  const router = useRouter(),
+    backend = useBackend();
+  const root = backend.base + '/b/' + building.id;
+  const [input, setInput] = useState(''),
+    [progress, setProgress] = useState(''),
+    [source, setSource] = useState<Source | null>(null),
+    [errorText, setErrorText] = useState('');
+  const bottom = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
+  const [layers, setLayers] = useState<Layer[]>(() => {
+      const all = availableLayers ?? [];
+      const chosen = all.filter((l) => initialLayers?.includes(l));
+      return chosen.length ? chosen : [...all];
+    }),
+    [paywall, setPaywall] = useState(false);
+  // `layers` travels only when the page offers layer chips (the demo); the real route ignores unknown fields.
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport<BylawMessage>({
+        api: backend.api + '/chat',
+        prepareSendMessagesRequest: ({ id, messages, body }) => ({
+          body: { ...body, id, message: messages[messages.length - 1] },
+        }),
+      }),
+    [backend.api],
+  );
+  const hasLayers = !!availableLayers;
+  const options = useMemo(() => (hasLayers ? { body: { layers } } : undefined), [hasLayers, layers]);
+  const { messages, sendMessage, status, error, stop, setMessages, clearError } = useChat<BylawMessage>({
+    id,
+    messages: initialMessages,
+    resume: true,
+    transport,
+    // A resident out of credits: nothing was saved, so take the question back out of the thread and put it in the box.
+    onError: (e) => {
+      if (!isPaywall(e)) return;
+      const last = messages.findLast((m) => m.role === 'user');
+      if (last) {
+        setInput(
+          last.parts
+            .filter((p) => p.type === 'text')
+            .map((p) => p.text)
+            .join('\n'),
+        );
+        setMessages((m) => m.filter((x) => x.id !== last.id));
+      }
+      clearError();
+      setPaywall(true);
+    },
+    onData: (p) => {
+      if (p.type === 'data-progress') setProgress(p.data.label);
+    },
+    onFinish: () => {
+      setProgress('');
+      router.refresh();
+    },
+  });
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    const prompt = sessionStorage.getItem('bylawiq-prompt:' + id);
+    if (prompt) {
+      sessionStorage.removeItem('bylawiq-prompt:' + id);
+      sendMessage(
+        { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text: prompt }] },
+        options,
+      );
+    }
+  }, [id, sendMessage, options]);
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+  }, [messages.length, status]);
+  const waiting = status === 'streaming' || status === 'submitted';
+  async function send() {
+    if (!input.trim()) return;
+    const value = input;
+    setInput('');
+    await sendMessage(
+      { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text: value }] },
+      options,
+    );
+  }
+  // Buying from the paywall (resident Ask, demo only) sends the question that was put back in the box, in the same click.
+  const [buying, setBuying] = useState(false),
+    [buyError, setBuyError] = useState('');
+  async function buyAndAsk() {
+    setBuying(true);
+    setBuyError('');
+    const r = await backend.buyCredits({ buildingId: building.id });
+    setBuying(false);
+    if (!r.ok) {
+      setBuyError(r.error);
+      return;
+    }
+    setPaywall(false);
+    await send();
+  }
+  return (
+    <div className="chat-view">
+      <PageHeading
+        eyebrow={building.name}
+        title="Ask BylawIQ"
+        description={'Scope: ' + pretty(scope) + (asOf ? ' · As of ' + asOf : ' · Current sources')}
+      />
+      <div className="chat-scroll">
+        {messages.map((m) => {
+          const data = m.parts.find((p) => p.type === 'data-answer');
+          const text = m.parts
+            .filter((p) => p.type === 'text')
+            .map((p) => p.text)
+            .join('\n');
+          return (
+            <article key={m.id} className={'chat-message ' + m.role}>
+              {m.role === 'user' ? (
+                <div>
+                  <div className="user-bubble">{text}</div>
+                  <button
+                    className="button button-ghost button-small"
+                    onClick={async () => {
+                      const r = await backend.branchChat({ chatId: id, messageId: m.id });
+                      if (r.ok) {
+                        sessionStorage.setItem('bylawiq-prompt:' + r.id, text);
+                        router.push(root + '/chat/' + r.id + layersQuery(availableLayers, layers));
+                      } else setErrorText(r.error || 'Unable to branch.');
+                    }}
+                  >
+                    <GitBranch size={12} />
+                    Branch from here
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="assistant-heading">
+                    <span className="ai-emblem">
+                      <Sparkles size={16} />
+                    </span>
+                    BylawIQ <Badge tone="ai">AI draft</Badge>
+                  </div>
+                  {data?.type === 'data-answer' ? (
+                    <GroundedResponse
+                      data={data.data}
+                      buildings={known}
+                      activeBuildingId={building.id}
+                      onSource={setSource}
+                    />
+                  ) : (
+                    <div className="answer-body">{text}</div>
+                  )}
+                  <div className="action-line" style={{ marginTop: 15, paddingLeft: 35 }}>
+                    <Button
+                      variant="ghost"
+                      size="small"
+                      onClick={() => navigator.clipboard.writeText(text || JSON.stringify(data?.data))}
+                    >
+                      <Copy size={13} />
+                      Copy
+                    </Button>
+                    {canDraft && (
+                      <Link className="button button-ghost button-small" href={root + '/notices'}>
+                        <FileText size={13} />
+                        Draft correspondence
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+            </article>
+          );
+        })}
+        {waiting && (
+          <div className="activity-row" role="status">
+            <Sparkles className="spin" size={17} />
+            <span className="form-note">{progress || 'Opening your sources…'}</span>
+          </div>
+        )}
+        {((error && !isPaywall(error)) || errorText) && (
+          <div className="form-error" role="alert">
+            {errorText ||
+              'The answer could not complete. Your saved conversation remains available. Try again shortly.'}
+          </div>
+        )}
+        <div ref={bottom} />
+      </div>
+      <div className="chat-composer">
+        <form
+          className="composer"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            aria-label="Message BylawIQ"
+            placeholder="Ask a follow-up question…"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+          />
+          <div className="composer-bottom">
+            <span className="scope-chip">
+              <Building2 size={13} />
+              {scope === 'general' ? 'General BC sources' : building.name}
+            </span>
+            <span className="scope-chip">
+              <ShieldCheck size={13} />
+              Sources required
+            </span>
+            {availableLayers && availableLayers.length > 0 && (
+              <LayerChips available={availableLayers} value={layers} onChange={setLayers} />
+            )}
+            {waiting ? (
+              <Button
+                size="icon"
+                className="send-button"
+                aria-label="Stop generation"
+                type="button"
+                onClick={async () => {
+                  await fetch(backend.api + '/chat/' + id + '/stop', { method: 'POST' });
+                  await stop();
+                  setProgress('');
+                }}
+              >
+                <Square size={15} />
+              </Button>
+            ) : (
+              <Button size="icon" className="send-button" aria-label="Send message" disabled={!input.trim()}>
+                <ArrowUp size={18} />
+              </Button>
+            )}
+          </div>
+        </form>
+        <p className="disclaimer">{DISCLAIMER}</p>
+      </div>
+      <Modal
+        open={!!source}
+        onOpenChange={(v) => !v && setSource(null)}
+        title="Verify the source"
+        description="Read the original passage behind this answer."
+      >
+        {source && (
+          <div className="source-drawer">
+            <div className="action-line">
+              <Badge tone={source.kind === 'firm' ? 'warning' : source.kind === 'legal' ? 'ai' : 'blue'}>
+                {sourceBadge(source, known)}
+              </Badge>
+              <Badge>{source.sectionRef || 'Document passage'}</Badge>
+            </div>
+            <h3>{source.title}</h3>
+            <div className="source-card">
+              <blockquote>{source.content}</blockquote>
+              <small>
+                Effective: {source.effectiveDate || 'Not verified'}
+                {source.page ? ' · Page ' + source.page : ''}
+              </small>
+            </div>
+            <p className="form-note">
+              {source.citation ||
+                'Check the complete provision and amendment history before relying on an extract.'}
+            </p>
+            {source.kind === 'firm' && (
+              <p className="inline-callout">
+                Internal practice — not law or bylaw. The building’s own bylaws govern.
+              </p>
+            )}
+          </div>
+        )}
+      </Modal>
+      <Modal
+        open={paywall}
+        onOpenChange={(v) => {
+          setPaywall(v);
+          setBuyError('');
+        }}
+        title="You’re out of credits"
+        description="Your question wasn’t sent and no credit was used."
+      >
+        <div className="form-stack">
+          <p className="form-note">
+            Each question uses 1 credit once your free questions are used. Your question is back in the box —
+            buy credits and it’s sent straight away.
+          </p>
+          <p className="form-note">
+            <strong>Demo — no real charge.</strong> No card is asked for or charged.
+          </p>
+          {buyError && (
+            <p className="form-error" role="alert">
+              {buyError}
+            </p>
+          )}
+          <div className="form-footer">
+            <Link className="button button-secondary" href={root + '/credits'}>
+              See credit options
+            </Link>
+            <Button busy={buying} onClick={buyAndAsk}>
+              Buy 100 credits · $20 and ask
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
 }
 /** Groups answer claims by the source they cite (`groupClaims`): one section per building — each under its own
  * building's name — then the law, then the firm's internal practice, so neither another building's bylaws nor
  * firm guidance is ever read as this building's own rule. */
-function GroundedResponse({data,buildings,activeBuildingId,onSource}:{data:AnswerData;buildings:readonly NamedBuilding[];activeBuildingId:string;onSource:(s:Source)=>void}){
- const claim=(c:AnswerData['answer']['answer'][number],i:number)=><p key={i}>{c.text}{c.evidence.map(e=>{const s=data.sources.find(s=>s.id===e.source);return s?<button className="citation-link" key={e.source} aria-label={'Open source '+e.source+', '+sourceBadge(s,buildings)} onClick={()=>onSource(sourceSchema.parse(s))}>{e.source}</button>:null;})}</p>;
- const groups=groupClaims(data.answer.answer,data.sources,buildings,activeBuildingId);
- return <div className="answer-body">{groups.map(g=><section key={g.key} className={'answer-layer answer-layer-'+g.kind}><h3>{g.heading}</h3>{g.claims.map(claim)}</section>)}{([['BASIS',data.answer.basis],['NEXT STEPS',data.answer.nextSteps]] as const).filter(([,claims])=>claims.length>0).map(([label,claims])=><section key={label}><h3>{label}</h3>{claims.map(claim)}</section>)}{data.answer.limitations&&<p className="inline-callout" style={{marginTop:18}}>{data.answer.limitations}</p>}<p className="disclaimer">{DISCLAIMER}</p></div>;
+function GroundedResponse({
+  data,
+  buildings,
+  activeBuildingId,
+  onSource,
+}: {
+  data: AnswerData;
+  buildings: readonly NamedBuilding[];
+  activeBuildingId: string;
+  onSource: (s: Source) => void;
+}) {
+  const claim = (c: AnswerData['answer']['answer'][number], i: number) => (
+    <p key={i}>
+      {c.text}
+      {c.evidence.map((e) => {
+        const s = data.sources.find((s) => s.id === e.source);
+        return s ? (
+          <button
+            className="citation-link"
+            key={e.source}
+            aria-label={'Open source ' + e.source + ', ' + sourceBadge(s, buildings)}
+            onClick={() => onSource(sourceSchema.parse(s))}
+          >
+            {e.source}
+          </button>
+        ) : null;
+      })}
+    </p>
+  );
+  const groups = groupClaims(data.answer.answer, data.sources, buildings, activeBuildingId);
+  return (
+    <div className="answer-body">
+      {groups.map((g) => (
+        <section key={g.key} className={'answer-layer answer-layer-' + g.kind}>
+          <h3>{g.heading}</h3>
+          {g.claims.map(claim)}
+        </section>
+      ))}
+      {(
+        [
+          ['BASIS', data.answer.basis],
+          ['NEXT STEPS', data.answer.nextSteps],
+        ] as const
+      )
+        .filter(([, claims]) => claims.length > 0)
+        .map(([label, claims]) => (
+          <section key={label}>
+            <h3>{label}</h3>
+            {claims.map(claim)}
+          </section>
+        ))}
+      {data.answer.limitations && (
+        <p className="inline-callout" style={{ marginTop: 18 }}>
+          {data.answer.limitations}
+        </p>
+      )}
+      <p className="disclaimer">{DISCLAIMER}</p>
+    </div>
+  );
 }

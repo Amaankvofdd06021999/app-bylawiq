@@ -1,21 +1,55 @@
-import {beforeAll,afterAll,describe,it,expect} from 'vitest';
-import {createHmac} from 'node:crypto';
-import type {PGlite} from '@electric-sql/pglite';
-import {migratedDb} from './db-harness';
-let db:PGlite;let sql:(s:string)=>Promise<unknown>;let identity:(id:string)=>Promise<void>;let admin:()=>Promise<void>;
-const a='10000000-0000-4000-8000-000000000001',b='10000000-0000-4000-8000-000000000002',assistant='10000000-0000-4000-8000-000000000003',counsel='10000000-0000-4000-8000-000000000004';
-let ba:string,bb:string,chat:string,notice:string;
-const embedding=JSON.stringify([1,...Array(1023).fill(0)]);
-beforeAll(async()=>{
- ({db,sql,identity,admin}=await migratedDb());
- await sql(`insert into auth.users(id,email,email_confirmed_at) values ('${a}','alpha@example.test',now()),('${b}','beta@example.test',now()),('${assistant}','assistant@example.test',now()),('${counsel}','counsel@example.test',now());`);
- await identity(a);ba=String((await db.query<{id:string}>(`select public.bootstrap_workspace('Alpha','admin','Alpha building','Alice') id`)).rows[0].id);
- await identity(b);bb=String((await db.query<{id:string}>(`select public.bootstrap_workspace('Beta','single_building','Beta building','Bob') id`)).rows[0].id);
- await admin();await sql(`update public.profiles set account_type='multi_building' where id='${assistant}';insert into public.building_members(building_id,user_id,role) values('${ba}','${assistant}','portfolio_assistant');insert into public.building_members(building_id,user_id,role,expires_at) values('${ba}','${counsel}','external_counsel',now()-interval '1 day');`);
- await identity(a);chat=(await db.query<{id:string}>(`insert into public.chats(building_id,user_id) values('${ba}','${a}') returning id`)).rows[0].id;
- notice=(await db.query<{id:string}>(`insert into public.generated_documents(building_id,created_by,title,kind,body_md) values('${ba}','${a}','Draft','s135_notice','A sample draft for human review') returning id`)).rows[0].id;
- await admin();
- await sql(`insert into public.knowledge_bases(id,building_id,name) values('80000000-0000-4000-8000-000000000001','${bb}','Private KB');
+import { beforeAll, afterAll, describe, it, expect } from 'vitest';
+import { createHmac } from 'node:crypto';
+import type { PGlite } from '@electric-sql/pglite';
+import { migratedDb } from './db-harness';
+let db: PGlite;
+let sql: (s: string) => Promise<unknown>;
+let identity: (id: string) => Promise<void>;
+let admin: () => Promise<void>;
+const a = '10000000-0000-4000-8000-000000000001',
+  b = '10000000-0000-4000-8000-000000000002',
+  assistant = '10000000-0000-4000-8000-000000000003',
+  counsel = '10000000-0000-4000-8000-000000000004';
+let ba: string, bb: string, chat: string, notice: string;
+const embedding = JSON.stringify([1, ...Array(1023).fill(0)]);
+beforeAll(async () => {
+  ({ db, sql, identity, admin } = await migratedDb());
+  await sql(
+    `insert into auth.users(id,email,email_confirmed_at) values ('${a}','alpha@example.test',now()),('${b}','beta@example.test',now()),('${assistant}','assistant@example.test',now()),('${counsel}','counsel@example.test',now());`,
+  );
+  await identity(a);
+  ba = String(
+    (
+      await db.query<{ id: string }>(
+        `select public.bootstrap_workspace('Alpha','admin','Alpha building','Alice') id`,
+      )
+    ).rows[0].id,
+  );
+  await identity(b);
+  bb = String(
+    (
+      await db.query<{ id: string }>(
+        `select public.bootstrap_workspace('Beta','single_building','Beta building','Bob') id`,
+      )
+    ).rows[0].id,
+  );
+  await admin();
+  await sql(
+    `update public.profiles set account_type='multi_building' where id='${assistant}';insert into public.building_members(building_id,user_id,role) values('${ba}','${assistant}','portfolio_assistant');insert into public.building_members(building_id,user_id,role,expires_at) values('${ba}','${counsel}','external_counsel',now()-interval '1 day');`,
+  );
+  await identity(a);
+  chat = (
+    await db.query<{ id: string }>(
+      `insert into public.chats(building_id,user_id) values('${ba}','${a}') returning id`,
+    )
+  ).rows[0].id;
+  notice = (
+    await db.query<{ id: string }>(
+      `insert into public.generated_documents(building_id,created_by,title,kind,body_md) values('${ba}','${a}','Draft','s135_notice','A sample draft for human review') returning id`,
+    )
+  ).rows[0].id;
+  await admin();
+  await sql(`insert into public.knowledge_bases(id,building_id,name) values('80000000-0000-4000-8000-000000000001','${bb}','Private KB');
  insert into public.documents(id,building_id,title,type,status,structure_confirmed,uploaded_by,effective_date) values('80000000-0000-4000-8000-000000000002','${bb}','Private garden rules','rules','ready',true,'${b}','2025-01-01');
  insert into public.document_chunks(document_id,building_id,chunk_index,content,embedding) values('80000000-0000-4000-8000-000000000002','${bb}',0,'The private garden closes at sunset.','${embedding}');
  insert into public.document_versions(document_id,building_id,content_hash) values('80000000-0000-4000-8000-000000000002','${bb}','test-hash');
@@ -31,135 +65,608 @@ beforeAll(async()=>{
  insert into public.artifact_versions(building_id,artifact_id,body_md,edited_by) values('${bb}','80000000-0000-4000-8000-000000000008','Private version','${b}');
  insert into public.notifications(building_id,type,title,body) values('${bb}','test','Private update','Private notification');
  insert into public.invitations(building_id,email,role,invited_by,token_hash) values('${bb}','invite@example.test','council_member','${b}','test-token');`);
-},60000);
-afterAll(()=>db.close());
-describe('Postgres scope and permissions',()=>{
- for(const table of ['knowledge_bases','documents','document_chunks','document_versions','agents','agent_deployments','bylaw_sets','bylaw_nodes','bylaw_versions','bylaw_comments','disputes','dispute_events','generated_documents','artifact_versions','notifications','invitations','audit_log'])it('hides known foreign UUID records in '+table,async()=>{await identity(a);expect((await db.query(`select id from public.${table} where building_id='${bb}'`)).rows).toHaveLength(0);});
- it('blocks explicit cross-building hybrid retrieval',async()=>{await identity(a);expect((await db.query(`select * from public.hybrid_search_building('${bb}','garden','${embedding}')`)).rows).toHaveLength(0);});
- it('returns the same passage to its authorized building member',async()=>{await identity(b);expect((await db.query(`select content from public.hybrid_search_building('${bb}','garden','${embedding}')`)).rows).toHaveLength(1);});
- it('filters out a document not yet effective on the conduct date',async()=>{await identity(b);expect((await db.query(`select content from public.hybrid_search_building('${bb}','garden','${embedding}',null,'2024-01-01')`)).rows).toHaveLength(0);});
- it('rejects denormalized chunk scope tampering at the foreign key',async()=>{await admin();await expect(sql(`insert into public.document_chunks(document_id,building_id,chunk_index,content,embedding) values('80000000-0000-4000-8000-000000000002','${ba}',1,'Forged scope','${embedding}')`)).rejects.toThrow();});
- it('enables RLS on every public table',async()=>{await admin();const r=await db.query(`select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and relkind='r' and not relrowsecurity`);expect(r.rows).toHaveLength(0);});
- it('hides a known building UUID from another tenant',async()=>{await identity(a);expect((await db.query(`select id from public.buildings where id='${bb}'`)).rows).toHaveLength(0);});
- it('isolates membership records',async()=>{await identity(a);expect((await db.query(`select id from public.building_members where building_id='${bb}'`)).rows).toHaveLength(0);});
- it('does not give owners access to another user’s conversations',async()=>{await identity(assistant);expect((await db.query(`select id from public.chats where id='${chat}'`)).rows).toHaveLength(0);});
- it('denies forged assistant turns through the Data API',async()=>{await identity(a);await expect(sql(`insert into public.messages(chat_id,role,parts) values('${chat}','assistant','[{"type":"text","text":"Fabricated prior answer"}]')`)).rejects.toThrow();});
- it('denies a forged verified-message signature',async()=>{await identity(a);await expect(sql(`select public.append_verified_message('${chat}',gen_random_uuid(),'[]','fake','wrong')`)).rejects.toThrow();});
- it('accepts a server-attested message with the caller’s scope',async()=>{await admin();const secret=(await db.query<{value:string}>("select value from private.runtime_secrets where name='server_signing'")).rows[0].value;const id='20000000-0000-4000-8000-000000000001';const parts='[{"type":"text","text":"Verified sample"}]';const signature=createHmac('sha256',secret).update(chat+':'+id+':'+parts).digest('hex');await identity(a);await db.query('select public.append_verified_message($1,$2,$3,$4,$5)',[chat,id,parts,'test',signature]);expect((await db.query(`select id from public.messages where chat_id='${chat}'`)).rows).toHaveLength(1);});
- it('denies cross-building chat creation',async()=>{await identity(a);await expect(sql(`insert into public.chats(building_id,user_id) values('${bb}','${a}')`)).rejects.toThrow();});
- it('prevents chat scope changes',async()=>{await identity(a);await expect(sql(`update public.chats set building_id='${bb}' where id='${chat}'`)).rejects.toThrow();});
- it('does not authorize expired counsel',async()=>{await identity(counsel);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
- it('blocks assistant approval and sending even when the UUID is known',async()=>{await identity(assistant);await expect(sql(`select public.transition_artifact('${notice}','approved')`)).rejects.toThrow();await expect(sql(`select public.transition_artifact('${notice}','sent',now())`)).rejects.toThrow();});
- it('blocks direct status and scope tampering',async()=>{await identity(a);await expect(sql(`update public.generated_documents set status='approved',approved_by='${a}',approved_at=now() where id='${notice}'`)).rejects.toThrow();await expect(sql(`update public.buildings set org_id=gen_random_uuid() where id='${ba}'`)).rejects.toThrow();});
- it('requires an independent approver for enforcement notices',async()=>{await identity(a);await sql(`select public.transition_artifact('${notice}','pending_review')`);await expect(sql(`select public.transition_artifact('${notice}','approved')`)).rejects.toThrow('self_approval_not_permitted');});
- it('does not permit editing or deleting the audit record',async()=>{await identity(a);await expect(sql('delete from public.audit_log')).rejects.toThrow();await expect(sql("update public.audit_log set action='forged'")).rejects.toThrow();});
- it('enforces a permanent single-building binding',async()=>{await admin();await expect(sql(`insert into public.building_members(building_id,user_id,role) values('${ba}','${b}','building_manager')`)).rejects.toThrow('single_building_bound');});
- describe('legal corpus point in time',()=>{
-  // Once a section is amended the old text must stop answering questions about today, or an answer
-  // cites law that no longer applies. scripts/ingest-kb.ts sets in_force_to on the superseded source
-  // and relies on hybrid_search_legal's as-of filter to do the rest.
-  beforeAll(async()=>{await admin();
-   await sql(`insert into public.jurisdictions(id,name,level,code,coverage) values('70000000-0000-4000-8000-000000000001','Test BC','provincial','test-bc','full');
+}, 60000);
+afterAll(() => db.close());
+describe('Postgres scope and permissions', () => {
+  for (const table of [
+    'knowledge_bases',
+    'documents',
+    'document_chunks',
+    'document_versions',
+    'agents',
+    'agent_deployments',
+    'bylaw_sets',
+    'bylaw_nodes',
+    'bylaw_versions',
+    'bylaw_comments',
+    'disputes',
+    'dispute_events',
+    'generated_documents',
+    'artifact_versions',
+    'notifications',
+    'invitations',
+    'audit_log',
+  ])
+    it('hides known foreign UUID records in ' + table, async () => {
+      await identity(a);
+      expect((await db.query(`select id from public.${table} where building_id='${bb}'`)).rows).toHaveLength(
+        0,
+      );
+    });
+  it('blocks explicit cross-building hybrid retrieval', async () => {
+    await identity(a);
+    expect(
+      (await db.query(`select * from public.hybrid_search_building('${bb}','garden','${embedding}')`)).rows,
+    ).toHaveLength(0);
+  });
+  it('returns the same passage to its authorized building member', async () => {
+    await identity(b);
+    expect(
+      (await db.query(`select content from public.hybrid_search_building('${bb}','garden','${embedding}')`))
+        .rows,
+    ).toHaveLength(1);
+  });
+  it('filters out a document not yet effective on the conduct date', async () => {
+    await identity(b);
+    expect(
+      (
+        await db.query(
+          `select content from public.hybrid_search_building('${bb}','garden','${embedding}',null,'2024-01-01')`,
+        )
+      ).rows,
+    ).toHaveLength(0);
+  });
+  it('rejects denormalized chunk scope tampering at the foreign key', async () => {
+    await admin();
+    await expect(
+      sql(
+        `insert into public.document_chunks(document_id,building_id,chunk_index,content,embedding) values('80000000-0000-4000-8000-000000000002','${ba}',1,'Forged scope','${embedding}')`,
+      ),
+    ).rejects.toThrow();
+  });
+  it('enables RLS on every public table', async () => {
+    await admin();
+    const r = await db.query(
+      `select relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and relkind='r' and not relrowsecurity`,
+    );
+    expect(r.rows).toHaveLength(0);
+  });
+  it('hides a known building UUID from another tenant', async () => {
+    await identity(a);
+    expect((await db.query(`select id from public.buildings where id='${bb}'`)).rows).toHaveLength(0);
+  });
+  it('isolates membership records', async () => {
+    await identity(a);
+    expect(
+      (await db.query(`select id from public.building_members where building_id='${bb}'`)).rows,
+    ).toHaveLength(0);
+  });
+  it('does not give owners access to another user’s conversations', async () => {
+    await identity(assistant);
+    expect((await db.query(`select id from public.chats where id='${chat}'`)).rows).toHaveLength(0);
+  });
+  it('denies forged assistant turns through the Data API', async () => {
+    await identity(a);
+    await expect(
+      sql(
+        `insert into public.messages(chat_id,role,parts) values('${chat}','assistant','[{"type":"text","text":"Fabricated prior answer"}]')`,
+      ),
+    ).rejects.toThrow();
+  });
+  it('denies a forged verified-message signature', async () => {
+    await identity(a);
+    await expect(
+      sql(`select public.append_verified_message('${chat}',gen_random_uuid(),'[]','fake','wrong')`),
+    ).rejects.toThrow();
+  });
+  it('accepts a server-attested message with the caller’s scope', async () => {
+    await admin();
+    const secret = (
+      await db.query<{ value: string }>(
+        "select value from private.runtime_secrets where name='server_signing'",
+      )
+    ).rows[0].value;
+    const id = '20000000-0000-4000-8000-000000000001';
+    const parts = '[{"type":"text","text":"Verified sample"}]';
+    const signature = createHmac('sha256', secret)
+      .update(chat + ':' + id + ':' + parts)
+      .digest('hex');
+    await identity(a);
+    await db.query('select public.append_verified_message($1,$2,$3,$4,$5)', [
+      chat,
+      id,
+      parts,
+      'test',
+      signature,
+    ]);
+    expect((await db.query(`select id from public.messages where chat_id='${chat}'`)).rows).toHaveLength(1);
+  });
+  it('denies cross-building chat creation', async () => {
+    await identity(a);
+    await expect(
+      sql(`insert into public.chats(building_id,user_id) values('${bb}','${a}')`),
+    ).rejects.toThrow();
+  });
+  it('prevents chat scope changes', async () => {
+    await identity(a);
+    await expect(sql(`update public.chats set building_id='${bb}' where id='${chat}'`)).rejects.toThrow();
+  });
+  it('does not authorize expired counsel', async () => {
+    await identity(counsel);
+    expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);
+  });
+  it('blocks assistant approval and sending even when the UUID is known', async () => {
+    await identity(assistant);
+    await expect(sql(`select public.transition_artifact('${notice}','approved')`)).rejects.toThrow();
+    await expect(sql(`select public.transition_artifact('${notice}','sent',now())`)).rejects.toThrow();
+  });
+  it('blocks direct status and scope tampering', async () => {
+    await identity(a);
+    await expect(
+      sql(
+        `update public.generated_documents set status='approved',approved_by='${a}',approved_at=now() where id='${notice}'`,
+      ),
+    ).rejects.toThrow();
+    await expect(
+      sql(`update public.buildings set org_id=gen_random_uuid() where id='${ba}'`),
+    ).rejects.toThrow();
+  });
+  it('requires an independent approver for enforcement notices', async () => {
+    await identity(a);
+    await sql(`select public.transition_artifact('${notice}','pending_review')`);
+    await expect(sql(`select public.transition_artifact('${notice}','approved')`)).rejects.toThrow(
+      'self_approval_not_permitted',
+    );
+  });
+  it('does not permit editing or deleting the audit record', async () => {
+    await identity(a);
+    await expect(sql('delete from public.audit_log')).rejects.toThrow();
+    await expect(sql("update public.audit_log set action='forged'")).rejects.toThrow();
+  });
+  it('enforces a permanent single-building binding', async () => {
+    await admin();
+    await expect(
+      sql(
+        `insert into public.building_members(building_id,user_id,role) values('${ba}','${b}','building_manager')`,
+      ),
+    ).rejects.toThrow('single_building_bound');
+  });
+  describe('legal corpus point in time', () => {
+    // Once a section is amended the old text must stop answering questions about today, or an answer
+    // cites law that no longer applies. scripts/ingest-kb.ts sets in_force_to on the superseded source
+    // and relies on hybrid_search_legal's as-of filter to do the rest.
+    beforeAll(async () => {
+      await admin();
+      await sql(`insert into public.jurisdictions(id,name,level,code,coverage) values('70000000-0000-4000-8000-000000000001','Test BC','provincial','test-bc','full');
    insert into public.legal_sources(id,jurisdiction_id,type,title,citation,kb_id,kb_version,in_force_from,in_force_to,verified_at) values
     ('70000000-0000-4000-8000-000000000010','70000000-0000-4000-8000-000000000001','statute','Fines now','TEST s 132 current','test.s132','0.7.0','2026-01-01',null,now()),
     ('70000000-0000-4000-8000-000000000011','70000000-0000-4000-8000-000000000001','statute','Fines before','TEST s 132 replaced','test.s132.2020-01-01','0.6.0','2020-01-01','2026-01-01',now());
    insert into public.legal_chunks(source_id,content,section_ref,embedding) values
     ('70000000-0000-4000-8000-000000000010','testfine the maximum fine is two hundred dollars','Section 132','${embedding}'),
     ('70000000-0000-4000-8000-000000000011','testfine the maximum fine is fifty dollars','Section 132','${embedding}');`);
+    });
+    const search = (asOf: string | null) =>
+      db.query<{ citation: string; kb_version: string | null }>(
+        `select citation,kb_version from public.hybrid_search_legal('testfine','${embedding}','{}'::uuid[],${asOf ? `'${asOf}'::date` : 'null'})`,
+      );
+    it('returns only the text in force today', async () => {
+      await identity(a);
+      const r = await search(null);
+      expect(r.rows.map((x) => x.citation)).toEqual(['TEST s 132 current']);
+    });
+    it('returns the superseded text for a question asked as of a date when it applied', async () => {
+      await identity(a);
+      const r = await search('2022-06-01');
+      expect(r.rows.map((x) => x.citation)).toEqual(['TEST s 132 replaced']);
+    });
+    it('reports the kb version of each source so an answer can be traced to its corpus', async () => {
+      await identity(a);
+      const r = await search(null);
+      expect(r.rows[0].kb_version).toBe('0.7.0');
+    });
+    it('refuses to load the same kb item twice', async () => {
+      await admin();
+      await expect(
+        sql(
+          `insert into public.legal_sources(jurisdiction_id,type,title,citation,kb_id) values('70000000-0000-4000-8000-000000000001','statute','Dup','TEST dup','test.s132')`,
+        ),
+      ).rejects.toThrow();
+    });
   });
-  const search=(asOf:string|null)=>db.query<{citation:string;kb_version:string|null}>(
-   `select citation,kb_version from public.hybrid_search_legal('testfine','${embedding}','{}'::uuid[],${asOf?`'${asOf}'::date`:'null'})`);
-  it('returns only the text in force today',async()=>{await identity(a);const r=await search(null);
-   expect(r.rows.map(x=>x.citation)).toEqual(['TEST s 132 current']);});
-  it('returns the superseded text for a question asked as of a date when it applied',async()=>{await identity(a);const r=await search('2022-06-01');
-   expect(r.rows.map(x=>x.citation)).toEqual(['TEST s 132 replaced']);});
-  it('reports the kb version of each source so an answer can be traced to its corpus',async()=>{await identity(a);const r=await search(null);
-   expect(r.rows[0].kb_version).toBe('0.7.0');});
-  it('refuses to load the same kb item twice',async()=>{await admin();
-   await expect(sql(`insert into public.legal_sources(jurisdiction_id,type,title,citation,kb_id) values('70000000-0000-4000-8000-000000000001','statute','Dup','TEST dup','test.s132')`)).rejects.toThrow();});
- });
- it('uses caller security for both hybrid retrieval functions',async()=>{await admin();const r=await db.query<{prosecdef:boolean}>("select prosecdef from pg_proc where proname in ('hybrid_search_building','hybrid_search_legal')");expect(r.rows).toHaveLength(2);expect(r.rows.every(x=>!x.prosecdef)).toBe(true);});
- describe('invitations and existing members',()=>{
-  const president='10000000-0000-4000-8000-000000000011',manager='10000000-0000-4000-8000-000000000012',newcomer='10000000-0000-4000-8000-000000000013';
-  beforeAll(async()=>{await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${president}','president@example.test',now()),('${manager}','manager@example.test',now()),('${newcomer}','newcomer@example.test',now());
+  it('uses caller security for both hybrid retrieval functions', async () => {
+    await admin();
+    const r = await db.query<{ prosecdef: boolean }>(
+      "select prosecdef from pg_proc where proname in ('hybrid_search_building','hybrid_search_legal')",
+    );
+    expect(r.rows).toHaveLength(2);
+    expect(r.rows.every((x) => !x.prosecdef)).toBe(true);
+  });
+  describe('invitations and existing members', () => {
+    const president = '10000000-0000-4000-8000-000000000011',
+      manager = '10000000-0000-4000-8000-000000000012',
+      newcomer = '10000000-0000-4000-8000-000000000013';
+    beforeAll(async () => {
+      await admin();
+      await sql(`insert into auth.users(id,email,email_confirmed_at) values('${president}','president@example.test',now()),('${manager}','manager@example.test',now()),('${newcomer}','newcomer@example.test',now());
    update public.profiles set account_type='multi_building' where id='${manager}';
-   insert into public.building_members(building_id,user_id,role) values('${ba}','${president}','council_president'),('${ba}','${manager}','portfolio_manager');`);});
-  const roleOf=async(user:string)=>{await admin();return (await db.query<{role:string}>(`select role from public.building_members where building_id='${ba}' and user_id='${user}'`)).rows[0]?.role;};
-  it('does not let a lower-ranked member invite an existing member',async()=>{await identity(president);await expect(sql(`select public.create_invitation('${ba}','manager@example.test','council_member','president-demote-hash',null)`)).rejects.toThrow('already_member');});
-  it('does not change an existing member’s role when they accept an invitation',async()=>{await admin();await sql(`insert into public.invitations(building_id,email,role,invited_by,token_hash) values('${ba}','manager@example.test','council_member','${president}','stale-demote-hash')`);await identity(manager);await expect(sql(`select public.accept_invitation('stale-demote-hash')`)).rejects.toThrow('already_member');expect(await roleOf(manager)).toBe('portfolio_manager');});
-  it('does not let a lower-ranked member revive a suspended higher-ranked membership',async()=>{const former='10000000-0000-4000-8000-000000000014';await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${former}','former@example.test',now());update public.profiles set account_type='multi_building' where id='${former}';insert into public.building_members(building_id,user_id,role,status) values('${ba}','${former}','portfolio_manager','suspended');`);await identity(president);await expect(sql(`select public.create_invitation('${ba}','former@example.test','council_member','revive-hash',null)`)).rejects.toThrow('forbidden');});
-  it('still admits a new person through an invitation',async()=>{await identity(president);await sql(`select public.create_invitation('${ba}','newcomer@example.test','council_member','newcomer-hash',null)`);await identity(newcomer);await sql(`select public.accept_invitation('newcomer-hash')`);expect(await roleOf(newcomer)).toBe('council_member');});
- });
- describe('malware scan gate on stored files',()=>{
-  const doc='80000000-0000-4000-8000-000000000021';let path:string;
-  beforeAll(async()=>{path=`${ba}/${doc}/source.pdf`;await admin();await sql(`insert into public.documents(id,building_id,title,type,status,uploaded_by,storage_path) values('${doc}','${ba}','Unscanned upload','rules','scanning','${a}','${path}');insert into storage.objects(bucket_id,name) values('vault','${path}');`);});
-  const visible=async()=>{await identity(a);return (await db.query(`select id from storage.objects where bucket_id='vault' and name='${path}'`)).rows.length;};
-  it('does not serve a stored file before its malware scan clears',async()=>{expect(await visible()).toBe(0);});
-  it('serves the stored file once the scan has cleared',async()=>{await admin();await sql(`update public.documents set scan_cleared_at=now() where id='${doc}'`);expect(await visible()).toBe(1);});
-  it('does not let a member mark their own upload as scan-cleared',async()=>{await identity(a);await expect(sql(`insert into public.documents(building_id,title,uploaded_by,storage_path,scan_cleared_at) values('${ba}','Forged clearance','${a}','${ba}/forged/source.pdf',now())`)).rejects.toThrow();});
- });
- describe('as-of retrieval of replaced documents',()=>{
-  const oldDoc='80000000-0000-4000-8000-000000000031',newDoc='80000000-0000-4000-8000-000000000032',undatedOld='80000000-0000-4000-8000-000000000033',undatedNew='80000000-0000-4000-8000-000000000034';
-  beforeAll(async()=>{await admin();await sql(`insert into public.documents(id,building_id,title,type,status,structure_confirmed,uploaded_by,effective_date) values
+   insert into public.building_members(building_id,user_id,role) values('${ba}','${president}','council_president'),('${ba}','${manager}','portfolio_manager');`);
+    });
+    const roleOf = async (user: string) => {
+      await admin();
+      return (
+        await db.query<{ role: string }>(
+          `select role from public.building_members where building_id='${ba}' and user_id='${user}'`,
+        )
+      ).rows[0]?.role;
+    };
+    it('does not let a lower-ranked member invite an existing member', async () => {
+      await identity(president);
+      await expect(
+        sql(
+          `select public.create_invitation('${ba}','manager@example.test','council_member','president-demote-hash',null)`,
+        ),
+      ).rejects.toThrow('already_member');
+    });
+    it('does not change an existing member’s role when they accept an invitation', async () => {
+      await admin();
+      await sql(
+        `insert into public.invitations(building_id,email,role,invited_by,token_hash) values('${ba}','manager@example.test','council_member','${president}','stale-demote-hash')`,
+      );
+      await identity(manager);
+      await expect(sql(`select public.accept_invitation('stale-demote-hash')`)).rejects.toThrow(
+        'already_member',
+      );
+      expect(await roleOf(manager)).toBe('portfolio_manager');
+    });
+    it('does not let a lower-ranked member revive a suspended higher-ranked membership', async () => {
+      const former = '10000000-0000-4000-8000-000000000014';
+      await admin();
+      await sql(
+        `insert into auth.users(id,email,email_confirmed_at) values('${former}','former@example.test',now());update public.profiles set account_type='multi_building' where id='${former}';insert into public.building_members(building_id,user_id,role,status) values('${ba}','${former}','portfolio_manager','suspended');`,
+      );
+      await identity(president);
+      await expect(
+        sql(
+          `select public.create_invitation('${ba}','former@example.test','council_member','revive-hash',null)`,
+        ),
+      ).rejects.toThrow('forbidden');
+    });
+    it('still admits a new person through an invitation', async () => {
+      await identity(president);
+      await sql(
+        `select public.create_invitation('${ba}','newcomer@example.test','council_member','newcomer-hash',null)`,
+      );
+      await identity(newcomer);
+      await sql(`select public.accept_invitation('newcomer-hash')`);
+      expect(await roleOf(newcomer)).toBe('council_member');
+    });
+  });
+  describe('malware scan gate on stored files', () => {
+    const doc = '80000000-0000-4000-8000-000000000021';
+    let path: string;
+    beforeAll(async () => {
+      path = `${ba}/${doc}/source.pdf`;
+      await admin();
+      await sql(
+        `insert into public.documents(id,building_id,title,type,status,uploaded_by,storage_path) values('${doc}','${ba}','Unscanned upload','rules','scanning','${a}','${path}');insert into storage.objects(bucket_id,name) values('vault','${path}');`,
+      );
+    });
+    const visible = async () => {
+      await identity(a);
+      return (await db.query(`select id from storage.objects where bucket_id='vault' and name='${path}'`))
+        .rows.length;
+    };
+    it('does not serve a stored file before its malware scan clears', async () => {
+      expect(await visible()).toBe(0);
+    });
+    it('serves the stored file once the scan has cleared', async () => {
+      await admin();
+      await sql(`update public.documents set scan_cleared_at=now() where id='${doc}'`);
+      expect(await visible()).toBe(1);
+    });
+    it('does not let a member mark their own upload as scan-cleared', async () => {
+      await identity(a);
+      await expect(
+        sql(
+          `insert into public.documents(building_id,title,uploaded_by,storage_path,scan_cleared_at) values('${ba}','Forged clearance','${a}','${ba}/forged/source.pdf',now())`,
+        ),
+      ).rejects.toThrow();
+    });
+  });
+  describe('as-of retrieval of replaced documents', () => {
+    const oldDoc = '80000000-0000-4000-8000-000000000031',
+      newDoc = '80000000-0000-4000-8000-000000000032',
+      undatedOld = '80000000-0000-4000-8000-000000000033',
+      undatedNew = '80000000-0000-4000-8000-000000000034';
+    beforeAll(async () => {
+      await admin();
+      await sql(`insert into public.documents(id,building_id,title,type,status,structure_confirmed,uploaded_by,effective_date) values
    ('${newDoc}','${ba}','Pet bylaw 2024','bylaws','ready',true,'${a}','2024-06-01'),('${undatedNew}','${ba}','Parking rules, undated amendment','rules','ready',true,'${a}',null);
    insert into public.documents(id,building_id,title,type,status,structure_confirmed,uploaded_by,effective_date,superseded_by) values
    ('${oldDoc}','${ba}','Pet bylaw 2020','bylaws','ready',true,'${a}','2020-01-01','${newDoc}'),('${undatedOld}','${ba}','Parking rules 2019','rules','ready',true,'${a}','2019-01-01','${undatedNew}');
    insert into public.document_chunks(document_id,building_id,chunk_index,content,embedding) values
    ('${oldDoc}','${ba}',0,'Pets must be leashed in the lobby.','${embedding}'),('${newDoc}','${ba}',0,'Pets must be carried in the lobby.','${embedding}'),
-   ('${undatedOld}','${ba}',0,'Visitors may park for four hours.','${embedding}'),('${undatedNew}','${ba}',0,'Visitors may park for two hours.','${embedding}');`);});
-  const docsAsOf=async(asOf:string)=>{await identity(a);return (await db.query<{document_id:string}>(`select document_id from public.hybrid_search_building('${ba}','lobby park','${embedding}',null,'${asOf}')`)).rows.map(r=>r.document_id);};
-  it('leaves out a replaced bylaw for a date after its replacement took effect',async()=>{const docs=await docsAsOf('2025-03-01');expect(docs).toContain(newDoc);expect(docs).not.toContain(oldDoc);});
-  it('returns the replaced bylaw for a date before its replacement took effect',async()=>{const docs=await docsAsOf('2023-01-01');expect(docs).toContain(oldDoc);expect(docs).not.toContain(newDoc);});
-  it('leaves out a replaced document when its replacement has no effective date',async()=>{expect(await docsAsOf('2023-01-01')).not.toContain(undatedOld);});
- });
- describe('who can act on building updates',()=>{
-  const councillor='10000000-0000-4000-8000-000000000041',warning='80000000-0000-4000-8000-000000000041';
-  beforeAll(async()=>{await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${councillor}','councillor@example.test',now());
+   ('${undatedOld}','${ba}',0,'Visitors may park for four hours.','${embedding}'),('${undatedNew}','${ba}',0,'Visitors may park for two hours.','${embedding}');`);
+    });
+    const docsAsOf = async (asOf: string) => {
+      await identity(a);
+      return (
+        await db.query<{ document_id: string }>(
+          `select document_id from public.hybrid_search_building('${ba}','lobby park','${embedding}',null,'${asOf}')`,
+        )
+      ).rows.map((r) => r.document_id);
+    };
+    it('leaves out a replaced bylaw for a date after its replacement took effect', async () => {
+      const docs = await docsAsOf('2025-03-01');
+      expect(docs).toContain(newDoc);
+      expect(docs).not.toContain(oldDoc);
+    });
+    it('returns the replaced bylaw for a date before its replacement took effect', async () => {
+      const docs = await docsAsOf('2023-01-01');
+      expect(docs).toContain(oldDoc);
+      expect(docs).not.toContain(newDoc);
+    });
+    it('leaves out a replaced document when its replacement has no effective date', async () => {
+      expect(await docsAsOf('2023-01-01')).not.toContain(undatedOld);
+    });
+  });
+  describe('who can act on building updates', () => {
+    const councillor = '10000000-0000-4000-8000-000000000041',
+      warning = '80000000-0000-4000-8000-000000000041';
+    beforeAll(async () => {
+      await admin();
+      await sql(`insert into auth.users(id,email,email_confirmed_at) values('${councillor}','councillor@example.test',now());
    insert into public.building_members(building_id,user_id,role) values('${ba}','${councillor}','council_member');
-   insert into public.notifications(id,building_id,type,title,body,severity) values('${warning}','${ba}','unfiled_adoption','Filing record needed','Record the LTO filing.','warning');`);});
-  const stateOf=async()=>{await admin();return (await db.query<{state:string}>(`select state from public.notifications where id='${warning}'`)).rows[0].state;};
-  it('does not let a council member dismiss an update',async()=>{await identity(councillor);await expect(sql(`select public.update_notification('${warning}','dismissed','Not relevant to us')`)).rejects.toThrow('forbidden');expect(await stateOf()).toBe('new');});
-  it('lets a council member mark an update as viewed',async()=>{await identity(councillor);await sql(`select public.update_notification('${warning}','viewed')`);expect(await stateOf()).toBe('viewed');});
-  it('lets an owner dismiss an update with a reason',async()=>{await identity(a);await sql(`select public.update_notification('${warning}','dismissed','Filed on paper already')`);expect(await stateOf()).toBe('dismissed');});
- });
- describe('legal review gate when proposing a bylaw',()=>{
-  const propose=async(title:string,body:string)=>{await identity(a);const v=(await db.query<{id:string}>(`select public.save_bylaw('${ba}',null,$1,'9.1',$2,'Test amendment') id`,[title,body])).rows[0].id;return sql(`select public.transition_bylaw('${v}','proposed','without_review')`);};
-  it('does not require legal review for words that merely contain a flagged term',async()=>{await expect(propose('Garage storage','Owners must keep the garage and storage lockers free of damage and current with the carpet cleaning schedule.')).resolves.toBeDefined();});
-  it('requires legal review for a bylaw that sets a fine',async()=>{await expect(propose('Fines','A fine of $50 applies to each contravention.')).rejects.toThrow('legal_review_required');});
-  it('requires legal review for a bylaw about rentals',async()=>{await expect(propose('Rentals','Rentals must be registered with council before occupancy.')).rejects.toThrow('legal_review_required');});
- });
- describe('single-building conflicts when inviting',()=>{
-  const annexManager='10000000-0000-4000-8000-000000000051';
-  beforeAll(async()=>{await identity(a);const org=(await db.query<{org_id:string}>(`select org_id from public.org_members where user_id='${a}'`)).rows[0].org_id;const annex=(await db.query<{id:string}>(`select public.create_building('${org}','Alpha annex',null,'',null) id`)).rows[0].id;
-   await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${annexManager}','annex@example.test',now());update public.profiles set account_type='single_building' where id='${annexManager}';insert into public.building_members(building_id,user_id,role) values('${annex}','${annexManager}','building_manager');`);});
-  it('does not reveal a single-building account that belongs to another organization',async()=>{await identity(a);await expect(sql(`select public.create_invitation('${ba}','beta@example.test','council_member','cross-org-hash',null)`)).resolves.toBeDefined();});
-  it('still stops that account from joining when they accept',async()=>{await identity(b);await expect(sql(`select public.accept_invitation('cross-org-hash')`)).rejects.toThrow('single_building_bound');});
-  it('warns about a single-building account in the inviter’s own organization',async()=>{await identity(a);await expect(sql(`select public.create_invitation('${ba}','annex@example.test','council_member','same-org-hash',null)`)).rejects.toThrow('single_building_conflict');});
- });
- describe('recording an imported registered bylaw as in force',()=>{
-  const registered='80000000-0000-4000-8000-000000000061';const versions:string[]=[];
-  beforeAll(async()=>{await admin();await sql(`insert into public.documents(id,building_id,title,type,status,uploaded_by,parsed_sections) values('${registered}','${ba}','Registered bylaws 2023','bylaws','review','${a}','[{"sectionRef":"4.1","heading":"4.1 Quiet hours","content":"Owners must not cause unreasonable noise after 11 pm."},{"sectionRef":"4.2","heading":"4.2 Parking","content":"Visitor parking is limited to four hours."}]');`);
-   await identity(a);await sql(`select public.confirm_document_structure('${registered}')`);
-   await admin();versions.push(...(await db.query<{id:string}>(`select v.id from public.bylaw_versions v join public.bylaw_nodes n on n.id=v.node_id join public.bylaw_sets s on s.id=n.set_id where s.title='Registered bylaws 2023' order by n.section_ref`)).rows.map(r=>r.id));});
-  const versionRow=async(id:string)=>{await admin();return (await db.query<{status:string;filing_reference:string|null;effective_date:string|null}>(`select status,filing_reference,effective_date::text from public.bylaw_versions where id='${id}'`)).rows[0];};
-  it('marks an imported bylaw in force from its LTO filing record without a vote',async()=>{await identity(a);await sql(`select public.record_registered_bylaw('${versions[0]}','CA1234567','2023-05-01')`);expect(await versionRow(versions[0])).toEqual({status:'in_force',filing_reference:'CA1234567',effective_date:'2023-05-01'});});
-  it('does not let a bylaw drafted in the app skip the vote',async()=>{await identity(a);const drafted=(await db.query<{id:string}>(`select public.save_bylaw('${ba}',null,'Bicycles','7.1','Bicycles must be stored in the bike room.','New rule') id`)).rows[0].id;await expect(sql(`select public.record_registered_bylaw('${drafted}','CA7654321','2023-05-01')`)).rejects.toThrow('invalid_transition');expect((await versionRow(drafted)).status).toBe('draft');});
-  it('does not let a member without adoption rights record the filing',async()=>{await identity(assistant);await expect(sql(`select public.record_registered_bylaw('${versions[1]}','CA1234567','2023-05-01')`)).rejects.toThrow('forbidden');expect((await versionRow(versions[1])).status).toBe('draft');});
-  it('does not mark a registration in force before its effective date',async()=>{await identity(a);await expect(sql(`select public.record_registered_bylaw('${versions[1]}','CA1234567',current_date+30)`)).rejects.toThrow('invalid_transition');expect((await versionRow(versions[1])).status).toBe('draft');});
- });
- describe('organization oversight of linked accounts',()=>{
-  const linker='10000000-0000-4000-8000-000000000071',outsider='10000000-0000-4000-8000-000000000072';let link:string;
-  beforeAll(async()=>{await admin();await sql(`insert into auth.users(id,email,email_confirmed_at) values('${linker}','linker@example.test',now()),('${outsider}','outsider@example.test',now());
+   insert into public.notifications(id,building_id,type,title,body,severity) values('${warning}','${ba}','unfiled_adoption','Filing record needed','Record the LTO filing.','warning');`);
+    });
+    const stateOf = async () => {
+      await admin();
+      return (
+        await db.query<{ state: string }>(`select state from public.notifications where id='${warning}'`)
+      ).rows[0].state;
+    };
+    it('does not let a council member dismiss an update', async () => {
+      await identity(councillor);
+      await expect(
+        sql(`select public.update_notification('${warning}','dismissed','Not relevant to us')`),
+      ).rejects.toThrow('forbidden');
+      expect(await stateOf()).toBe('new');
+    });
+    it('lets a council member mark an update as viewed', async () => {
+      await identity(councillor);
+      await sql(`select public.update_notification('${warning}','viewed')`);
+      expect(await stateOf()).toBe('viewed');
+    });
+    it('lets an owner dismiss an update with a reason', async () => {
+      await identity(a);
+      await sql(`select public.update_notification('${warning}','dismissed','Filed on paper already')`);
+      expect(await stateOf()).toBe('dismissed');
+    });
+  });
+  describe('legal review gate when proposing a bylaw', () => {
+    const propose = async (title: string, body: string) => {
+      await identity(a);
+      const v = (
+        await db.query<{ id: string }>(
+          `select public.save_bylaw('${ba}',null,$1,'9.1',$2,'Test amendment') id`,
+          [title, body],
+        )
+      ).rows[0].id;
+      return sql(`select public.transition_bylaw('${v}','proposed','without_review')`);
+    };
+    it('does not require legal review for words that merely contain a flagged term', async () => {
+      await expect(
+        propose(
+          'Garage storage',
+          'Owners must keep the garage and storage lockers free of damage and current with the carpet cleaning schedule.',
+        ),
+      ).resolves.toBeDefined();
+    });
+    it('requires legal review for a bylaw that sets a fine', async () => {
+      await expect(propose('Fines', 'A fine of $50 applies to each contravention.')).rejects.toThrow(
+        'legal_review_required',
+      );
+    });
+    it('requires legal review for a bylaw about rentals', async () => {
+      await expect(
+        propose('Rentals', 'Rentals must be registered with council before occupancy.'),
+      ).rejects.toThrow('legal_review_required');
+    });
+  });
+  describe('single-building conflicts when inviting', () => {
+    const annexManager = '10000000-0000-4000-8000-000000000051';
+    beforeAll(async () => {
+      await identity(a);
+      const org = (
+        await db.query<{ org_id: string }>(`select org_id from public.org_members where user_id='${a}'`)
+      ).rows[0].org_id;
+      const annex = (
+        await db.query<{ id: string }>(
+          `select public.create_building('${org}','Alpha annex',null,'',null) id`,
+        )
+      ).rows[0].id;
+      await admin();
+      await sql(
+        `insert into auth.users(id,email,email_confirmed_at) values('${annexManager}','annex@example.test',now());update public.profiles set account_type='single_building' where id='${annexManager}';insert into public.building_members(building_id,user_id,role) values('${annex}','${annexManager}','building_manager');`,
+      );
+    });
+    it('does not reveal a single-building account that belongs to another organization', async () => {
+      await identity(a);
+      await expect(
+        sql(
+          `select public.create_invitation('${ba}','beta@example.test','council_member','cross-org-hash',null)`,
+        ),
+      ).resolves.toBeDefined();
+    });
+    it('still stops that account from joining when they accept', async () => {
+      await identity(b);
+      await expect(sql(`select public.accept_invitation('cross-org-hash')`)).rejects.toThrow(
+        'single_building_bound',
+      );
+    });
+    it('warns about a single-building account in the inviter’s own organization', async () => {
+      await identity(a);
+      await expect(
+        sql(
+          `select public.create_invitation('${ba}','annex@example.test','council_member','same-org-hash',null)`,
+        ),
+      ).rejects.toThrow('single_building_conflict');
+    });
+  });
+  describe('recording an imported registered bylaw as in force', () => {
+    const registered = '80000000-0000-4000-8000-000000000061';
+    const versions: string[] = [];
+    beforeAll(async () => {
+      await admin();
+      await sql(
+        `insert into public.documents(id,building_id,title,type,status,uploaded_by,parsed_sections) values('${registered}','${ba}','Registered bylaws 2023','bylaws','review','${a}','[{"sectionRef":"4.1","heading":"4.1 Quiet hours","content":"Owners must not cause unreasonable noise after 11 pm."},{"sectionRef":"4.2","heading":"4.2 Parking","content":"Visitor parking is limited to four hours."}]');`,
+      );
+      await identity(a);
+      await sql(`select public.confirm_document_structure('${registered}')`);
+      await admin();
+      versions.push(
+        ...(
+          await db.query<{ id: string }>(
+            `select v.id from public.bylaw_versions v join public.bylaw_nodes n on n.id=v.node_id join public.bylaw_sets s on s.id=n.set_id where s.title='Registered bylaws 2023' order by n.section_ref`,
+          )
+        ).rows.map((r) => r.id),
+      );
+    });
+    const versionRow = async (id: string) => {
+      await admin();
+      return (
+        await db.query<{ status: string; filing_reference: string | null; effective_date: string | null }>(
+          `select status,filing_reference,effective_date::text from public.bylaw_versions where id='${id}'`,
+        )
+      ).rows[0];
+    };
+    it('marks an imported bylaw in force from its LTO filing record without a vote', async () => {
+      await identity(a);
+      await sql(`select public.record_registered_bylaw('${versions[0]}','CA1234567','2023-05-01')`);
+      expect(await versionRow(versions[0])).toEqual({
+        status: 'in_force',
+        filing_reference: 'CA1234567',
+        effective_date: '2023-05-01',
+      });
+    });
+    it('does not let a bylaw drafted in the app skip the vote', async () => {
+      await identity(a);
+      const drafted = (
+        await db.query<{ id: string }>(
+          `select public.save_bylaw('${ba}',null,'Bicycles','7.1','Bicycles must be stored in the bike room.','New rule') id`,
+        )
+      ).rows[0].id;
+      await expect(
+        sql(`select public.record_registered_bylaw('${drafted}','CA7654321','2023-05-01')`),
+      ).rejects.toThrow('invalid_transition');
+      expect((await versionRow(drafted)).status).toBe('draft');
+    });
+    it('does not let a member without adoption rights record the filing', async () => {
+      await identity(assistant);
+      await expect(
+        sql(`select public.record_registered_bylaw('${versions[1]}','CA1234567','2023-05-01')`),
+      ).rejects.toThrow('forbidden');
+      expect((await versionRow(versions[1])).status).toBe('draft');
+    });
+    it('does not mark a registration in force before its effective date', async () => {
+      await identity(a);
+      await expect(
+        sql(`select public.record_registered_bylaw('${versions[1]}','CA1234567',current_date+30)`),
+      ).rejects.toThrow('invalid_transition');
+      expect((await versionRow(versions[1])).status).toBe('draft');
+    });
+  });
+  describe('organization oversight of linked accounts', () => {
+    const linker = '10000000-0000-4000-8000-000000000071',
+      outsider = '10000000-0000-4000-8000-000000000072';
+    let link: string;
+    beforeAll(async () => {
+      await admin();
+      await sql(`insert into auth.users(id,email,email_confirmed_at) values('${linker}','linker@example.test',now()),('${outsider}','outsider@example.test',now());
    update public.profiles set account_type='single_building' where id='${linker}';insert into public.building_members(building_id,user_id,role) values('${ba}','${linker}','building_manager');`);
-   await identity(outsider);await sql(`select public.bootstrap_workspace('Gamma','admin','Gamma building','Olive')`);
-   await admin();const secret=(await db.query<{value:string}>("select value from private.runtime_secrets where name='server_signing'")).rows[0].value;const ts=Math.floor(Date.now()/1000);
-   await identity(linker);link=(await db.query<{id:string}>('select public.link_verified_account($1,$2,$3) id',[b,ts,createHmac('sha256',secret).update('link:'+linker+':'+b+':'+ts).digest('hex')])).rows[0].id;});
-  it('shows an account link to an admin of either account’s organization',async()=>{await identity(a);expect((await db.query(`select id from public.linked_accounts where id='${link}'`)).rows).toHaveLength(1);});
-  it('records the link where organization admins can read it',async()=>{await identity(a);expect((await db.query(`select id from public.audit_log where action='account.link' and target_id='${link}'`)).rows.length).toBeGreaterThan(0);});
-  it('hides the link from an admin of an unrelated organization',async()=>{await identity(outsider);expect((await db.query(`select id from public.linked_accounts where id='${link}'`)).rows).toHaveLength(0);});
-  it('does not let an unrelated user revoke the link or record an unlink',async()=>{await identity(outsider);await expect(sql(`select public.revoke_account_link('${link}')`)).rejects.toThrow('forbidden');await admin();expect((await db.query(`select id from public.audit_log where action='account.unlink' and actor_id='${outsider}'`)).rows).toHaveLength(0);});
-  it('lists the link on the members page for the organization’s admins only',async()=>{await identity(a);expect((await db.query<{id:string}>(`select id from public.list_account_links_for_building('${ba}')`)).rows.map(r=>r.id)).toContain(link);await identity(outsider);expect((await db.query(`select id from public.list_account_links_for_building('${ba}')`)).rows).toHaveLength(0);});
-  it('lets an organization admin revoke the link',async()=>{await identity(a);await sql(`select public.revoke_account_link('${link}')`);await admin();expect((await db.query<{revoked:boolean}>(`select revoked_at is not null revoked from public.linked_accounts where id='${link}'`)).rows[0].revoked).toBe(true);});
- });
- it('revokes access immediately without waiting for JWT refresh',async()=>{await admin();await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);await identity(assistant);expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);});
+      await identity(outsider);
+      await sql(`select public.bootstrap_workspace('Gamma','admin','Gamma building','Olive')`);
+      await admin();
+      const secret = (
+        await db.query<{ value: string }>(
+          "select value from private.runtime_secrets where name='server_signing'",
+        )
+      ).rows[0].value;
+      const ts = Math.floor(Date.now() / 1000);
+      await identity(linker);
+      link = (
+        await db.query<{ id: string }>('select public.link_verified_account($1,$2,$3) id', [
+          b,
+          ts,
+          createHmac('sha256', secret)
+            .update('link:' + linker + ':' + b + ':' + ts)
+            .digest('hex'),
+        ])
+      ).rows[0].id;
+    });
+    it('shows an account link to an admin of either account’s organization', async () => {
+      await identity(a);
+      expect((await db.query(`select id from public.linked_accounts where id='${link}'`)).rows).toHaveLength(
+        1,
+      );
+    });
+    it('records the link where organization admins can read it', async () => {
+      await identity(a);
+      expect(
+        (
+          await db.query(
+            `select id from public.audit_log where action='account.link' and target_id='${link}'`,
+          )
+        ).rows.length,
+      ).toBeGreaterThan(0);
+    });
+    it('hides the link from an admin of an unrelated organization', async () => {
+      await identity(outsider);
+      expect((await db.query(`select id from public.linked_accounts where id='${link}'`)).rows).toHaveLength(
+        0,
+      );
+    });
+    it('does not let an unrelated user revoke the link or record an unlink', async () => {
+      await identity(outsider);
+      await expect(sql(`select public.revoke_account_link('${link}')`)).rejects.toThrow('forbidden');
+      await admin();
+      expect(
+        (
+          await db.query(
+            `select id from public.audit_log where action='account.unlink' and actor_id='${outsider}'`,
+          )
+        ).rows,
+      ).toHaveLength(0);
+    });
+    it('lists the link on the members page for the organization’s admins only', async () => {
+      await identity(a);
+      expect(
+        (
+          await db.query<{ id: string }>(`select id from public.list_account_links_for_building('${ba}')`)
+        ).rows.map((r) => r.id),
+      ).toContain(link);
+      await identity(outsider);
+      expect(
+        (await db.query(`select id from public.list_account_links_for_building('${ba}')`)).rows,
+      ).toHaveLength(0);
+    });
+    it('lets an organization admin revoke the link', async () => {
+      await identity(a);
+      await sql(`select public.revoke_account_link('${link}')`);
+      await admin();
+      expect(
+        (
+          await db.query<{ revoked: boolean }>(
+            `select revoked_at is not null revoked from public.linked_accounts where id='${link}'`,
+          )
+        ).rows[0].revoked,
+      ).toBe(true);
+    });
+  });
+  it('revokes access immediately without waiting for JWT refresh', async () => {
+    await admin();
+    await sql(`update public.building_members set status='suspended' where user_id='${assistant}'`);
+    await identity(assistant);
+    expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);
+  });
 });

@@ -72,7 +72,9 @@ const ManifestSchema = z.object({
 const ApplyEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  LEGAL_CORPUS_INGEST_ENABLED: z.literal('true', { message: 'LEGAL_CORPUS_INGEST_ENABLED must be "true" (written approval required)' }),
+  LEGAL_CORPUS_INGEST_ENABLED: z.literal('true', {
+    message: 'LEGAL_CORPUS_INGEST_ENABLED must be "true" (written approval required)',
+  }),
   VOYAGE_API_KEY: z.string().min(1),
 });
 
@@ -93,23 +95,35 @@ function contextualText(item: Item, chunk: z.infer<typeof ChunkSchema>): string 
 /** Hash of what was loaded for a source, so an unchanged source is not re-embedded. */
 function contentHash(item: Item): string {
   return createHash('sha256')
-    .update(JSON.stringify([item.title, item.citation, item.in_force_from, item.in_force_to,
-                            item.chunks.map((c) => [c.section_ref, c.heading, c.content])]))
+    .update(
+      JSON.stringify([
+        item.title,
+        item.citation,
+        item.in_force_from,
+        item.in_force_to,
+        item.chunks.map((c) => [c.section_ref, c.heading, c.content]),
+      ]),
+    )
     .digest('hex');
 }
 
 /** kb item type -> legal_sources.type (see docs/02-DATA-MODEL.md, legal_source_type). */
 function sourceType(item: Item): string {
   switch (item.type) {
-    case 'act-section': return 'statute';
-    case 'regulation-section': return 'regulation';
-    case 'schedule': return 'standard_bylaw';
-    case 'crt-decision': return 'crt_decision';
+    case 'act-section':
+      return 'statute';
+    case 'regulation-section':
+      return 'regulation';
+    case 'schedule':
+      return 'standard_bylaw';
+    case 'crt-decision':
+      return 'crt_decision';
     case 'court-decision':
       if (item.id.startsWith('bc.bcca.')) return 'bcca_decision';
       if (item.id.startsWith('bc.bcsc.')) return 'bcsc_decision';
       return 'court_decision';
-    default: throw new Error(`no legal_sources type for kb type ${item.type}`);
+    default:
+      throw new Error(`no legal_sources type for kb type ${item.type}`);
   }
 }
 
@@ -149,14 +163,25 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
     const response = await fetch('https://api.voyageai.com/v1/embeddings', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input: batch, model: EMBEDDING_MODEL, input_type: 'document', truncation: false }),
+      body: JSON.stringify({
+        input: batch,
+        model: EMBEDDING_MODEL,
+        input_type: 'document',
+        truncation: false,
+      }),
       signal: AbortSignal.timeout(120_000),
     });
-    if (!response.ok) throw new Error(`embedding request failed: HTTP ${response.status}. Nothing further was written.`);
+    if (!response.ok)
+      throw new Error(`embedding request failed: HTTP ${response.status}. Nothing further was written.`);
     const body = z
-      .object({ data: z.array(z.object({ index: z.number(), embedding: z.array(z.number()).length(EMBEDDING_DIMENSIONS) })) })
+      .object({
+        data: z.array(
+          z.object({ index: z.number(), embedding: z.array(z.number()).length(EMBEDDING_DIMENSIONS) }),
+        ),
+      })
       .parse(await response.json());
-    if (body.data.length !== batch.length) throw new Error('the embedding service returned an incomplete batch. Nothing further was written.');
+    if (body.data.length !== batch.length)
+      throw new Error('the embedding service returned an incomplete batch. Nothing further was written.');
     out.push(...body.data.sort((a, b) => a.index - b.index).map((d) => d.embedding));
     process.stdout.write(`\r  embedded ${out.length}/${texts.length} chunk(s)`);
   }
@@ -171,9 +196,14 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
   const db = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: jurisdiction, error: jErr } = await db.from('jurisdictions').select('id').eq('code', 'BC').maybeSingle();
+  const { data: jurisdiction, error: jErr } = await db
+    .from('jurisdictions')
+    .select('id')
+    .eq('code', 'BC')
+    .maybeSingle();
   if (jErr) throw new Error(`could not read jurisdictions: ${jErr.message}`);
-  if (!jurisdiction) throw new Error('no BC jurisdiction row. Seed public.jurisdictions before loading the corpus.');
+  if (!jurisdiction)
+    throw new Error('no BC jurisdiction row. Seed public.jurisdictions before loading the corpus.');
 
   const { data: existingRows, error: eErr } = await db
     .from('legal_sources')
@@ -181,7 +211,8 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
     .not('kb_id', 'is', null);
   if (eErr) throw new Error(`could not read legal_sources: ${eErr.message}`);
   const existing = new Map(
-    z.array(z.object({ id: z.string(), kb_id: z.string(), content_sha256: z.string().nullable() }))
+    z
+      .array(z.object({ id: z.string(), kb_id: z.string(), content_sha256: z.string().nullable() }))
       .parse(existingRows ?? [])
       .map((r) => [r.kb_id, r]),
   );
@@ -196,7 +227,10 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
   // Embed before writing anything, so a failure part way through never leaves a source row whose
   // chunks do not match its content hash.
   const embeddings = changed.length
-    ? await embed(changed.flatMap((i) => i.chunks.map((c) => contextualText(i, c))), env.VOYAGE_API_KEY)
+    ? await embed(
+        changed.flatMap((i) => i.chunks.map((c) => contextualText(i, c))),
+        env.VOYAGE_API_KEY,
+      )
     : [];
 
   let e = 0;
@@ -223,7 +257,8 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
       )
       .select('id')
       .single();
-    if (sErr || !source) throw new Error(`upsert legal_sources for ${item.id} failed: ${sErr?.message ?? 'no row'}`);
+    if (sErr || !source)
+      throw new Error(`upsert legal_sources for ${item.id} failed: ${sErr?.message ?? 'no row'}`);
     if (item.in_force_to) superseded++;
 
     // Replace the chunks wholesale: a section's text changed, so chunk boundaries may have moved and
@@ -251,10 +286,14 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
 
   console.log(`Loaded ${changed.length} source(s) from kb ${kbVersion}; ${unchanged} unchanged.`);
   if (superseded) {
-    console.log(`${superseded} of them have in_force_to set, so they answer only "as of" questions before that date.`);
+    console.log(
+      `${superseded} of them have in_force_to set, so they answer only "as of" questions before that date.`,
+    );
   }
   if (orphans.length) {
-    console.log(`\n${orphans.length} source(s) in the database are not in this build. Left untouched — an item leaving a build is not a repeal. Decide what each one means:`);
+    console.log(
+      `\n${orphans.length} source(s) in the database are not in this build. Left untouched — an item leaving a build is not a repeal. Decide what each one means:`,
+    );
     for (const kbId of orphans) console.log(`  ${kbId}`);
   }
 }
@@ -270,9 +309,13 @@ async function main(): Promise<void> {
 
   console.log(`kb ${manifest.kb_version}, built ${manifest.built_at}, ${manifest.status_filter}`);
   console.log(`corpus ${manifest.corpus_sha256.slice(0, 12)} from ${distDir}\n`);
-  console.log(`Would load ${law.length} law item(s) into legal_sources and ${law.reduce((n, i) => n + i.chunks.length, 0)} chunk(s) into legal_chunks:`);
+  console.log(
+    `Would load ${law.length} law item(s) into legal_sources and ${law.reduce((n, i) => n + i.chunks.length, 0)} chunk(s) into legal_chunks:`,
+  );
   for (const i of law) {
-    console.log(`  ${i.id}  [${sourceType(i)}]  ${i.citation ?? ''}  ${i.chunks.length} chunk(s)  ${i.status}`);
+    console.log(
+      `  ${i.id}  [${sourceType(i)}]  ${i.citation ?? ''}  ${i.chunks.length} chunk(s)  ${i.status}`,
+    );
   }
   if (skipped.length) {
     console.log(`\nSkipping ${skipped.length} non-law item(s) (no target table yet):`);
@@ -285,7 +328,9 @@ async function main(): Promise<void> {
   }
   if (!manifest.production) {
     if (!allowDraft) {
-      throw new Error('this build includes unapproved items. Use pnpm --dir kb build:prod, or pass --allow-draft for a non-production database.');
+      throw new Error(
+        'this build includes unapproved items. Use pnpm --dir kb build:prod, or pass --allow-draft for a non-production database.',
+      );
     }
     if (process.env.DATABASE_ENVIRONMENT === 'production') {
       throw new Error('refusing to load unapproved kb items into a production database.');

@@ -1,0 +1,14 @@
+# kb/ is its own package with its own tooling.
+/kb/
+node_modules/
+.next/
+/package-lock.json
+/SOURCE-MANIFEST.json
+/next-env.d.ts
+/test-results/
+/playwright-report/
+/verification/
+/public/
+/supabase/
+/docs/
+*.md
