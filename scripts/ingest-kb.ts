@@ -115,7 +115,9 @@ function sourceType(item: Item): string {
     case 'regulation-section':
       return 'regulation';
     case 'schedule':
-      return 'standard_bylaw';
+      // Two kinds of schedule share this kb type: the Act's Schedule of Standard Bylaws (`bc.spa.sched.*`) and
+      // the Regulation's prescribed forms (`bc.spr.form.*`). A form is part of the Regulation, not a bylaw.
+      return item.id.startsWith('bc.spr.') ? 'regulation' : 'standard_bylaw';
     case 'crt-decision':
       return 'crt_decision';
     case 'court-decision':

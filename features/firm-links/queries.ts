@@ -35,13 +35,30 @@ export async function firmOrganizations() {
   checkDb(error);
   return z.array(z.object({ id: z.uuid(), name: z.string() })).parse(data);
 }
+// Drafts a building has sent to its strata management firm for review. RLS (`scoped_read`, i.e. `chat.use`)
+// would also return a building's own pending reviews to its own staff, so the inbox is narrowed to buildings
+// the person reaches through a firm link — the same `private.is_linked_member` condition `decide_firm_review`
+// uses to let them decide. Mirrored by `mock/source.ts#firmReviewInbox`.
 export async function firmReviewInbox() {
   const user = await requireUser();
+  const linked = await user.client
+    .from('building_members')
+    .select('building_id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .not('via_link_id', 'is', null);
+  checkDb(linked.error);
+  const buildingIds = z
+    .array(z.object({ building_id: z.uuid() }))
+    .parse(linked.data)
+    .map((m) => m.building_id);
+  if (!buildingIds.length) return [];
   const { data, error } = await user.client
     .from('generated_documents')
     .select('id,building_id,title,kind,created_at')
     .eq('review_by', 'firm')
     .eq('status', 'pending_review')
+    .in('building_id', buildingIds)
     .is('deleted_at', null)
     .order('created_at')
     .limit(50);

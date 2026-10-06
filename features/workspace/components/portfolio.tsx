@@ -9,7 +9,7 @@ export function Portfolio({ profile, buildings }: { profile: Profile; buildings:
   return (
     <>
       <PageHeading
-        eyebrow="YOUR PORTFOLIO"
+        eyebrow="Your portfolio"
         title={'Welcome back, ' + (profile.display_name.split(' ')[0] || 'there') + '.'}
         description="A clearer view of the buildings and people you support."
         action={
@@ -40,7 +40,9 @@ export function Portfolio({ profile, buildings }: { profile: Profile; buildings:
       </div>
       <div className="section-title">
         <h2>Your buildings</h2>
-        <Badge>{buildings.length} buildings</Badge>
+        <Badge>
+          {buildings.length} {buildings.length === 1 ? 'building' : 'buildings'}
+        </Badge>
       </div>
       {buildings.length ? (
         <div className="card-grid">

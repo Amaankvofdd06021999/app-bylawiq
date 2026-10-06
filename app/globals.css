@@ -263,11 +263,23 @@ small {
 .nav-label {
   font-size: 9px;
   letter-spacing: 1.5px;
+  text-transform: uppercase;
   padding: 24px 14px 9px;
   color: #666e77;
 }
 .sidebar-bottom {
   padding-top: 16px;
+}
+/* Sign out sits under the account button: the building switcher (which also has it) is closed to single-building accounts. */
+.nav-item.sign-out {
+  width: 100%;
+  margin: 6px 0 0;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
 }
 .privacy-mini {
   display: flex;

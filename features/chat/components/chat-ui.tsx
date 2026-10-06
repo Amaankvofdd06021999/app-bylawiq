@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Button, PageHeading, Badge, Modal, TrustNote, Empty } from '@/components/ui';
 import { useBackend } from '@/components/backend';
-import { str } from '@/features/workspace/components/resource-form';
+import { str } from '@/lib/rows';
 import type { Building, Profile, Row } from '@/lib/schema';
 import type { BylawMessage, AnswerData } from '@/lib/chat-types';
 import { sourceSchema, type Source } from '@/lib/ai/citations';
@@ -197,7 +197,7 @@ export function AskHome({
     return (
       <>
         <PageHeading
-          eyebrow={building.strata_plan_no || 'BUILDING WORKSPACE'}
+          eyebrow={building.strata_plan_no || 'Building workspace'}
           title="Ask BylawIQ"
           description={'Questions about ' + building.name + '’s bylaws.'}
         />
@@ -211,7 +211,7 @@ export function AskHome({
   return (
     <>
       <PageHeading
-        eyebrow={building.strata_plan_no || 'BUILDING WORKSPACE'}
+        eyebrow={building.strata_plan_no || 'Building workspace'}
         title={'Good to see you, ' + (profile.display_name.split(' ')[0] || 'there') + '.'}
         description={'A little more clarity for ' + building.name + '.'}
         action={
@@ -440,7 +440,7 @@ export function AskHome({
             <ShieldCheck size={16} color="#9cabb9" />
           </div>
           <div className="card">
-            <span className="eyebrow">BUILDING KNOWLEDGE</span>
+            <span className="eyebrow">Building knowledge</span>
             <h3 style={{ fontSize: 16, fontWeight: 400 }}>{building.name}</h3>
             <p className="form-note" style={{ marginTop: 8 }}>
               A complete picture starts with the right documents.
@@ -508,6 +508,21 @@ export function AskHome({
       </Modal>
     </>
   );
+}
+/** A grounded answer as plain text for the clipboard: each claim, the limitations, and the disclaimer, which
+ * travels with any copied legal information (docs/11-LEGAL-SAFETY.md). */
+function answerText({ answer }: AnswerData): string {
+  const section = (heading: string, claims: { text: string }[]) =>
+    claims.length ? [heading, ...claims.map((c) => '- ' + c.text)].join('\n') : '';
+  return [
+    section('Answer', answer.answer),
+    section('Basis', answer.basis),
+    section('Next steps', answer.nextSteps),
+    answer.limitations,
+    DISCLAIMER,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 }
 export function Conversation({
   id,
@@ -687,7 +702,9 @@ export function Conversation({
                     <Button
                       variant="ghost"
                       size="small"
-                      onClick={() => navigator.clipboard.writeText(text || JSON.stringify(data?.data))}
+                      onClick={() =>
+                        navigator.clipboard.writeText(text || (data ? answerText(data.data) : ''))
+                      }
                     >
                       <Copy size={13} />
                       Copy
@@ -885,8 +902,8 @@ function GroundedResponse({
       ))}
       {(
         [
-          ['BASIS', data.answer.basis],
-          ['NEXT STEPS', data.answer.nextSteps],
+          ['Basis', data.answer.basis],
+          ['Next steps', data.answer.nextSteps],
         ] as const
       )
         .filter(([, claims]) => claims.length > 0)

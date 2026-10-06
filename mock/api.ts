@@ -12,7 +12,7 @@ import { getStore, newId, audit, type MockState } from './store';
 import { can, visibleDocuments, linkedFirmId } from './rules';
 import { need, now } from './mutations/shared';
 import { canUseChat, isResidentAsker, refundQuestion, spendQuestion } from './mutations/chat';
-import { answer, answerPortfolio } from './answers';
+import { answer, answerGeneral, answerPortfolio } from './answers';
 // Demo stand-ins for `app/api/*/route.ts`: same request/response contracts, but reading and writing the
 // session's own in-memory `MockState` instead of Postgres — the mock's RLS boundary is `mock/rules.ts`,
 // checked here the same way `requirePermission` is checked in the real routes (see AGENTS.md §0). Every
@@ -269,7 +269,9 @@ export async function chat(req: Request): Promise<Response> {
                 question,
                 v.layers,
               )
-            : answer(s, userId, buildingId, question, v.layers);
+            : chatRow.scope === 'general'
+              ? answerGeneral(s, userId, question, v.layers)
+              : answer(s, userId, buildingId, question, v.layers);
         const parts: BylawMessage['parts'] = [];
         if (!result.sources.length) {
           if (charge) refundQuestion(s, charge);

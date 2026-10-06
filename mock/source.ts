@@ -1,12 +1,21 @@
 import { z } from 'zod';
 import type { Building, Profile, Row } from '@/lib/schema';
 import { chatSchema } from '@/lib/schema';
+import { RESOURCES, type Resource } from '@/lib/resources';
 import type { FirmLinkStatus } from '@/features/firm-links/schema';
 import { NotFoundError } from '@/lib/errors';
 import type { MockState } from './store';
 import { PERSONAS } from './personas';
 import { permissionsFor } from './permissions';
-import { accessibleBuildings, can, canResidentAsk, isLinkedMember, roleIn, visibleDocuments } from './rules';
+import {
+  accessibleBuildings,
+  can,
+  canResidentAsk,
+  isLinkedMember,
+  portfolioScopeHolds,
+  roleIn,
+  visibleDocuments,
+} from './rules';
 // Mock equivalent of `features/workspace/queries.ts` + `features/firm-links/queries.ts`. Every function here
 // takes `(state,userId,...)` instead of reading the authenticated user off a Supabase client, so it is a pure,
 // testable stand-in for the real query that runs behind RLS (see AGENTS.md §0) — the same scoping rules from
@@ -29,41 +38,7 @@ export function workspace(
   const email = PERSONAS.find((p) => p.userId === userId)?.email ?? '';
   return { profile, buildings, organizations, memberships, email };
 }
-// Copied literally from the column lists in `features/workspace/queries.ts`'s `resources` map — the demo
-// projects each row down to exactly these columns, the same way the real `select(...)` does.
-const resources = {
-  documents: [
-    'documents',
-    'id,building_id,title,type,status,error_message,effective_date,lto_filing_ref,created_at,byte_size,source_url,knowledge_base_id,parsed_sections,structure_confirmed',
-  ],
-  agents: [
-    'agents',
-    'id,building_id,name,description,instructions,status,knowledge_base_id,include_legal,top_k,created_at',
-  ],
-  knowledge: ['knowledge_bases', 'id,building_id,name,description,created_at'],
-  bylaws: ['bylaw_nodes', 'id,building_id,title,section_ref,set_id,created_at'],
-  versions: [
-    'bylaw_versions',
-    'id,building_id,node_id,version,body,rationale,status,effective_date,filing_reference,created_by,review_choice,source_document_id,created_at',
-  ],
-  notices: [
-    'generated_documents',
-    'id,building_id,kind,title,body_md,status,review_by,created_by,approved_by,approved_at,sent_at,dispute_id,created_at',
-  ],
-  comments: ['document_review_comments', 'id,building_id,document_id,author_id,body,created_at'],
-  disputes: ['disputes', 'id,building_id,title,reference,category,subject_unit,stage,created_at'],
-  events: ['dispute_events', 'id,building_id,dispute_id,stage,occurred_at,logged_at,summary,actor_id'],
-  updates: [
-    'notifications',
-    'id,building_id,type,title,body,severity,target_id,state,snoozed_until,created_at',
-  ],
-  members: ['building_members', 'id,building_id,user_id,role,status,expires_at'],
-  invitations: ['invitations', 'id,building_id,email,role,expires_at,accepted_at,revoked_at,created_at'],
-  audit: ['audit_log', 'id,building_id,action,target_id,occurred_at,actor_id'],
-  chats: ['chats', 'id,building_id,title,scope,updated_at,archived'],
-  deployments: ['agent_deployments', 'id,building_id,agent_id,version,config,created_at'],
-} as const;
-export type Resource = keyof typeof resources;
+export type { Resource };
 // A resource needs this permission to be read at all, mirroring each table's `scoped_read`/`*_read` RLS
 // policy. `documents`, `members` and `chats` have their own row-level rule below and are not listed here.
 const readPermission: Partial<Record<Resource, string>> = {
@@ -86,7 +61,7 @@ function pick(row: Row, cols: readonly string[]): Row {
   return out;
 }
 export function listResource(s: MockState, userId: string, resource: Resource, buildingId: string): Row[] {
-  const [, columns] = resources[resource];
+  const [, columns] = RESOURCES[resource];
   const cols = columns.split(',');
   let rows: Row[];
   if (resource === 'documents') {
@@ -98,10 +73,11 @@ export function listResource(s: MockState, userId: string, resource: Resource, b
       // Mirrors `members_read`: your own row, or every row with `member.read`.
       rows = can(s, userId, 'member.read', buildingId) ? all : all.filter((r) => r.user_id === userId);
     } else if (resource === 'chats') {
-      // Mirrors `chats_read`: only chats you started, and only with `chat.use` on their building (demo only: or
-      // a resident's own building chats while they have paid Ask).
+      // Mirrors `chats_read`: only chats you started, only with `chat.use` on their building, and a portfolio chat
+      // only while every building it searched is still yours (demo only: or a resident's own building chats while
+      // they have paid Ask).
       rows = can(s, userId, 'chat.use', buildingId)
-        ? all.filter((r) => r.user_id === userId)
+        ? all.filter((r) => r.user_id === userId && portfolioScopeHolds(s, userId, r))
         : canResidentAsk(s, userId, buildingId)
           ? all.filter((r) => r.user_id === userId && r.scope === 'building')
           : [];
@@ -150,7 +126,8 @@ export function conversation(
     row.user_id === userId &&
     (row.scope === 'general' ||
       can(s, userId, 'chat.use', String(row.building_id)) ||
-      (row.scope === 'building' && canResidentAsk(s, userId, String(row.building_id))));
+      (row.scope === 'building' && canResidentAsk(s, userId, String(row.building_id)))) &&
+    portfolioScopeHolds(s, userId, row);
   if (!row || !accessible) throw new NotFoundError();
   const chat = chatSchema.parse(
     pick(row, [

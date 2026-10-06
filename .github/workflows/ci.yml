@@ -10,6 +10,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run format:check
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
@@ -49,7 +50,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
+          cache-dependency-path: kb/pnpm-lock.yaml
       - run: pnpm --dir kb install --frozen-lockfile
       - run: pnpm --dir kb typecheck
       - run: pnpm --dir kb test

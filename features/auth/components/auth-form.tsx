@@ -30,7 +30,7 @@ export function AuthForm({
       <aside className="auth-art">
         <Brand />
         <div className="auth-quote">
-          <span className="eyebrow">THE KNOWLEDGE BEHIND YOUR BUILDING</span>
+          <span className="eyebrow">The knowledge behind your building</span>
           <h1>
             Your building.
             <br />

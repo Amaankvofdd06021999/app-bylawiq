@@ -62,7 +62,7 @@ export function BuildingManagerDashboard({
   return (
     <>
       <PageHeading
-        eyebrow="BUILDING HOME"
+        eyebrow="Building home"
         title={b.name}
         description={
           [b.strataPlan, b.address, b.units ? `${b.units} units` : null].filter(Boolean).join(' · ') ||

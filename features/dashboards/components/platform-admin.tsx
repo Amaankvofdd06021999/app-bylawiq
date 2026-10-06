@@ -140,7 +140,7 @@ export function PlatformAdminDashboard({ data }: { data: PlatformAdminData }) {
   return (
     <>
       <PageHeading
-        eyebrow="BYLAWIQ PLATFORM"
+        eyebrow="BylawIQ platform"
         title="Platform overview"
         description={`Customers, revenue and AI usage for ${data.month}, across every firm and building. Totals only — no building’s documents or answers appear here.`}
       />

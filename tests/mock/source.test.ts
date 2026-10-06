@@ -120,3 +120,24 @@ describe('mock source: firm links', () => {
     expect(firmReviewInbox(s, IDS.users.james)).toEqual([]);
   });
 });
+describe('mock source: portfolio chats after losing a building', () => {
+  // Mirrors the second clause of `chats_read`: a portfolio chat stays readable only while you still hold
+  // `chat.use_portfolio` on every building it searched. Losing one hides the whole chat and its passages.
+  it('hides a portfolio chat once any building in its scope is no longer yours', async () => {
+    const { createChat } = await import('@/mock/mutations');
+    const s = seed();
+    const { harbour, marina, seaside } = IDS.buildings;
+    const r = createChat(s, IDS.users.sarah, {
+      buildingId: harbour,
+      scope: 'portfolio',
+      buildingIds: [marina, seaside],
+    });
+    if (!r.ok) throw new Error(r.error);
+    expect(conversation(s, IDS.users.sarah, r.id).chat.id).toBe(r.id);
+    expect(listResource(s, IDS.users.sarah, 'chats', harbour).some((c) => c.id === r.id)).toBe(true);
+    for (const m of s.members)
+      if (m.user_id === IDS.users.sarah && m.building_id === seaside) m.status = 'removed';
+    expect(() => conversation(s, IDS.users.sarah, r.id)).toThrow(NotFoundError);
+    expect(listResource(s, IDS.users.sarah, 'chats', harbour).some((c) => c.id === r.id)).toBe(false);
+  });
+});

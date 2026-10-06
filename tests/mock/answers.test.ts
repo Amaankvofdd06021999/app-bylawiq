@@ -83,3 +83,17 @@ describe('layered answers', () => {
     expect(r.answer.limitations).toBe(NO_GROUNDING);
   });
 });
+describe('retrieval mirrors chunks_read and general scope', () => {
+  it('never cites a document that is still waiting for review', async () => {
+    const { answer } = await import('@/mock/answers');
+    const s = seed();
+    const r = answer(s, IDS.users.james, IDS.buildings.seaside, 'What does our insurance coverage include?');
+    expect(r.sources.some((x) => x.title.startsWith('Insurance summary'))).toBe(false);
+  });
+  it('answers a general chat from the legal corpus only', async () => {
+    const { answerGeneral } = await import('@/mock/answers');
+    const r = answerGeneral(seed(), IDS.users.james, 'Can the strata fine me for noise?');
+    expect(r.sources.length).toBeGreaterThan(0);
+    expect(r.sources.every((x) => x.kind === 'legal' && x.buildingId === null)).toBe(true);
+  });
+});

@@ -43,10 +43,10 @@ const navigation = [
   ['notices', 'Notices', Mail, 'chat.use', ''],
   ['disputes', 'Disputes', Scale, 'dispute.read', ''],
   ['updates', 'Updates', Bell, 'chat.use', ''],
-  ['agents', 'AI agents', Bot, 'agent.manage', 'INTELLIGENCE'],
-  ['knowledge', 'Knowledge bases', Database, 'agent.manage', 'INTELLIGENCE'],
-  ['members', 'Team members', Users, 'member.read', 'WORKSPACE'],
-  ['settings', 'Settings', Settings, 'building.read', 'WORKSPACE'],
+  ['agents', 'AI agents', Bot, 'agent.manage', 'Intelligence'],
+  ['knowledge', 'Knowledge bases', Database, 'agent.manage', 'Intelligence'],
+  ['members', 'Team members', Users, 'member.read', 'Workspace'],
+  ['settings', 'Settings', Settings, 'building.read', 'Workspace'],
 ] as const;
 // Pure so it's testable without rendering: same filter the sidebar and the phone tab bar both need. Without a
 // permissions list (the overview, no building) nothing is filtered, as before.
@@ -108,16 +108,17 @@ export function Shell({
     router = useRouter(),
     { base, signOut } = useBackend();
   const can = (p: string) => !permissions || permissions.includes(p);
-  const canAsk = can('chat.use') || can('chat.resident');
-  const items = visibleNav(permissions, firmKnowledge),
+  const active = buildings.find((b) => b.id === activeId) || buildings[0];
+  // Building-scoped links (Ask, Updates, Settings…) need a building to point at; with none, only the overview shows.
+  const canAsk = active != null && (can('chat.use') || can('chat.resident'));
+  const items = active ? visibleNav(permissions, firmKnowledge) : [],
     residentItems = resident ? residentNav(permissions) : [],
     bar: (readonly [string, string, typeof House, string])[] = resident
       ? residentItems.filter((n) => residentTabs.includes(n[0]))
-      : tabs.filter((t) => can(t[3]) || (t[0] === 'ask' && canAsk));
+      : tabs.filter((t) => active != null && (can(t[3]) || (t[0] === 'ask' && canAsk)));
   const [mobile, setMobile] = useState(false),
     [switcher, setSwitcher] = useState(false),
     [search, setSearch] = useState('');
-  const active = buildings.find((b) => b.id === activeId) || buildings[0];
   const root = base + (active ? '/b/' + active.id : '/workspace');
   const href = (section: string) => root + '/' + section;
   // Without `agent.manage` the building tab of Knowledge has nothing for them, so a firm-knowledge reader lands on the Firm tab.
@@ -247,7 +248,10 @@ export function Shell({
             <ShieldCheck size={17} />
             <span>Private to your building</span>
           </div>
-          <button className="user-menu" onClick={() => router.push(href('settings'))}>
+          <button
+            className="user-menu"
+            onClick={() => router.push(active ? href('settings') : base + '/workspace')}
+          >
             <span className="avatar">
               {(profile.display_name || 'You')
                 .split(' ')
@@ -266,6 +270,17 @@ export function Shell({
               </small>
             </span>
             <Settings size={15} />
+          </button>
+          <button
+            type="button"
+            className="nav-item sign-out"
+            onClick={async () => {
+              await signOut();
+              router.push(base || '/login');
+            }}
+          >
+            <LogOut size={18} />
+            Sign out
           </button>
         </div>
       </aside>
@@ -296,7 +311,7 @@ export function Shell({
                 <kbd>⌘ K</kbd>
               </button>
             )}
-            {can('chat.use') && (
+            {active && can('chat.use') && (
               <Link className="icon-button topbar-updates" aria-label="Updates" href={href('updates')}>
                 <Bell size={18} />
               </Link>

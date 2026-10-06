@@ -4,9 +4,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22.18.0"
   },
-  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
@@ -18,7 +17,8 @@
     "test:db": "supabase test db",
     "db:types": "supabase gen types typescript --local > lib/supabase/database.types.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "kb:ingest": "node scripts/ingest-kb.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "3.0.118",

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Modal } from '@/components/ui';
 import { useBackend } from '@/components/backend';
-import type { Row } from '@/lib/schema';
 export type Field = {
   name: string;
   label: string;
@@ -157,9 +156,3 @@ export function ResourceForm({
     </Modal>
   );
 }
-export const str = (row: Row, key: string, fallback = '') =>
-  typeof row[key] === 'string'
-    ? (row[key] as string)
-    : typeof row[key] === 'number'
-      ? String(row[key])
-      : fallback;

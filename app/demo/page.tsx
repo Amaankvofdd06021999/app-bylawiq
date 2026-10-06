@@ -9,7 +9,7 @@ export default function DemoPicker() {
     <main className="onboarding" id="main">
       <Brand />
       <span className="eyebrow" style={{ marginTop: 45 }}>
-        INTERACTIVE DEMO
+        Interactive demo
       </span>
       <h1>Choose a person to try BylawIQ as.</h1>
       <p className="form-note">

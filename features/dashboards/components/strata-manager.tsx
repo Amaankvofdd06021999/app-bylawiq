@@ -47,7 +47,7 @@ export function StrataManagerDashboard({
   return (
     <>
       <PageHeading
-        eyebrow="TODAY"
+        eyebrow="Today"
         title={`Welcome back, ${data.firstName}.`}
         description={
           n

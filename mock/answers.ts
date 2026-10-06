@@ -92,19 +92,32 @@ export function answerPortfolio(
 ): AnswerData {
   return answerOver(s, userId, [...new Set(buildingIds)], question, layers);
 }
+/** A "General BC sources" chat: no building, so only the shared legal corpus is searched (as the real
+ * retrieval does for `scope = 'general'`). Never a building's or a firm's passages. */
+export function answerGeneral(
+  s: MockState,
+  userId: string,
+  question: string,
+  layers?: readonly Layer[],
+): AnswerData {
+  return answerOver(s, userId, [], question, layers, true);
+}
 function answerOver(
   s: MockState,
   userId: string,
   buildingIds: readonly string[],
   question: string,
   layers?: readonly Layer[],
+  general = false,
 ): AnswerData {
   const allowedIn = new Map(
     buildingIds.map(
       (b) => [b, layersFor(s, userId, b).filter((l) => !layers || layers.includes(l))] as const,
     ),
   );
-  const anyAllows = (l: Layer) => [...allowedIn.values()].some((a) => a.includes(l));
+  const anyAllows = (l: Layer) =>
+    (general && l === 'legal' && (!layers || layers.includes('legal'))) ||
+    [...allowedIn.values()].some((a) => a.includes(l));
   const topics = TOPICS.filter((words) => words.some((w) => hasWord(question, w)));
   if (!(['building', 'firm', 'legal'] as const).some(anyAllows) || !topics.length) return noGrounding();
   const hits: Hit[] = [];
@@ -113,7 +126,9 @@ function answerOver(
     const docs = visibleDocuments(s, userId, buildingId);
     for (const c of s.chunks.filter((c) => c.buildingId === buildingId)) {
       const doc = docs.find((d) => d.id === c.documentId);
-      if (!doc) continue;
+      // Mirrors `chunks_read`: only indexed (`ready`) documents, and bylaws only once their structure is confirmed.
+      if (!doc || doc.status !== 'ready' || (doc.type === 'bylaws' && doc.structure_confirmed !== true))
+        continue;
       hits.push({
         kind: 'building',
         title: String(doc.title),

@@ -22,7 +22,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['inngest/ingest.ts', 'inngest/corpus-sync.ts', 'features/members/invite.ts'],
+    files: ['inngest/ingest.ts', 'features/members/invite.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
   globalIgnores([

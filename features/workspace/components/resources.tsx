@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -24,10 +24,11 @@ import {
   Settings,
 } from 'lucide-react';
 import { Button, PageHeading, Badge, Empty, Modal } from '@/components/ui';
-import { ResourceForm, str, type Field } from './resource-form';
+import { ResourceForm, type Field } from './resource-form';
+import { str } from '@/lib/rows';
+import { errorFrom } from '@/lib/http';
 import { ReviewThread } from './review-thread';
 import { useBackend } from '@/components/backend';
-import { OrgAccountLinks } from '@/features/members/linked-accounts';
 import type { Building, Row, Profile } from '@/lib/schema';
 import { pretty, DOCUMENT_TYPES, ROLE_LABELS, DISCLAIMER } from '@/lib/constants';
 type FormConfig = {
@@ -46,6 +47,7 @@ export function Resources({
   permissions,
   firmLinked = false,
   linkedMember = false,
+  accountLinks,
 }: {
   section: string;
   building: Building;
@@ -55,6 +57,8 @@ export function Resources({
   permissions: string[];
   firmLinked?: boolean;
   linkedMember?: boolean;
+  /** Members section: the organization's account-link panel, when the page offers it. */
+  accountLinks?: ReactNode;
 }) {
   const router = useRouter(),
     backend = useBackend();
@@ -75,6 +79,7 @@ export function Resources({
   const can = (p: string) => permissions.includes(p);
   const root = backend.base + '/b/' + building.id;
   const knowledge = related.knowledge || [];
+  const pendingInvitations = (related.invitations || []).filter((i) => !i.accepted_at && !i.revoked_at);
   const filtered = rows.filter(
     (r) =>
       str(r, 'title', str(r, 'name', str(r, 'email', str(r, 'user_id'))))
@@ -178,32 +183,33 @@ export function Resources({
           },
         ],
       });
-    if (section === 'documents')
-      id
-        ? setForm({
-            ...base,
-            title: 'Edit document details',
-            operation: 'document.update',
-            fields: [
-              { name: 'title', label: 'Title', value: get('title'), required: true },
-              {
-                name: 'type',
-                label: 'Document type',
-                type: 'select',
-                value: get('type'),
-                options: DOCUMENT_TYPES.map((t) => ({ value: t, label: pretty(t) })),
-              },
-              {
-                name: 'effectiveDate',
-                label: 'Effective date',
-                type: 'text',
-                value: get('effective_date'),
-                hint: 'YYYY-MM-DD, if verified.',
-              },
-              { name: 'filingReference', label: 'LTO filing reference', value: get('lto_filing_ref') },
-            ],
-          })
-        : setUpload(true);
+    if (section === 'documents') {
+      if (id)
+        setForm({
+          ...base,
+          title: 'Edit document details',
+          operation: 'document.update',
+          fields: [
+            { name: 'title', label: 'Title', value: get('title'), required: true },
+            {
+              name: 'type',
+              label: 'Document type',
+              type: 'select',
+              value: get('type'),
+              options: DOCUMENT_TYPES.map((t) => ({ value: t, label: pretty(t) })),
+            },
+            {
+              name: 'effectiveDate',
+              label: 'Effective date',
+              type: 'text',
+              value: get('effective_date'),
+              hint: 'YYYY-MM-DD, if verified.',
+            },
+            { name: 'filingReference', label: 'LTO filing reference', value: get('lto_filing_ref') },
+          ],
+        });
+      else setUpload(true);
+    }
     if (section === 'members')
       setForm({
         ...base,
@@ -314,11 +320,20 @@ export function Resources({
               />
             </div>
             <div className="tab-filter">
-              <button className={filter === 'all' ? 'selected' : ''} onClick={() => setFilter('all')}>
-                All {section}
+              <button
+                className={filter === 'all' ? 'selected' : ''}
+                aria-pressed={filter === 'all'}
+                onClick={() => setFilter('all')}
+              >
+                {section === 'audit' ? 'All activity' : 'All ' + title.toLowerCase()}
               </button>
               {statuses.slice(0, 4).map((s) => (
-                <button className={filter === s ? 'selected' : ''} key={s} onClick={() => setFilter(s)}>
+                <button
+                  className={filter === s ? 'selected' : ''}
+                  aria-pressed={filter === s}
+                  key={s}
+                  onClick={() => setFilter(s)}
+                >
                   {pretty(s)}
                 </button>
               ))}
@@ -398,10 +413,12 @@ export function Resources({
                     )}
                   </div>
                   <div className="agent-card-footer">
-                    <Button variant="ghost" size="small" onClick={() => openForm(row)}>
-                      <Settings size={14} />
-                      Configure
-                    </Button>
+                    {can('agent.manage') && (
+                      <Button variant="ghost" size="small" onClick={() => openForm(row)}>
+                        <Settings size={14} />
+                        Configure
+                      </Button>
+                    )}
                     <div className="action-line">
                       {section === 'agents' && can('agent.deploy') && (
                         <Button
@@ -678,26 +695,24 @@ export function Resources({
               </table>
             </div>
           )}
-          {section === 'members' && can('org.manage') && <OrgAccountLinks buildingId={building.id} />}
-          {section === 'members' && (related.invitations || []).length > 0 && (
+          {section === 'members' && accountLinks}
+          {section === 'members' && pendingInvitations.length > 0 && (
             <div className="card" style={{ marginTop: 25 }}>
               <h3>Pending invitations</h3>
-              {related.invitations
-                .filter((i) => !i.accepted_at && !i.revoked_at)
-                .map((i) => (
-                  <div className="activity-row" key={i.id}>
-                    <Users size={17} />
-                    <div>
-                      <h3>{str(i, 'email')}</h3>
-                      <p>
-                        {pretty(str(i, 'role'))} · Expires {str(i, 'expires_at').slice(0, 10)}
-                      </p>
-                    </div>
-                    <Button size="small" variant="ghost" onClick={() => act('invite.revoke', i.id)}>
-                      Revoke
-                    </Button>
+              {pendingInvitations.map((i) => (
+                <div className="activity-row" key={i.id}>
+                  <Users size={17} />
+                  <div>
+                    <h3>{str(i, 'email')}</h3>
+                    <p>
+                      {pretty(str(i, 'role'))} · Expires {str(i, 'expires_at').slice(0, 10)}
+                    </p>
                   </div>
-                ))}
+                  <Button size="small" variant="ghost" onClick={() => act('invite.revoke', i.id)}>
+                    Revoke
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
         </>
@@ -779,8 +794,8 @@ export function Resources({
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ documentId: selected.id }),
-                        });
-                        if (r.ok) {
+                        }).catch(() => null);
+                        if (r?.ok) {
                           setSelected(null);
                           router.refresh();
                         } else setError('The document could not be requeued.');
@@ -903,6 +918,7 @@ function SettingsView({
   can: (p: string) => boolean;
   setForm: (v: FormConfig) => void;
 }) {
+  const backend = useBackend();
   return (
     <div className="settings-grid">
       <section className="card">
@@ -959,9 +975,12 @@ function SettingsView({
         </dl>
         <p className="fine-print">Each account keeps its own conversations and building data.</p>
         <div className="action-line" style={{ marginTop: 22 }}>
-          <Link className="button button-secondary" href="/forgot">
-            Reset password
-          </Link>
+          {/* The demo has no real accounts, so there is no password to reset. */}
+          {backend.base === '' && (
+            <Link className="button button-secondary" href="/forgot">
+              Reset password
+            </Link>
+          )}
           <Link className="button button-secondary" href={root + '/members'}>
             Manage team
           </Link>
@@ -1088,15 +1107,19 @@ function UploadForm({
           setBusy(true);
           const form = new FormData(e.currentTarget);
           form.set('buildingId', buildingId);
-          const r = await fetch(backend.api + '/upload', { method: 'POST', body: form });
-          const body = await r.json();
-          setBusy(false);
-          if (!r.ok) {
-            setError(body.error || 'Upload failed.');
-            return;
+          try {
+            const r = await fetch(backend.api + '/upload', { method: 'POST', body: form });
+            if (!r.ok) {
+              setError(await errorFrom(r, 'Upload failed. Please try again.'));
+              return;
+            }
+            router.refresh();
+            onClose();
+          } catch {
+            setError('Upload failed. Check your connection and try again.');
+          } finally {
+            setBusy(false);
           }
-          router.refresh();
-          onClose();
         }}
       >
         <div className="upload-target">
@@ -1189,23 +1212,27 @@ function WebsiteForm({
           e.preventDefault();
           setBusy(true);
           const f = new FormData(e.currentTarget);
-          const r = await fetch(backend.api + '/sources', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              buildingId,
-              url: f.get('url'),
-              title: f.get('title'),
-              knowledgeBaseId: f.get('knowledgeBaseId') || null,
-              consent: true,
-            }),
-          });
-          const data = await r.json();
-          setBusy(false);
-          if (!r.ok) setError(data.error || 'Unable to add source.');
-          else {
-            router.refresh();
-            onClose();
+          try {
+            const r = await fetch(backend.api + '/sources', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                buildingId,
+                url: f.get('url'),
+                title: f.get('title'),
+                knowledgeBaseId: f.get('knowledgeBaseId') || null,
+                consent: true,
+              }),
+            });
+            if (!r.ok) setError(await errorFrom(r, 'Unable to add source.'));
+            else {
+              router.refresh();
+              onClose();
+            }
+          } catch {
+            setError('Unable to add source. Check your connection and try again.');
+          } finally {
+            setBusy(false);
           }
         }}
       >
@@ -1337,7 +1364,11 @@ function Editor({
             <Badge tone={['in_force', 'approved', 'sent'].includes(status) ? 'green' : 'warning'}>
               {pretty(status)}
             </Badge>
-            <Badge>{isBylaw ? history.length + ' versions' : 'Human review required'}</Badge>
+            <Badge>
+              {isBylaw
+                ? history.length + (history.length === 1 ? ' version' : ' versions')
+                : 'Human review required'}
+            </Badge>
           </div>
           <label>
             Title
@@ -1372,7 +1403,7 @@ function Editor({
           <div className={isBylaw && current ? 'bylaw-diff' : ''}>
             {isBylaw && current && (
               <div>
-                <span className="eyebrow">CURRENT VERSION</span>
+                <span className="eyebrow">Current version</span>
                 <div className="bylaw-current">{str(current, 'body')}</div>
               </div>
             )}

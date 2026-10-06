@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
 import { useBackend } from '@/components/backend';
 import type { Row } from '@/lib/schema';
-import { str } from './resource-form';
+import { str } from '@/lib/rows';
 export function ReviewThread({
   buildingId,
   documentId,

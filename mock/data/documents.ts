@@ -102,6 +102,8 @@ function buildingDocs(
       knowledge_base_id: kbId,
       effective_date: '2025-03-12',
       lto_filing_ref: 'LF-2025-0182',
+      // A manager has confirmed the parsed sections, which is what lets retrieval use a bylaws document.
+      structure_confirmed: true,
     }),
     d(2, 'Building rules · Common areas', 'rules', {
       owner_visible: true,

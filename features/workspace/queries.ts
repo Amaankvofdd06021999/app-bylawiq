@@ -3,6 +3,7 @@ import { requireUser } from '@/lib/auth/guards';
 import { buildingSchema, profileSchema, rowSchema, chatSchema } from '@/lib/schema';
 import { checkDb, NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
+import { RESOURCES, type Resource } from '@/lib/resources';
 export async function workspace() {
   const user = await requireUser();
   const responses = await Promise.all([
@@ -33,43 +34,11 @@ export async function workspace() {
     email: user.email,
   };
 }
-const resources = {
-  documents: [
-    'documents',
-    'id,building_id,title,type,status,error_message,effective_date,lto_filing_ref,created_at,byte_size,source_url,knowledge_base_id,parsed_sections,structure_confirmed',
-  ],
-  agents: [
-    'agents',
-    'id,building_id,name,description,instructions,status,knowledge_base_id,include_legal,top_k,created_at',
-  ],
-  knowledge: ['knowledge_bases', 'id,building_id,name,description,created_at'],
-  bylaws: ['bylaw_nodes', 'id,building_id,title,section_ref,set_id,created_at'],
-  versions: [
-    'bylaw_versions',
-    'id,building_id,node_id,version,body,rationale,status,effective_date,filing_reference,created_by,review_choice,source_document_id,created_at',
-  ],
-  notices: [
-    'generated_documents',
-    'id,building_id,kind,title,body_md,status,review_by,created_by,approved_by,approved_at,sent_at,dispute_id,created_at',
-  ],
-  comments: ['document_review_comments', 'id,building_id,document_id,author_id,body,created_at'],
-  disputes: ['disputes', 'id,building_id,title,reference,category,subject_unit,stage,created_at'],
-  events: ['dispute_events', 'id,building_id,dispute_id,stage,occurred_at,logged_at,summary,actor_id'],
-  updates: [
-    'notifications',
-    'id,building_id,type,title,body,severity,target_id,state,snoozed_until,created_at',
-  ],
-  members: ['building_members', 'id,building_id,user_id,role,status,expires_at'],
-  invitations: ['invitations', 'id,building_id,email,role,expires_at,accepted_at,revoked_at,created_at'],
-  audit: ['audit_log', 'id,building_id,action,target_id,occurred_at,actor_id'],
-  chats: ['chats', 'id,building_id,title,scope,updated_at,archived'],
-  deployments: ['agent_deployments', 'id,building_id,agent_id,version,config,created_at'],
-} as const;
-export type Resource = keyof typeof resources;
+export type { Resource };
 export async function listResource(resource: Resource, buildingId: string) {
   const user = await requireUser();
-  const table: string = resources[resource][0];
-  const columns: string = resources[resource][1];
+  const table: string = RESOURCES[resource][0];
+  const columns: string = RESOURCES[resource][1];
   const { data, error } = await user.client
     .from(table)
     .select(columns)

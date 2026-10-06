@@ -36,6 +36,13 @@ export function visibleDocuments(s: MockState, userId: string, buildingId: strin
     ? docs.filter((d) => d.owner_visible === true)
     : docs;
 }
+// Mirrors the portfolio clause of the `chats_read` policy: a portfolio chat is readable only while the reader
+// still holds `chat.use_portfolio` on every building it searched. Other scopes are unaffected.
+export function portfolioScopeHolds(s: MockState, userId: string, chat: Row): boolean {
+  if (chat.scope !== 'portfolio') return true;
+  const ids = Array.isArray(chat.scope_building_ids) ? chat.scope_building_ids.map(String) : [];
+  return ids.every((b) => can(s, userId, 'chat.use_portfolio', b));
+}
 // Mirrors `public.linked_firm_id`.
 export function linkedFirmId(s: MockState, buildingId: string): string | null {
   const link = s.firmLinks.find((l) => l.building_id === buildingId && l.status === 'active');
