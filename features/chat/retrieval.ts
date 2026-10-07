@@ -147,13 +147,74 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
       if (r.kb_version) legalKbVersionByChunk.set(r.chunk_id, r.kb_version);
     }
   }
-  // Interleave corpora before reranking so a populated building corpus cannot crowd out legislation.
+  // Add firm knowledge retrieval (for strata managers and firm owners linked to buildings)
+  // Firm knowledge includes templates, precedents, guides that apply across buildings
+  if (scope.length > 0 && (chat.scope === 'portfolio' || chat.scope === 'general')) {
+    // Get org_id from first building in scope
+    const { data: buildingOrg, error: orgError } = await user.client
+      .from('buildings')
+      .select('org_id')
+      .eq('id', scope[0])
+      .single();
+
+    checkDb(orgError);
+
+    if (buildingOrg?.org_id) {
+      // User can access firm knowledge if they're an org member
+      const { data: firmResults, error: firmError } = await user.client.rpc('search_firm_knowledge', {
+        p_firm_id: buildingOrg.org_id,
+        p_query: query,
+        p_limit: 20,
+        p_building_id: null, // Search all buildings' applicability
+      });
+
+      checkDb(firmError);
+
+      if (firmResults && Array.isArray(firmResults)) {
+        const firmRows = z
+          .array(
+            z.object({
+              document_id: z.uuid(),
+              chunk_id: z.uuid(),
+              chunk_index: z.number(),
+              content: z.string(),
+              rank: z.number(),
+              kind: z.enum(['template', 'policy', 'precedent', 'research', 'guide']),
+              title: z.string(),
+            }),
+          )
+          .parse(firmResults);
+
+        for (const r of firmRows) {
+          candidates.push({
+            chunkId: r.chunk_id,
+            kind: 'firm',
+            title: r.title,
+            content: r.content,
+            sectionRef: r.kind, // Use kind as section reference (e.g., "template", "precedent")
+            effectiveDate: null,
+            buildingId: null,
+            page: null,
+            citation: null,
+            firmName: buildingOrg.org_id, // Will be replaced with actual firm name if available
+          });
+        }
+      }
+    }
+  }
+
+  // Interleave corpora before reranking: building → legal → firm
+  // Prevents any single corpus from crowding out the others
   const legal = candidates.filter((c) => c.kind === 'legal'),
-    local = candidates.filter((c) => c.kind === 'building');
+    local = candidates.filter((c) => c.kind === 'building'),
+    firm = candidates.filter((c) => c.kind === 'firm');
+
   let ranked: Omit<Source, 'id'>[] = [];
-  for (let i = 0; i < Math.max(local.length, legal.length); i++) {
+  // Interleave in priority order: local → legal → firm
+  for (let i = 0; i < Math.max(local.length, legal.length, firm.length); i++) {
     if (local[i]) ranked.push(local[i]);
     if (legal[i]) ranked.push(legal[i]);
+    if (firm[i]) ranked.push(firm[i]);
   }
   ranked = ranked.slice(0, 40);
   if (process.env.GROQ_API_KEY && ranked.length) {
