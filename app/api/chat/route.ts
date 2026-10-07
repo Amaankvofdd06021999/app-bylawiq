@@ -6,6 +6,7 @@ import { rateLimit } from '@/lib/security/rate-limit';
 import { checkDb, errorResponse, NotFoundError } from '@/lib/errors';
 import { chatSchema } from '@/lib/schema';
 import { generateAnswer, replayStream } from '@/features/chat/stream';
+import { logger } from '@/lib/logger';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -78,9 +79,96 @@ export async function POST(req: Request) {
           .join('\n'),
       }));
     const work = generateAnswer(user, chat, run.data.id, v.message.parts[0].text, priorMessages);
-    after(() => work);
+    after(async () => {
+      await work;
+      // Deduct wallet credits after chat completes (residents only)
+      await deductChatCredits(user, chat.id, chat.building_id);
+    });
     return replayStream(user, run.data.id, req.signal);
   } catch (e) {
     return errorResponse(e);
+  }
+}
+
+// Deduct credits from resident wallet after chat completes
+// Cost: 1 credit per 1000 tokens (approximately $0.01 per 1000 tokens)
+async function deductChatCredits(user: SessionUser, chatId: string, buildingId: string) {
+  try {
+    // Check if user is a resident (has owner_resident role)
+    const { data: member, error: memberError } = await user.client
+      .from('building_members')
+      .select('role')
+      .eq('building_id', buildingId)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    checkDb(memberError);
+
+    // Only residents pay for chats
+    if (!member || member.role !== 'owner_resident') {
+      return;
+    }
+
+    // Fetch messages from this chat to estimate tokens
+    const { data: messages, error: messagesError } = await user.client
+      .from('messages')
+      .select('parts')
+      .eq('chat_id', chatId)
+      .order('created_at');
+
+    checkDb(messagesError);
+
+    // Estimate token usage: ~4 chars per token average
+    let estimatedTokens = 0;
+    (messages || []).forEach((msg: any) => {
+      const parts = msg.parts || [];
+      parts.forEach((p: any) => {
+        if (p.type === 'text' && p.text) {
+          estimatedTokens += Math.ceil(p.text.length / 4);
+        }
+      });
+    });
+
+    // Cost: 1 credit per 1000 tokens, minimum 1 credit per question
+    const creditsCost = Math.max(1, Math.ceil(estimatedTokens / 1000));
+
+    // Deduct from wallet via RPC
+    const { data: result, error: deductError } = await user.client.rpc('deduct_wallet_credits', {
+      p_user_id: user.id,
+      p_building_id: buildingId,
+      p_amount: creditsCost,
+      p_reason: 'ask_question',
+      p_metadata: { chatId, estimatedTokens },
+    });
+
+    if (deductError) {
+      logger.error({
+        userId: user.id,
+        buildingId,
+        chatId,
+        error: deductError.message,
+        context: 'wallet_deduction_failed',
+      });
+      return;
+    }
+
+    if (!result?.success) {
+      logger.warn({
+        userId: user.id,
+        buildingId,
+        chatId,
+        error: result?.error,
+        context: 'insufficient_credits',
+      });
+    }
+  } catch (err: any) {
+    logger.error({
+      userId: user.id,
+      buildingId: buildingId,
+      chatId,
+      error: err.message,
+      context: 'chat_credits_exception',
+    });
   }
 }

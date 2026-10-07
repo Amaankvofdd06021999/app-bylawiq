@@ -3,6 +3,9 @@ import { configured } from '@/lib/env';
 import { UnauthorizedError } from '@/lib/errors';
 import * as workspaceQueries from '@/features/workspace/queries';
 import * as firmQueries from '@/features/firm-links/queries';
+import * as dashboardQueries from '@/features/dashboards/queries';
+import * as residentQueries from '@/features/resident/queries';
+import * as firmKnowledgeQueries from '@/features/firm-knowledge/queries';
 import type { BylawMessage } from '@/lib/chat-types';
 import { NO_EXTRA_NAV, type DataSource } from './source';
 
@@ -81,19 +84,38 @@ export function supabaseSource(): DataSource {
     },
 
     async platformDashboard() {
+      // TODO: Implement platform admin dashboard (Phase 5)
       return null;
     },
     async workspaceDashboard() {
+      signedIn();
+      const { profile } = await source.workspace();
+
+      // Determine which dashboard to show based on user's primary role
+      // Try firm owner first, then strata manager
+      if (profile.account_type === 'admin') {
+        // Get primary organization
+        const { organizations } = await source.workspace();
+        if (organizations.length > 0) {
+          const data = await dashboardQueries.firmOwnerDashboard(organizations[0].id);
+          if (data) return { kind: 'firm_owner' as const, data };
+        }
+      }
+
+      // TODO: Determine strata manager dashboard
       return null;
     },
-    async buildingDashboard() {
-      return null;
+    async buildingDashboard(buildingId) {
+      signedIn();
+      return dashboardQueries.buildingManagerDashboard(buildingId);
     },
-    async residentHome() {
-      return null;
+    async residentHome(buildingId: string) {
+      signedIn();
+      return residentQueries.residentHome(buildingId);
     },
-    async firmKnowledge() {
-      return null;
+    async firmKnowledge(firmId: string, query: string, buildingId?: string) {
+      signedIn();
+      return firmKnowledgeQueries.searchFirmKnowledge(firmId, query, buildingId);
     },
   };
   return source;
