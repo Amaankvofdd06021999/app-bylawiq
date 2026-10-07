@@ -6,7 +6,7 @@ export function LegalBanner() {
     <div role="note" aria-label="Legal notice" className="legal-banner">
       <Scale size={18} aria-hidden />
       <div>
-        <strong>Drafting help for owners needs legal sign-off before launch — demo only</strong>
+        <strong>Drafting help for owners — subject to legal review</strong>
         <p>{DISCLAIMER}</p>
       </div>
     </div>

@@ -101,7 +101,6 @@ function FlagSwitch({ on }: { on: boolean }) {
         </p>
         <div className="action-line" style={{ marginTop: 8 }}>
           <Badge tone="warning">Needs legal sign-off before production</Badge>
-          <Badge>Demo only</Badge>
         </div>
         {error && (
           <p role="alert" className="form-error" style={{ marginTop: 8 }}>

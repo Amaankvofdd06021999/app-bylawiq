@@ -85,13 +85,40 @@ export async function firmOwnerDashboard(orgId: string): Promise<FirmOwnerData |
     (staffStats || []).map((s: any) => [s.user_id, s.count || 0]),
   );
 
+  // Fetch open reviews per staff member
+  const { data: openReviewsData, error: reviewsError } = await user.client
+    .from('document_reviews')
+    .select('reviewer_id, count')
+    .eq('status', 'pending');
+
+  checkDb(reviewsError);
+
+  const openReviewsByStaff = new Map(
+    (openReviewsData || []).map((r: any) => [r.reviewer_id, r.count || 0]),
+  );
+
+  // Fetch last active time per staff member
+  const { data: lastActiveData, error: lastActiveError } = await user.client
+    .from('platform_audit_log')
+    .select('admin_id, created_at')
+    .order('created_at', { ascending: false });
+
+  checkDb(lastActiveError);
+
+  const lastActiveByStaff = new Map<string, string>();
+  (lastActiveData || []).forEach((entry: any) => {
+    if (!lastActiveByStaff.has(entry.admin_id)) {
+      lastActiveByStaff.set(entry.admin_id, entry.created_at);
+    }
+  });
+
   const staffList = (staff || []).map((m: any) => ({
     userId: m.user_id,
     name: m.profiles?.display_name || 'Unknown',
     role: m.role,
     buildings: staffBuildingCounts.get(m.user_id) || 0,
-    openReviews: 0, // TODO: compute from documents (Phase 2 follow-up)
-    lastActive: null, // TODO: compute from audit_log (Phase 5)
+    openReviews: openReviewsByStaff.get(m.user_id) || 0,
+    lastActive: lastActiveByStaff.get(m.user_id) || null,
     you: m.user_id === user.id,
   }));
 
@@ -217,12 +244,7 @@ export async function firmOwnerDashboard(orgId: string): Promise<FirmOwnerData |
           ? new Date((decidedDocs as any[])[decidedDocs.length - 1].created_at)
           : null,
     },
-    knowledge: {
-      total: 0, // TODO: compute from firm_documents (Phase 4)
-      collections: [],
-      lastUpdated: null,
-      buildingId: null,
-    },
+    knowledge: await fetchFirmKnowledge(user, orgId),
     plan: null,
     invitations: [],
     codes: [],
@@ -296,9 +318,19 @@ export async function strataManagerDashboard(orgId: string): Promise<StrataManag
 
   checkDb(draftError);
 
+  // Fetch recent audit log entries per building
+  const { data: auditEventsStrata, error: auditErrorStrata } = await user.client
+    .from('audit_log')
+    .select('building_id, created_at')
+    .in('building_id', buildingIds)
+    .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+  checkDb(auditErrorStrata);
+
   const reviewsByBuildingStrata = new Map<string, number>();
   const disputesByBuildingStrata = new Map<string, number>();
   const draftsByBuilding = new Map<string, number>();
+  const updatesByBuildingStrata = new Map<string, number>();
 
   (reviewCountsStrata || []).forEach((r: any) => {
     reviewsByBuildingStrata.set(
@@ -318,6 +350,10 @@ export async function strataManagerDashboard(orgId: string): Promise<StrataManag
     draftsByBuilding.set(d.building_id, (draftsByBuilding.get(d.building_id) || 0) + 1);
   });
 
+  (auditEventsStrata || []).forEach((a: any) => {
+    updatesByBuildingStrata.set(a.building_id, (updatesByBuildingStrata.get(a.building_id) || 0) + 1);
+  });
+
   const buildings = (linkedBuildings || []).map((l: any) => ({
     id: l.building_id,
     name: l.buildings?.name || 'Unknown',
@@ -327,11 +363,51 @@ export async function strataManagerDashboard(orgId: string): Promise<StrataManag
     reviews: reviewsByBuildingStrata.get(l.building_id) || 0,
     disputes: disputesByBuildingStrata.get(l.building_id) || 0,
     drafts: draftsByBuilding.get(l.building_id) || 0,
-    updates: 0, // TODO: compute from audit_log (Phase 5)
+    updates: updatesByBuildingStrata.get(l.building_id) || 0
   }));
 
   // Build needs attention list (overdue reviews, escalated disputes)
   const needsAttention = [];
+
+  // Fetch oldest document ages per building
+  const { data: oldestDocs, error: docsAgeError } = await user.client
+    .from('documents')
+    .select('building_id, created_at')
+    .eq('status', 'draft')
+    .in('building_id', buildingIds)
+    .order('created_at', { ascending: true });
+
+  checkDb(docsAgeError);
+
+  const oldestDocByBuilding = new Map<string, number>();
+  (oldestDocs || []).forEach((doc: any) => {
+    if (!oldestDocByBuilding.has(doc.building_id)) {
+      const daysOld = Math.floor(
+        (Date.now() - new Date(doc.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      oldestDocByBuilding.set(doc.building_id, daysOld);
+    }
+  });
+
+  // Fetch oldest dispute ages per building
+  const { data: oldestDisputes, error: disputesAgeError } = await user.client
+    .from('disputes')
+    .select('building_id, created_at')
+    .in('status', ['open', 'escalated'])
+    .in('building_id', buildingIds)
+    .order('created_at', { ascending: true });
+
+  checkDb(disputesAgeError);
+
+  const oldestDisputeByBuilding = new Map<string, number>();
+  (oldestDisputes || []).forEach((dispute: any) => {
+    if (!oldestDisputeByBuilding.has(dispute.building_id)) {
+      const daysOld = Math.floor(
+        (Date.now() - new Date(dispute.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      oldestDisputeByBuilding.set(dispute.building_id, daysOld);
+    }
+  });
 
   buildings.forEach((b: any) => {
     if (b.reviews > 0) {
@@ -340,7 +416,7 @@ export async function strataManagerDashboard(orgId: string): Promise<StrataManag
         buildingId: b.id,
         buildingName: b.name,
         count: b.reviews,
-        age: null, // TODO: compute oldest created_at
+        age: oldestDocByBuilding.get(b.id) || null,
       });
     }
     if (b.disputes > 0) {
@@ -349,17 +425,35 @@ export async function strataManagerDashboard(orgId: string): Promise<StrataManag
         buildingId: b.id,
         buildingName: b.name,
         count: b.disputes,
-        age: null, // TODO: compute oldest created_at
+        age: oldestDisputeByBuilding.get(b.id) || null,
       });
     }
   });
+
+  // Fetch firm knowledge base collections
+  const { data: firmDocs } = await user.client
+    .from('firm_knowledge')
+    .select('type')
+    .eq('org_id', orgId)
+    .is('deleted_at', null);
+
+  const typeGroups = new Map<string, number>();
+  (firmDocs || []).forEach((doc: any) => {
+    const count = typeGroups.get(doc.type) || 0;
+    typeGroups.set(doc.type, count + 1);
+  });
+
+  const collections = Array.from(typeGroups.entries()).map(([type, count]) => ({
+    type,
+    count,
+  }));
 
   return {
     firstName,
     needsAttention,
     buildings,
     knowledge: {
-      collections: [], // TODO: compute from firm_documents (Phase 4)
+      collections,
       recent: [],
       buildingId: null,
     },
@@ -552,4 +646,51 @@ export async function buildingManagerDashboard(buildingId: string): Promise<Buil
       invite: ['building_manager', 'council_president', 'org_owner', 'org_admin'].includes(member.role),
     },
   };
+}
+
+/**
+ * Fetch firm knowledge base metrics
+ */
+async function fetchFirmKnowledge(user: any, orgId: string) {
+  try {
+    // Get firm documents count
+    const { data: documents, error: docsError } = await user.client
+      .from('firm_knowledge')
+      .select('id, type, updated_at')
+      .eq('org_id', orgId)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false });
+
+    if (docsError) throw docsError;
+
+    const docCount = (documents || []).length;
+    const lastUpdated = documents?.[0]?.updated_at || null;
+
+    // Group by type
+    const typeGroups = new Map<string, number>();
+    (documents || []).forEach((doc: any) => {
+      const count = typeGroups.get(doc.type) || 0;
+      typeGroups.set(doc.type, count + 1);
+    });
+
+    const collections = Array.from(typeGroups.entries()).map(([type, count]) => ({
+      type,
+      count,
+    }));
+
+    return {
+      total: docCount,
+      collections,
+      lastUpdated,
+      buildingId: null,
+    };
+  } catch (error) {
+    console.error('Failed to fetch firm knowledge:', error);
+    return {
+      total: 0,
+      collections: [],
+      lastUpdated: null,
+      buildingId: null,
+    };
+  }
 }
