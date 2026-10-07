@@ -7,6 +7,13 @@ import { type Source } from '@/lib/ai/citations';
 import type { SessionUser } from '@/lib/auth/guards';
 import { checkDb, AppError } from '@/lib/errors';
 import { chatSchema } from '@/lib/schema';
+import {
+  retrieveStaffDocuments,
+  getBuildingSpendingSummary,
+  compareMultiBuildingSpending,
+  getOrgSpendingSummary,
+  getOrgBudgetStatus,
+} from './retrieval-helpers';
 export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchema>, query: string) {
   let kb: string | null = null;
   let includeLegal = true;
@@ -147,6 +154,80 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
       if (r.kb_version) legalKbVersionByChunk.set(r.chunk_id, r.kb_version);
     }
   }
+
+  // Retrieve staff documents (maintenance logs, contracts, insurance) for building managers and above
+  for (const building of scope) {
+    try {
+      const staffDocs = await retrieveStaffDocuments(user, building, query);
+      for (const doc of staffDocs) {
+        candidates.push({
+          chunkId: doc.id as `${string}-${string}-${string}-${string}-${string}`,
+          kind: 'staff',
+          title: doc.title,
+          content: doc.content,
+          sectionRef: String(doc.metadata.status),
+          effectiveDate: null,
+          buildingId: building,
+          page: null,
+          citation: null,
+          documentKind: doc.kind,
+        });
+      }
+    } catch (err) {
+      // Staff document retrieval is optional; silently fail if user lacks permission
+    }
+  }
+
+  // Retrieve financial context based on scope and user role
+  try {
+    if (scope.length === 1) {
+      // Single building: get spending summary
+      const summary = await getBuildingSpendingSummary(user, scope[0]);
+      if (summary) {
+        // Use a deterministic UUID-like ID for financial contexts
+        const financialId = `d0000000-0000-5000-b000-${String(scope[0]).replace(/-/g, '').substring(0, 12)}` as `${string}-${string}-${string}-${string}-${string}`;
+        candidates.push({
+          chunkId: financialId,
+          kind: 'financial',
+          title: 'Building Spending Summary',
+          content: `Building spending this month: ${summary.residents_active} active residents, ${summary.questions_asked} questions asked, $${summary.total_spent_usd} spent. Average cost per question: $${summary.avg_question_cost_usd}.`,
+          sectionRef: 'financial',
+          effectiveDate: summary.month,
+          buildingId: scope[0],
+          page: null,
+          citation: null,
+          isFinancialContext: true,
+        });
+      }
+    } else if (scope.length > 1) {
+      // Multiple buildings: get comparison
+      const comparison = await compareMultiBuildingSpending(user, scope);
+      if (comparison && comparison.length > 0) {
+        const comparisonText = comparison
+          .map(
+            (b) =>
+              `${b.building_name}: $${b.total_spent_usd} (${b.residents_active} residents, ${b.questions_asked} questions, $${b.avg_spend_per_resident} avg per resident), rank #${b.ranking}`,
+          )
+          .join('; ');
+        // Use a deterministic UUID-like ID for multi-building comparison
+        const financialId = `d1000000-0000-5000-b000-000000000000` as `${string}-${string}-${string}-${string}-${string}`;
+        candidates.push({
+          chunkId: financialId,
+          kind: 'financial',
+          title: 'Multi-Building Spending Comparison',
+          content: `Spending across your buildings: ${comparisonText}`,
+          sectionRef: 'financial',
+          effectiveDate: null,
+          buildingId: null,
+          page: null,
+          citation: null,
+          isFinancialContext: true,
+        });
+      }
+    }
+  } catch (err) {
+    // Financial context retrieval is optional; silently fail if user lacks permission
+  }
   // Add firm knowledge retrieval (for strata managers and firm owners linked to buildings)
   // Firm knowledge includes templates, precedents, guides that apply across buildings
   if (scope.length > 0 && (chat.scope === 'portfolio' || chat.scope === 'general')) {
@@ -203,20 +284,24 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
     }
   }
 
-  // Interleave corpora before reranking: building → legal → firm
+  // Interleave corpora before reranking: building → legal → firm → staff → financial
   // Prevents any single corpus from crowding out the others
   const legal = candidates.filter((c) => c.kind === 'legal'),
     local = candidates.filter((c) => c.kind === 'building'),
-    firm = candidates.filter((c) => c.kind === 'firm');
+    firm = candidates.filter((c) => c.kind === 'firm'),
+    staff = candidates.filter((c) => c.kind === 'staff'),
+    financial = candidates.filter((c) => c.kind === 'financial');
 
   let ranked: Omit<Source, 'id'>[] = [];
-  // Interleave in priority order: local → legal → firm
-  for (let i = 0; i < Math.max(local.length, legal.length, firm.length); i++) {
+  // Interleave in priority order: local → legal → firm → staff → financial
+  for (let i = 0; i < Math.max(local.length, legal.length, firm.length, staff.length, financial.length); i++) {
     if (local[i]) ranked.push(local[i]);
     if (legal[i]) ranked.push(legal[i]);
     if (firm[i]) ranked.push(firm[i]);
+    if (staff[i]) ranked.push(staff[i]);
+    if (financial[i]) ranked.push(financial[i]);
   }
-  ranked = ranked.slice(0, 40);
+  ranked = ranked.slice(0, 50);
   if (process.env.GROQ_API_KEY && ranked.length) {
     try {
       const result = await generateText({

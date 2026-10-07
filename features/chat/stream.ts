@@ -166,8 +166,8 @@ export async function generateAnswer(
             await user.client.from('message_citations').insert({
               message_id: id,
               ordinal: s.id,
-              kind: s.kind,
-              document_chunk_id: s.kind === 'building' ? s.chunkId : null,
+              kind: s.kind === 'staff' || s.kind === 'financial' ? 'building' : s.kind,
+              document_chunk_id: s.kind === 'building' ? s.chunkId : s.kind === 'staff' ? s.chunkId : null,
               legal_chunk_id: s.kind === 'legal' ? s.chunkId : null,
               quoted_span: e.quote,
             })

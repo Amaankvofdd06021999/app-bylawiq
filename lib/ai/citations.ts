@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const sourceSchema = z.object({
   id: z.number().int().positive(),
   chunkId: z.uuid(),
-  kind: z.enum(['building', 'firm', 'legal']),
+  kind: z.enum(['building', 'firm', 'legal', 'staff', 'financial']),
   title: z.string(),
   content: z.string(),
   sectionRef: z.string().nullable(),
@@ -14,6 +14,10 @@ export const sourceSchema = z.object({
   citation: z.string().nullable(),
   // Optional, so sources stored before it existed still parse: the firm's name on a `firm` source (demo only today).
   firmName: z.string().max(200).nullable().optional(),
+  // Staff document metadata (maintenance, contracts, insurance)
+  documentKind: z.enum(['maintenance', 'vendor', 'insurance']).nullable().optional(),
+  // Financial context (for contextual awareness, not citations)
+  isFinancialContext: z.boolean().optional(),
 });
 export type Source = z.infer<typeof sourceSchema>;
 const claim = z.object({

@@ -15,6 +15,7 @@ export async function retrieveStaffDocuments(
   query: string,
 ) {
   const documents: Array<{
+    id: string;
     kind: 'maintenance' | 'vendor' | 'insurance';
     title: string;
     content: string;
@@ -49,6 +50,7 @@ export async function retrieveStaffDocuments(
 
       for (const log of parsed) {
         documents.push({
+          id: log.log_id,
           kind: 'maintenance',
           title: `Maintenance: ${log.issue_type} (${log.severity})`,
           content: log.description,
@@ -82,6 +84,7 @@ export async function retrieveStaffDocuments(
       const parsed = z
         .array(
           z.object({
+            contract_id: z.string().uuid(),
             vendor_name: z.string(),
             service_type: z.string(),
             contract_start_date: z.string(),
@@ -95,6 +98,7 @@ export async function retrieveStaffDocuments(
 
       for (const contract of parsed) {
         documents.push({
+          id: contract.contract_id,
           kind: 'vendor',
           title: `Vendor: ${contract.vendor_name} (${contract.service_type})`,
           content: `Service: ${contract.service_type}. Contract: ${contract.contract_start_date} to ${contract.contract_end_date}. Cost: $${contract.monthly_cost || contract.annual_cost || 'N/A'}/month or year.`,
@@ -128,6 +132,7 @@ export async function retrieveStaffDocuments(
       const parsed = z
         .array(
           z.object({
+            policy_id: z.string().uuid(),
             provider_name: z.string(),
             policy_type: z.string(),
             coverage_amount: z.number(),
@@ -141,6 +146,7 @@ export async function retrieveStaffDocuments(
 
       for (const policy of parsed) {
         documents.push({
+          id: policy.policy_id,
           kind: 'insurance',
           title: `Insurance: ${policy.policy_type} (${policy.provider_name})`,
           content: `Coverage: $${policy.coverage_amount}. Deductible: $${policy.deductible}. Policy: ${policy.policy_start_date} to ${policy.policy_end_date}.`,
