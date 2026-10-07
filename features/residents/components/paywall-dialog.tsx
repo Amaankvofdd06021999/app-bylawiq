@@ -1,128 +1,171 @@
 'use client';
-import { useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Coins } from 'lucide-react';
-import { Button, Modal } from '@/components/ui';
-import { useBackend } from '@/components/backend';
-import type { DraftInput, Prices, ResidentDraftView } from '../types';
-/** Shown when a paid tool costs more credits than the resident has. Buying here runs the same demo checkout as
- * the Credits page, then `onBought` carries on with what the resident was doing — one click, no retyping. */
-export function PaywallDialog({
-  open,
-  onOpenChange,
-  buildingId,
-  needed,
-  credits,
-  pack,
-  onBought,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
+import { useState } from 'react';
+import { X, CreditCard, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui';
+import { purchaseCreditsAction } from '../resident-chat-actions';
+
+interface PaywallDialogProps {
   buildingId: string;
-  needed: number;
-  credits: number;
-  pack: Prices['pack'];
-  onBought: () => void;
-}) {
-  const backend = useBackend();
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState('');
-  // `onBought` runs before the dialog closes, so it still sees what the resident was doing.
-  async function buy() {
+  buildingName: string;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+export function PaywallDialog({
+  buildingId,
+  buildingName,
+  onClose,
+  onSuccess,
+}: PaywallDialogProps) {
+  const [selectedPackage, setSelectedPackage] = useState<number>(100);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const creditPackages = [
+    { credits: 50, label: '$10' },
+    { credits: 100, label: '$20' },
+    { credits: 250, label: '$45' },
+    { credits: 500, label: '$85' },
+  ];
+
+  const handlePurchase = async () => {
     setBusy(true);
-    setError('');
-    const r = await backend.buyCredits({ buildingId });
+    const result = await purchaseCreditsAction({
+      buildingId,
+      creditAmount: selectedPackage,
+    });
     setBusy(false);
-    if (!r.ok) {
-      setError(r.error);
-      return;
+
+    if (result.ok) {
+      setSuccess(`✅ Credits added!`);
+      setTimeout(() => {
+        onSuccess?.();
+        onClose();
+      }, 1500);
+    } else {
+      setError(result.error);
     }
-    onBought();
-    onOpenChange(false);
-  }
+  };
+
   return (
-    <Modal
-      open={open}
-      onOpenChange={onOpenChange}
-      title="You need more credits"
-      description="Nothing was charged and nothing was saved."
-    >
-      <div className="form-stack">
-        <p className="form-note">
-          This uses {needed} credits and you have {credits === 1 ? '1 credit' : credits + ' credits'}. Buy{' '}
-          {pack.credits} credits for ${pack.price} and we’ll carry on straight away.
-        </p>
-        <p className="checkout-line">
-          <Coins size={16} aria-hidden />
-          <span>{pack.credits} credits</span>
-          <strong>${pack.price}.00</strong>
-        </p>
-        <p className="form-note">
-          <strong>Demo — no real charge.</strong> No card is asked for or charged.
-        </p>
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="form-footer">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Not now
+    <div className="paywall-overlay" onClick={onClose}>
+      <div className="paywall-dialog" onClick={(e) => e.stopPropagation()}>
+        <button className="close-button" onClick={onClose}>
+          <X size={20} />
+        </button>
+        <AlertCircle size={32} />
+        <h2>Get credits to continue</h2>
+        <p>You have used all free questions. Purchase credits to keep asking.</p>
+        
+        <div className="packages-grid">
+          {creditPackages.map((pkg) => (
+            <button
+              key={pkg.credits}
+              className={`package-card ${selectedPackage === pkg.credits ? 'selected' : ''}`}
+              onClick={() => setSelectedPackage(pkg.credits)}
+            >
+              <div className="package-credits">{pkg.credits}</div>
+              <div className="package-price">{pkg.label}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className="demo-label">Demo Mode — No real charge</div>
+
+        {error && <p className="form-error">{error}</p>}
+        {success && <p className="form-success">{success}</p>}
+
+        <div className="dialog-actions">
+          <Button variant="ghost" onClick={onClose} disabled={busy}>
+            Cancel
           </Button>
-          <Button busy={busy} onClick={buy}>
-            Buy {pack.credits} credits · ${pack.price} and continue
+          <Button
+            onClick={handlePurchase}
+            disabled={busy}
+            busy={busy}
+          >
+            Add {selectedPackage} Credits
           </Button>
         </div>
+
+        <style jsx>{`
+          .paywall-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+          }
+
+          .paywall-dialog {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+          }
+
+          .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+          }
+
+          .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+          }
+
+          .package-card {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+
+          .package-card.selected {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+          }
+
+          .package-credits {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+          }
+
+          .demo-label {
+            padding: 0.75rem;
+            background: #fef3c7;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #92400e;
+            margin: 1rem 0;
+          }
+
+          .dialog-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+          }
+        `}</style>
       </div>
-    </Modal>
+    </div>
   );
-}
-/** Runs a paid drafting tool: submit, show the paywall when credits run short, and resubmit the same input once
- * the resident has bought credits. The pending input lives in a ref, so resubmitting never depends on which
- * render's closure the dialog calls back into. `credits` is the balance the paywall reported, not the page's. */
-export function useDraftTool() {
-  const router = useRouter(),
-    backend = useBackend();
-  const pending = useRef<DraftInput | null>(null);
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState(''),
-    [draft, setDraft] = useState<ResidentDraftView | null>(null),
-    [paywall, setPaywall] = useState<{ credits: number | null } | null>(null);
-  async function submit(input: DraftInput) {
-    setBusy(true);
-    setError('');
-    const r = await backend.residentDraft(input);
-    setBusy(false);
-    if (r.ok) {
-      setDraft(r.draft);
-      router.refresh();
-      return;
-    }
-    if (r.paywall) {
-      pending.current = input;
-      setPaywall({ credits: r.credits ?? null });
-      return;
-    }
-    setError(r.error);
-  }
-  const closePaywall = () => {
-    pending.current = null;
-    setPaywall(null);
-  };
-  return {
-    busy,
-    error,
-    draft,
-    setDraft,
-    submit,
-    paywall: paywall != null,
-    paywallCredits: paywall?.credits ?? null,
-    closePaywall,
-    retry: () => {
-      const input = pending.current;
-      closePaywall();
-      router.refresh();
-      if (input) void submit(input);
-    },
-  };
 }

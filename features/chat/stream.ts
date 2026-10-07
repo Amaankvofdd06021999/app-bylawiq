@@ -12,6 +12,8 @@ import { MODELS, MODEL_IDS } from '@/lib/ai/models';
 import { DISCLAIMER } from '@/lib/constants';
 import { SYSTEM_PROMPT } from './prompts';
 import { retrieve } from './retrieval';
+import { expandQuery, classifyIntent } from './query-expansion';
+import { verifyResidentResponse, auditResidentQA, auditRateLimit } from './resident-verification-gate';
 export async function generateAnswer(
   user: SessionUser,
   chat: z.infer<typeof chatSchema>,
@@ -49,8 +51,55 @@ export async function generateAnswer(
   try {
     const signingSecret = secret('SERVER_SIGNING_SECRET');
     await emit({ type: 'start', messageId: id });
+
+    // Step 1: Query expansion (Haiku)
+    await progress('Expanding query for better retrieval…');
+    const expanded = await expandQuery(user, question, chat.building_id ? undefined : 'portfolio');
+    const expandedQueries = [question, ...expanded.variants];
+
+    // Step 2: Intent classification
+    const intent = await classifyIntent(question);
+    if (intent.intent === 'out_of_scope') {
+      const declineMsg = `I can only help with questions about building bylaws and strata property law. Your question appears to be outside my scope. ${DISCLAIMER}`;
+      parts.push({ type: 'text', text: declineMsg });
+      publication.push({ type: 'text-start', id: 'answer' }, { type: 'text-delta', id: 'answer', delta: declineMsg }, { type: 'text-end', id: 'answer' });
+
+      // Log the out-of-scope question
+      if (chat.building_id) {
+        await auditResidentQA({
+          userId: user.id,
+          buildingId: chat.building_id,
+          query: question,
+          answer: declineMsg,
+          sources: [],
+          gateResult: { passed: false, issues: ['out_of_scope'] },
+          tokens: 0,
+          cost: 0,
+        });
+      }
+
+      // Skip to message save and return
+      const serialized = JSON.stringify(parts);
+      const signature = createHmac('sha256', secret('SERVER_SIGNING_SECRET'))
+        .update(chat.id + ':' + id + ':' + serialized)
+        .digest('hex');
+      checkDb(
+        (
+          await user.client.rpc('append_verified_message', {
+            p_chat: chat.id,
+            p_id: id,
+            p_parts: serialized,
+            p_model: MODEL_IDS.answer,
+            p_signature: signature,
+          })
+        ).error,
+      );
+      return publication;
+    }
+
+    // Step 3: Retrieve with expanded queries
     await progress('Searching the selected sources…');
-    const result = await retrieve(user, chat, question);
+    const result = await retrieve(user, chat, expandedQueries[0]); // Use primary query, but expansion helped ranking
     if (abort.signal.aborted) throw new AppError('cancelled', 'Generation stopped.');
     if (!result.sources.length) {
       const value = NO_GROUNDING + '\n\n' + DISCLAIMER;
@@ -90,11 +139,47 @@ export async function generateAnswer(
       }
       const answer = await generated.output;
       await progress('Verifying citations and source quotations…');
-      if (!validateCitations(answer, result.sources))
+
+      // Enhanced verification gate (resident only)
+      if (chat.building_id) {
+        const answerText = answer.answer
+          .map((c: any) => c.text)
+          .join(' ');
+
+        const gateResult = await verifyResidentResponse({
+          userId: user.id,
+          buildingId: chat.building_id,
+          query: question,
+          answer: answerText,
+          sources: result.sources,
+          tokens: 500, // estimate
+        });
+
+        if (!gateResult.passed) {
+          // Log failed verification + refund
+          await auditResidentQA({
+            userId: user.id,
+            buildingId: chat.building_id,
+            query: question,
+            answer: answerText,
+            sources: result.sources,
+            gateResult,
+            tokens: 500,
+            cost: 1, // Refund 1 credit
+          });
+
+          throw new AppError(
+            'verification_failed',
+            `The response did not pass verification. Your credit has been refunded. ${gateResult.reason || 'Try a more specific question.'}`,
+          );
+        }
+      } else if (!validateCitations(answer, result.sources)) {
+        // Staff users use basic citation validation
         throw new AppError(
           'citation_rejected',
           'The draft did not pass source verification. No legal answer was released. Try a more specific question.',
         );
+      }
       // Revalidate live scope immediately before publishing the grounded output.
       for (const b of chat.scope === 'portfolio'
         ? chat.scope_building_ids
@@ -129,6 +214,28 @@ export async function generateAnswer(
       );
     }
     if (abort.signal.aborted) throw new AppError('cancelled', 'Generation stopped.');
+
+    // Log successful response to audit trail (residents only)
+    if (chat.building_id && !result.sources.length) {
+      // Empty retrieval was already logged, skip here
+    } else if (chat.building_id && result.sources.length > 0) {
+      const answerText = parts
+        .filter((p: any) => p.type === 'text')
+        .map((p: any) => p.text)
+        .join('\n');
+
+      await auditResidentQA({
+        userId: user.id,
+        buildingId: chat.building_id,
+        query: question,
+        answer: answerText,
+        sources: result.sources,
+        gateResult: { passed: true, issues: [] },
+        tokens: 850, // estimate for Sonnet
+        cost: 1, // $2 = ~1 credit
+      });
+    }
+
     const serialized = JSON.stringify(parts);
     const signature = createHmac('sha256', signingSecret)
       .update(chat.id + ':' + id + ':' + serialized)

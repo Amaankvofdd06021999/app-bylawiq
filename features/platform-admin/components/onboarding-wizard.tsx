@@ -191,7 +191,90 @@ export function OnboardingWizard() {
         <Card>
           <h3>Settings</h3>
           <p>Configure billing, team access levels, and feature flags for this firm.</p>
-          {/* TODO: Add settings form */}
+
+          <div className="settings-form">
+            <div className="form-group">
+              <label htmlFor="plan">Plan Selection</label>
+              <select
+                id="plan"
+                value={state.firmType}
+                onChange={(e) => setState(s => ({ ...s, firmType: e.target.value as any }))}
+                className="form-control"
+              >
+                <option value="independent">Independent Firm ($99/mo)</option>
+                <option value="management_firm">Strata Management Firm ($199/mo)</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>
+                <input type="checkbox" defaultChecked />
+                Enable AI Chat for residents
+              </label>
+              <small>Residents can ask questions about bylaws</small>
+            </div>
+
+            <div className="form-group">
+              <label>
+                <input type="checkbox" defaultChecked />
+                Enable Analytics Dashboard
+              </label>
+              <small>Track chat usage and metrics</small>
+            </div>
+
+            <div className="form-group">
+              <label>
+                <input type="checkbox" />
+                Enable Resident Mobile App
+              </label>
+              <small>Residents access via mobile app</small>
+            </div>
+          </div>
+
+          <style jsx>{`
+            .settings-form {
+              display: flex;
+              flex-direction: column;
+              gap: 1.5rem;
+              margin-top: 1.5rem;
+              padding: 1rem;
+              background: #f9fafb;
+              border-radius: 6px;
+            }
+
+            .form-group {
+              display: flex;
+              flex-direction: column;
+              gap: 0.5rem;
+            }
+
+            .form-group label {
+              font-weight: 500;
+              color: #1f2937;
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+              cursor: pointer;
+            }
+
+            .form-group input[type="checkbox"] {
+              width: 18px;
+              height: 18px;
+              cursor: pointer;
+            }
+
+            .form-group select {
+              padding: 0.75rem;
+              border: 1px solid #d1d5db;
+              border-radius: 6px;
+              font-size: 0.95rem;
+            }
+
+            .form-group small {
+              color: #666;
+              font-size: 0.875rem;
+            }
+          `}</style>
         </Card>
       )}
 
