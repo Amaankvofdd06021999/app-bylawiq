@@ -91,13 +91,17 @@ export async function revokeBuildingLinkAction(raw: unknown) {
 
       // Add system comments to closed reviews
       for (const review of pendingReviews) {
-        await db.from('review_comments').insert({
+        const { error: commentError } = await db.from('review_comments').insert({
           review_id: review.id,
           author_id: user.id,
           type: 'system',
           content: 'Review closed: Building link to firm was revoked',
           created_at: new Date().toISOString(),
         });
+
+        if (commentError) {
+          console.error('Failed to add review comment:', commentError);
+        }
       }
     }
 

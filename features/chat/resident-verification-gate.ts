@@ -162,7 +162,7 @@ export async function auditResidentQA(input: {
           .eq('building_id', input.buildingId);
 
         // Log refund
-        await db.from('credit_ledger').insert({
+        const { error: refundError } = await db.from('credit_ledger').insert({
           user_id: input.userId,
           building_id: input.buildingId,
           delta: input.cost,

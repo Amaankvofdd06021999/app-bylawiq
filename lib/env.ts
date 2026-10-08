@@ -1,9 +1,41 @@
 import 'server-only';
 import { z } from 'zod';
 import { AppError } from './errors';
+
 export function configured() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
+
+export function validateApiKeys() {
+  const required = {
+    ANTHROPIC_API_KEY: 'Claude API for chat and drafting',
+    NEXT_PUBLIC_SUPABASE_URL: 'Supabase database URL',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: 'Supabase anonymous key',
+  };
+
+  const optional = {
+    VOYAGE_API_KEY: 'Embeddings API (falls back to local)',
+    STRIPE_SECRET_KEY: 'Billing integration (can run in demo)',
+    UPSTASH_REDIS_REST_URL: 'Rate limiting (falls back to database)',
+  };
+
+  for (const [key, desc] of Object.entries(required)) {
+    if (!process.env[key]) {
+      throw new AppError(
+        'config_error',
+        `Missing required configuration: ${key} (${desc})`,
+        503
+      );
+    }
+  }
+
+  for (const [key, desc] of Object.entries(optional)) {
+    if (!process.env[key]) {
+      console.warn(`⚠️ Optional config missing: ${key} (${desc})`);
+    }
+  }
+}
+
 export function publicEnv() {
   const value = z
     .object({ url: z.url(), key: z.string().min(1) })

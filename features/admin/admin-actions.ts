@@ -176,7 +176,7 @@ export async function toggleFeatureFlagAction({
     }
 
     // Log to audit trail
-    await db.from('platform_audit_log').insert({
+    const { error: auditError } = await db.from('platform_audit_log').insert({
       admin_id: user.id,
       action: 'toggle_feature_flag',
       resource_type: 'feature_flag',
@@ -184,6 +184,11 @@ export async function toggleFeatureFlagAction({
       details: { flag_name: flagName, enabled, previous_value: !enabled },
       created_at: new Date().toISOString(),
     });
+
+    if (auditError) {
+      console.error('Failed to log feature flag toggle:', auditError);
+      // Still return success - audit failure shouldn't block the operation
+    }
 
     return { ok: true };
   } catch (error) {

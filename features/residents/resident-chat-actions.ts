@@ -236,12 +236,17 @@ export async function purchaseCreditsAction(raw: unknown) {
       .eq('building_id', input.buildingId);
 
     // Log purchase
-    await db.from('credit_ledger').insert({
+    const { error: ledgerError } = await db.from('credit_ledger').insert({
       user_id: user.id,
       building_id: input.buildingId,
       delta: input.creditAmount,
       reason: 'purchase',
     });
+
+    if (ledgerError) {
+      console.error('Failed to log credit purchase:', ledgerError);
+      // Still return success - audit logging shouldn't block the purchase
+    }
 
     return {
       ok: true,
