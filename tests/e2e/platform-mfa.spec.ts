@@ -1,4 +1,4 @@
-import { submitSignIn } from './support/sign-in';
+import { openPage, submitSignIn } from './support/sign-in';
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { assertLocalSupabase, seedMfaAccounts, totpAt, type SeededAccount } from './support/local-mfa';
 
@@ -100,6 +100,35 @@ test('a new sign-in needs a step-up code, a wrong code is refused, and the right
 
     await expect(page).toHaveURL(/\/admin\/platform$/);
     await expect(consoleHeading(page)).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test('a verification that does not answer is released after a deadline, and the code can be entered again', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': testClientIp } });
+  const page = await context.newPage();
+  try {
+    await signIn(page, admin);
+    await openPage(page, '/admin/platform');
+    await expect(page).toHaveURL(/\/admin\/platform\/mfa$/);
+
+    // Hold the first verification request open. Server actions are POSTs that carry the Next-Action header.
+    let held = false;
+    await page.route('**/admin/platform/mfa', async (route) => {
+      if (!route.request().headers()['next-action'] || held) return route.continue();
+      held = true;
+      await new Promise((resolve) => setTimeout(resolve, 30_000));
+      return route.abort();
+    });
+
+    await page.fill('#mfa-code', '000000');
+    await page.getByRole('button', { name: 'Confirm' }).click();
+    await expect(page.locator('#mfa-error')).toContainText('did not finish', { timeout: 25_000 });
+    await expect(page.getByRole('button', { name: 'Confirm' })).toBeEnabled();
+    await expect(page.locator('#mfa-code')).toBeEnabled();
   } finally {
     await context.close();
   }
