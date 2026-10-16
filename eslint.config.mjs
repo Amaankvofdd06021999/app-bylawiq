@@ -22,7 +22,8 @@ export default defineConfig([
     },
   },
   {
-    files: ['inngest/ingest.ts', 'features/members/invite.ts'],
+    // lib/health-probe.ts: the readiness probe, boolean-only and service-role-only (see its header).
+    files: ['inngest/ingest.ts', 'features/members/invite.ts', 'lib/health-probe.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
   globalIgnores([

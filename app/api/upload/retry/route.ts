@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       .from('documents')
       .select('id,building_id,status')
       .eq('id', v.documentId)
-      .single();
+      .maybeSingle();
     checkDb(error);
     if (!data) throw new AppError('not_found', 'This document is unavailable.', 404);
     await requirePermission(user, 'vault.upload', data.building_id);

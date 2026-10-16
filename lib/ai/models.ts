@@ -1,16 +1,27 @@
 import 'server-only';
-import { anthropic } from '@ai-sdk/anthropic';
+import { groq } from '@ai-sdk/groq';
+import { localStubMode } from './provider-mode';
+import { stubLanguageModel } from './local-stub';
 
 export const MODEL_IDS = {
-  answer: process.env.AI_ANSWER_MODEL || 'claude-sonnet-5-5',
-  fast: process.env.AI_FAST_MODEL || 'claude-haiku-4-5-20251001',
-  structure: process.env.AI_STRUCTURE_MODEL || 'claude-haiku-4-5-20251001',
+  answer: process.env.AI_ANSWER_MODEL || 'openai/gpt-oss-120b',
+  fast: process.env.AI_FAST_MODEL || 'openai/gpt-oss-20b',
+  structure: process.env.AI_STRUCTURE_MODEL || 'openai/gpt-oss-20b',
   embedding: process.env.EMBEDDING_MODEL || 'voyage-law-2',
 } as const;
 
-export const MODELS = {
-  answer: anthropic(MODEL_IDS.answer),
-  draft: anthropic(MODEL_IDS.answer),
-  fast: anthropic(MODEL_IDS.fast),
-  structure: anthropic(MODEL_IDS.structure),
-};
+export const MODELS = localStubMode()
+  ? {
+      answer: stubLanguageModel(),
+      draft: stubLanguageModel(),
+      fast: stubLanguageModel(),
+      classify: stubLanguageModel(),
+      structure: stubLanguageModel(),
+    }
+  : {
+      answer: groq(MODEL_IDS.answer),
+      draft: groq(MODEL_IDS.answer),
+      fast: groq(MODEL_IDS.fast),
+      classify: groq(MODEL_IDS.fast),
+      structure: groq(MODEL_IDS.structure),
+    };

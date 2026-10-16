@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 const jar = new Map<string, string>();
+vi.mock('@/lib/legal-gates', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/legal-gates')>()),
+  residentDraftsAvailable: () => true,
+}));
 vi.mock('next/headers', () => ({
   cookies: async () => ({
     get: (name: string) => (jar.has(name) ? { name, value: jar.get(name)! } : undefined),

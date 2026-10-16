@@ -39,6 +39,9 @@ export async function branchChatAction(raw: unknown) {
 export async function setResidentAiAction(raw: unknown) {
   return withSession((s, u) => pure.setFlag(s, u, raw));
 }
+export async function startCreditCheckoutAction(): Promise<{ ok: false; error: string }> {
+  return { ok: false as const, error: 'The demo uses its own checkout.' };
+}
 export async function buyCreditsAction(raw: unknown) {
   return withSession((s, u) => buyCredits(s, u, raw));
 }

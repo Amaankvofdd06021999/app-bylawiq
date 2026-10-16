@@ -34,6 +34,13 @@ export const answerSchema = z.object({
   limitations: z.string().max(600),
 });
 export type GroundedAnswer = z.infer<typeof answerSchema>;
+export function isCitableSource(source: Source): boolean {
+  return (
+    (source.kind === 'building' || source.kind === 'legal' || source.kind === 'staff') &&
+    source.chunkId !== undefined
+  );
+}
+
 /** Reject fabricated authority names/section numbers before the answer enters a UI stream.
  * This validates resolvability and exact evidence spans, not legal entailment; human review remains mandatory.
  */
@@ -47,6 +54,8 @@ export function validateCitations(answer: GroundedAnswer, sources: Source[]): bo
   return (
     [...answer.answer, ...answer.basis, ...answer.nextSteps].every((c) => {
       const used = c.evidence.map((e) => sources.find((s) => s.id === e.source));
+      // Only sources with a stored passage can be cited. Financial context is shown to the model, not cited.
+      if (used.some((s) => !s || !isCitableSource(s))) return false;
       if (c.evidence.some((e, i) => !used[i] || !used[i]!.content.includes(e.quote))) return false;
       const text = used
         .map((s) => s!.content + ' ' + s!.title + ' ' + s!.citation + ' ' + s!.sectionRef)

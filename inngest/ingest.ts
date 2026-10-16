@@ -8,7 +8,25 @@ import { embeddings } from '@/lib/ai/embeddings';
 import { structuralChunks, contextualText } from '@/lib/ai/chunking';
 import { scrapePage } from '@/lib/security/web-source';
 import { checkDb, AppError } from '@/lib/errors';
+import { NonRetriableError } from 'inngest';
 import { inngest } from './client';
+import { assertFileClean, scanConfigFrom } from '@/lib/security/file-scan';
+import { assertTextLayer } from '@/lib/ai/text-layer';
+
+// Step errors can arrive as plain objects, so an AppError is recognised by its shape. Its message is written for users.
+function failureMessage(e: unknown): string {
+  // Both fields: a database error has a code but no HTTP status, and its message must never reach the user.
+  const coded =
+    typeof e === 'object' &&
+    e !== null &&
+    typeof (e as { code?: unknown }).code === 'string' &&
+    typeof (e as { status?: unknown }).status === 'number';
+  const message = typeof e === 'object' && e !== null ? (e as { message?: unknown }).message : undefined;
+  return coded && typeof message === 'string' && message.length > 0
+    ? message
+    : 'Indexing could not complete. Retry the upload or contact your administrator.';
+}
+
 const eventSchema = z.object({ documentId: z.uuid(), buildingId: z.uuid(), actorId: z.uuid() });
 export const ingestDocument = inngest.createFunction(
   { id: 'ingest-document', retries: 3, concurrency: { limit: 1, key: 'event.data.documentId' } },
@@ -67,54 +85,41 @@ export const ingestDocument = inngest.createFunction(
     }
     try {
       const parsed = await step.run('scan-and-parse', async () => {
-        await status('parsing');
-        if (document.source_url) return scrapePage(document.source_url);
-        if (!document.storage_path) throw new AppError('file_missing', 'The uploaded file is unavailable.');
-        const { data, error } = await db.storage.from('vault').download(document.storage_path);
-        checkDb(error);
-        if (!data) throw new AppError('file_missing', 'The uploaded file is unavailable.');
-        const bytes = Buffer.from(await data.arrayBuffer());
-        if (process.env.NODE_ENV === 'production' || process.env.FILE_SCAN_URL) {
+        try {
+          await status('parsing');
+          if (document.source_url) return scrapePage(document.source_url);
+          if (!document.storage_path) throw new AppError('file_missing', 'The uploaded file is unavailable.');
+          const { data, error } = await db.storage.from('vault').download(document.storage_path);
+          checkDb(error);
+          if (!data) throw new AppError('file_missing', 'The uploaded file is unavailable.');
+          const bytes = Buffer.from(await data.arrayBuffer());
+          // Every file is scanned before it is parsed. A missing or failing scanner stops ingestion. Nothing bypasses this.
           await status('scanning');
-          if (!process.env.FILE_SCAN_URL || !process.env.FILE_SCAN_TOKEN)
-            throw new AppError(
-              'scanner_unavailable',
-              'The malware scanner must be connected before this file can be processed.',
-            );
-          const scanned = await fetch(process.env.FILE_SCAN_URL, {
-            method: 'POST',
-            headers: {
-              Authorization: 'Bearer ' + process.env.FILE_SCAN_TOKEN,
-              'Content-Type': 'application/octet-stream',
-            },
-            body: bytes,
-            signal: AbortSignal.timeout(60000),
-          });
-          const verdict = z.object({ clean: z.boolean() }).parse(await scanned.json());
-          if (!scanned.ok || !verdict.clean)
-            throw new AppError('scan_failed', 'This file did not pass the malware scan.');
-        }
-        // Storage only serves a vault file once this is set (clean scan, or scanning disabled outside production).
-        checkDb(
-          (
-            await db
-              .from('documents')
-              .update({ scan_cleared_at: new Date().toISOString() })
-              .eq('id', document.id)
-              .is('deleted_at', null)
-          ).error,
-        );
-        await status('parsing');
-        const ext = document.storage_path.split('.').pop();
-        if (ext === 'txt' || ext === 'md') return bytes.toString('utf8');
-        if (ext === 'docx') return (await mammoth.extractRawText({ buffer: bytes })).value;
-        const text = await pdfText(new Uint8Array(bytes));
-        if (text.trim().length < 100)
-          throw new AppError(
-            'ocr_required',
-            'This PDF needs OCR. Upload a searchable PDF or connect the OCR integration.',
+          await assertFileClean(bytes, scanConfigFrom());
+          // Storage only serves a vault file once this is set (clean scan, or scanning disabled outside production).
+          checkDb(
+            (
+              await db
+                .from('documents')
+                .update({ scan_cleared_at: new Date().toISOString() })
+                .eq('id', document.id)
+                .is('deleted_at', null)
+            ).error,
           );
-        return text;
+          await status('parsing');
+          const ext = document.storage_path.split('.').pop();
+          if (ext === 'txt' || ext === 'md') return bytes.toString('utf8');
+          if (ext === 'docx') return (await mammoth.extractRawText({ buffer: bytes })).value;
+          const text = await pdfText(new Uint8Array(bytes));
+          assertTextLayer(text);
+          return text;
+        } catch (e) {
+          // Recorded as failed here, and not retried: a rejected or unreadable file will not succeed on retry. The user can
+          // fix it and retry from the document list (the retry route accepts 'failed').
+          const message = failureMessage(e);
+          await status('failed', message);
+          throw new NonRetriableError(message);
+        }
       });
       const sections = await step.run('detect-structure', async () => {
         await status('chunking');
@@ -192,12 +197,17 @@ export const ingestDocument = inngest.createFunction(
       });
       return { sections: sections.length, status: 'review' };
     } catch (e) {
-      await status(
-        'failed',
-        e instanceof AppError
-          ? e.message
-          : 'Indexing could not complete. Retry the upload or contact your administrator.',
-      );
+      // A step that failed has already recorded its message on the document. Inngest replays that failure here as a
+      // copy, so the document's stored state is the source of truth. A recorded failure is not retried.
+      const { data: current, error: readError } = await db
+        .from('documents')
+        .select('status')
+        .eq('id', v.documentId)
+        .maybeSingle();
+      checkDb(readError);
+      if (current?.status === 'failed')
+        throw new NonRetriableError('Indexing stopped: the failure is recorded on the document.');
+      await status('failed', failureMessage(e));
       throw new Error('Document ingestion failed: ' + v.documentId);
     }
   },

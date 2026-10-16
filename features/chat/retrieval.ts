@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { generateText, Output } from 'ai';
 import { embeddings } from '@/lib/ai/embeddings';
 import { MODELS } from '@/lib/ai/models';
+import { answerModelAvailable } from '@/lib/ai/provider-mode';
 import { type Source } from '@/lib/ai/citations';
 import type { SessionUser } from '@/lib/auth/guards';
 import { checkDb, AppError } from '@/lib/errors';
@@ -11,8 +12,6 @@ import {
   retrieveStaffDocuments,
   getBuildingSpendingSummary,
   compareMultiBuildingSpending,
-  getOrgSpendingSummary,
-  getOrgBudgetStatus,
 } from './retrieval-helpers';
 export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchema>, query: string) {
   let kb: string | null = null;
@@ -173,7 +172,7 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
           documentKind: doc.kind,
         });
       }
-    } catch (err) {
+    } catch {
       // Staff document retrieval is optional; silently fail if user lacks permission
     }
   }
@@ -185,7 +184,8 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
       const summary = await getBuildingSpendingSummary(user, scope[0]);
       if (summary) {
         // Use a deterministic UUID-like ID for financial contexts
-        const financialId = `d0000000-0000-5000-b000-${String(scope[0]).replace(/-/g, '').substring(0, 12)}` as `${string}-${string}-${string}-${string}-${string}`;
+        const financialId =
+          `d0000000-0000-5000-b000-${String(scope[0]).replace(/-/g, '').substring(0, 12)}` as `${string}-${string}-${string}-${string}-${string}`;
         candidates.push({
           chunkId: financialId,
           kind: 'financial',
@@ -210,7 +210,8 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
           )
           .join('; ');
         // Use a deterministic UUID-like ID for multi-building comparison
-        const financialId = `d1000000-0000-5000-b000-000000000000` as `${string}-${string}-${string}-${string}-${string}`;
+        const financialId =
+          `d1000000-0000-5000-b000-000000000000` as `${string}-${string}-${string}-${string}-${string}`;
         candidates.push({
           chunkId: financialId,
           kind: 'financial',
@@ -225,7 +226,7 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
         });
       }
     }
-  } catch (err) {
+  } catch {
     // Financial context retrieval is optional; silently fail if user lacks permission
   }
   // Add firm knowledge retrieval (for strata managers and firm owners linked to buildings)
@@ -294,7 +295,11 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
 
   let ranked: Omit<Source, 'id'>[] = [];
   // Interleave in priority order: local → legal → firm → staff → financial
-  for (let i = 0; i < Math.max(local.length, legal.length, firm.length, staff.length, financial.length); i++) {
+  for (
+    let i = 0;
+    i < Math.max(local.length, legal.length, firm.length, staff.length, financial.length);
+    i++
+  ) {
     if (local[i]) ranked.push(local[i]);
     if (legal[i]) ranked.push(legal[i]);
     if (firm[i]) ranked.push(firm[i]);
@@ -302,7 +307,7 @@ export async function retrieve(user: SessionUser, chat: z.infer<typeof chatSchem
     if (financial[i]) ranked.push(financial[i]);
   }
   ranked = ranked.slice(0, 50);
-  if (process.env.GROQ_API_KEY && ranked.length) {
+  if (answerModelAvailable() && ranked.length) {
     try {
       const result = await generateText({
         model: MODELS.fast,

@@ -1,4 +1,5 @@
 import { ZodError } from 'zod';
+import { logger } from '@/lib/logger';
 export class AppError extends Error {
   constructor(
     public code: string,
@@ -9,18 +10,18 @@ export class AppError extends Error {
   }
 }
 export class UnauthorizedError extends AppError {
-  constructor() {
-    super('unauthorized', 'Please sign in to continue.', 401);
+  constructor(message = 'Please sign in to continue.') {
+    super('unauthorized', message, 401);
   }
 }
 export class ForbiddenError extends AppError {
-  constructor() {
-    super('forbidden', 'You do not have permission for this action.', 403);
+  constructor(message = 'You do not have permission for this action.') {
+    super('forbidden', message, 403);
   }
 }
 export class NotFoundError extends AppError {
-  constructor() {
-    super('not_found', 'This item is unavailable.', 404);
+  constructor(message = 'This item is unavailable.') {
+    super('not_found', message, 404);
   }
 }
 export class RateLimitError extends AppError {
@@ -38,6 +39,8 @@ export function checkDb(error: { code?: string; message: string } | null) {
     knowledge_not_ready: 'Add and finish indexing a knowledge source before deploying.',
     legal_review_required: 'Arrange legal review or record a specific justification before proposing.',
     invalid_transition: 'This action is not available at the current stage.',
+    not_yet_effective:
+      'This bylaw takes effect on its effective date. Move it in force on or after that date.',
     review_required: 'Choose a legal review option first.',
     already_configured: 'This account is already configured.',
     already_member:
@@ -59,6 +62,8 @@ export function checkDb(error: { code?: string; message: string } | null) {
   if (error.code === '42501' || error.message.includes('forbidden')) throw new ForbiddenError();
   if (error.code === '23505')
     throw new AppError('conflict', 'This item already exists, or a request is already running.', 409);
+  // Operators get the database code and a truncated message. Neither carries row content; the user sees generic text.
+  logger.error({ context: 'db_error', dbCode: error.code ?? 'none', error: error.message.slice(0, 200) });
   throw new AppError('database_error', 'The change could not be saved. Please try again.', 500);
 }
 export function errorMessage(e: unknown) {
@@ -69,8 +74,8 @@ export function errorMessage(e: unknown) {
       : 'Something went wrong. Please try again.';
 }
 export function errorResponse(e: unknown) {
-  return Response.json(
-    { error: errorMessage(e) },
-    { status: e instanceof AppError ? e.status : e instanceof ZodError ? 400 : 500 },
-  );
+  const status = e instanceof AppError ? e.status : e instanceof ZodError ? 400 : 500;
+  if (status >= 500)
+    logger.error({ context: 'route_error', error: e instanceof Error ? e.message : 'unknown' });
+  return Response.json({ error: errorMessage(e) }, { status });
 }

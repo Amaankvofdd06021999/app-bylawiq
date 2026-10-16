@@ -1,4 +1,4 @@
-import 'server-only';
+﻿import 'server-only';
 import { createHmac } from 'node:crypto';
 import { streamText, Output, UI_MESSAGE_STREAM_HEADERS, type UIMessageChunk } from 'ai';
 import { z } from 'zod';
@@ -7,13 +7,15 @@ import { requirePermission } from '@/lib/auth/guards';
 import { chatSchema } from '@/lib/schema';
 import { secret } from '@/lib/env';
 import { checkDb, AppError } from '@/lib/errors';
-import { answerSchema, validateCitations, NO_GROUNDING } from '@/lib/ai/citations';
+import { answerSchema, isCitableSource, validateCitations, NO_GROUNDING } from '@/lib/ai/citations';
+import { answerModelAvailable } from '@/lib/ai/provider-mode';
+import { logger } from '@/lib/logger';
 import { MODELS, MODEL_IDS } from '@/lib/ai/models';
 import { DISCLAIMER } from '@/lib/constants';
 import { SYSTEM_PROMPT } from './prompts';
 import { retrieve } from './retrieval';
 import { expandQuery, classifyIntent } from './query-expansion';
-import { verifyResidentResponse, auditResidentQA, auditRateLimit } from './resident-verification-gate';
+import { verifyResidentResponse, auditResidentQA } from './resident-verification-gate';
 export async function generateAnswer(
   user: SessionUser,
   chat: z.infer<typeof chatSchema>,
@@ -22,7 +24,7 @@ export async function generateAnswer(
   history: { role: 'user' | 'assistant'; text: string }[],
 ) {
   const id = crypto.randomUUID();
-  const parts: unknown[] = [];
+  const parts: Array<{ type: string; id?: string; text?: string; data?: unknown }> = [];
   const publication: UIMessageChunk[] = [];
   let completed = false;
   const abort = new AbortController();
@@ -52,7 +54,7 @@ export async function generateAnswer(
     const signingSecret = secret('SERVER_SIGNING_SECRET');
     await emit({ type: 'start', messageId: id });
 
-    // Step 1: Query expansion (Haiku)
+    // Step 1: Query expansion (fast model)
     await progress('Expanding query for better retrieval…');
     const expanded = await expandQuery(user, question, chat.building_id ? undefined : 'portfolio');
     const expandedQueries = [question, ...expanded.variants];
@@ -62,7 +64,11 @@ export async function generateAnswer(
     if (intent.intent === 'out_of_scope') {
       const declineMsg = `I can only help with questions about building bylaws and strata property law. Your question appears to be outside my scope. ${DISCLAIMER}`;
       parts.push({ type: 'text', text: declineMsg });
-      publication.push({ type: 'text-start', id: 'answer' }, { type: 'text-delta', id: 'answer', delta: declineMsg }, { type: 'text-end', id: 'answer' });
+      publication.push(
+        { type: 'text-start', id: 'answer' },
+        { type: 'text-delta', id: 'answer', delta: declineMsg },
+        { type: 'text-end', id: 'answer' },
+      );
 
       // Log the out-of-scope question
       if (chat.building_id) {
@@ -101,7 +107,8 @@ export async function generateAnswer(
     await progress('Searching the selected sources…');
     const result = await retrieve(user, chat, expandedQueries[0]); // Use primary query, but expansion helped ranking
     if (abort.signal.aborted) throw new AppError('cancelled', 'Generation stopped.');
-    if (!result.sources.length) {
+    // Financial context informs the model but cannot be cited. Without a citable source there is no grounded answer.
+    if (!result.sources.some(isCitableSource)) {
       const value = NO_GROUNDING + '\n\n' + DISCLAIMER;
       parts.push({ type: 'text', text: value });
       publication.push(
@@ -110,7 +117,8 @@ export async function generateAnswer(
         { type: 'text-end', id: 'answer' },
       );
     } else {
-      secret('ANTHROPIC_API_KEY');
+      if (!answerModelAvailable())
+        throw new AppError('answer_unavailable', 'The answer service is not connected.', 503);
       await progress('Preparing a source-grounded draft…');
       const generated = streamText({
         model: MODELS.answer,
@@ -140,47 +148,53 @@ export async function generateAnswer(
       const answer = await generated.output;
       await progress('Verifying citations and source quotations…');
 
-      // Enhanced verification gate (resident only)
-      if (chat.building_id) {
-        const answerText = answer.answer
-          .map((c: any) => c.text)
-          .join(' ');
-
-        const gateResult = await verifyResidentResponse({
-          userId: user.id,
-          buildingId: chat.building_id,
-          query: question,
-          answer: answerText,
-          sources: result.sources,
-          tokens: 500, // estimate
-        });
-
-        if (!gateResult.passed) {
-          // Log failed verification + refund
-          await auditResidentQA({
-            userId: user.id,
-            buildingId: chat.building_id,
-            query: question,
-            answer: answerText,
-            sources: result.sources,
-            gateResult,
-            tokens: 500,
-            cost: 1, // Refund 1 credit
-          });
-
-          throw new AppError(
-            'verification_failed',
-            `The response did not pass verification. Your credit has been refunded. ${gateResult.reason || 'Try a more specific question.'}`,
-          );
-        }
-      } else if (!validateCitations(answer, result.sources)) {
-        // Staff users use basic citation validation
+      if (!validateCitations(answer, result.sources)) {
         throw new AppError(
           'citation_rejected',
           'The draft did not pass source verification. No legal answer was released. Try a more specific question.',
         );
       }
-      // Revalidate live scope immediately before publishing the grounded output.
+
+      if (chat.building_id) {
+        const { data: membership, error: membershipError } = await user.client
+          .from('building_members')
+          .select('role')
+          .eq('building_id', chat.building_id)
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+        checkDb(membershipError);
+
+        if (membership?.role === 'owner_resident') {
+          const answerText = answer.answer.map((c) => c.text).join(' ');
+          const gateResult = await verifyResidentResponse({
+            userId: user.id,
+            buildingId: chat.building_id,
+            query: question,
+            answer: answerText,
+            sources: result.sources,
+            tokens: 500,
+          });
+
+          if (!gateResult.passed) {
+            await auditResidentQA({
+              userId: user.id,
+              buildingId: chat.building_id,
+              query: question,
+              answer: answerText,
+              sources: result.sources,
+              gateResult,
+              tokens: 500,
+              cost: 0,
+            });
+
+            throw new AppError(
+              'verification_failed',
+              `The response did not pass verification. ${gateResult.reason || 'Try a more specific question.'}`,
+            );
+          }
+        }
+      } // Revalidate live scope immediately before publishing the grounded output.
       for (const b of chat.scope === 'portfolio'
         ? chat.scope_building_ids
         : chat.building_id
@@ -220,8 +234,8 @@ export async function generateAnswer(
       // Empty retrieval was already logged, skip here
     } else if (chat.building_id && result.sources.length > 0) {
       const answerText = parts
-        .filter((p: any) => p.type === 'text')
-        .map((p: any) => p.text)
+        .filter((p: { type: string }) => p.type === 'text')
+        .map((p: { text?: string }) => p.text)
         .join('\n');
 
       await auditResidentQA({
@@ -297,6 +311,16 @@ export async function generateAnswer(
     await emit({ type: 'finish', finishReason: 'stop' });
     completed = true;
   } catch (e) {
+    if (!abort.signal.aborted) {
+      // Logged without the question or the answer: only the error class and IDs.
+      logger.error({
+        context: 'chat_generation',
+        userId: user.id,
+        buildingId: chat.building_id ?? undefined,
+        requestId: runId,
+        error: e instanceof Error ? e.name + ': ' + e.message.slice(0, 300) : 'unknown',
+      });
+    }
     const message = abort.signal.aborted
       ? 'Generation stopped. Your question remains in the conversation.'
       : e instanceof AppError

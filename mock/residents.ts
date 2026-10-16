@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DRAFTS_UNAVAILABLE_MESSAGE, residentDraftsAvailable } from '@/lib/legal-gates';
 import type { Row } from '@/lib/schema';
 import { AppError, ForbiddenError, NotFoundError, errorMessage } from '@/lib/errors';
 import type {
@@ -372,6 +373,7 @@ function replyDraft(
  * nothing saved or charged — outside the resident's building, while resident AI is off, when no owner-visible
  * passage matches (no unsourced draft, AGENTS.md §5), or when credits run short (`paywall`). */
 export function residentDraft(s: MockState, userId: string, raw: unknown): DraftResult {
+  if (!residentDraftsAvailable()) return { ok: false, error: DRAFTS_UNAVAILABLE_MESSAGE };
   try {
     const v = draftInput.parse(raw);
     if (!toolsOn(s, userId, v.buildingId)) throw new ForbiddenError();

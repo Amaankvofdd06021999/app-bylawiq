@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { injectAxe, checkA11y, getViolations } from 'axe-playwright';
+import { injectAxe, getViolations } from 'axe-playwright';
 
 /**
  * Phase 5: Accessibility Audit Suite (WCAG 2.1 AA)
@@ -15,7 +15,13 @@ import { injectAxe, checkA11y, getViolations } from 'axe-playwright';
  * - No critical/serious violations
  */
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3100';
+// Port 3000 may be a developer server pointed at hosted data. Only the local test server is accepted.
+if (!/^http:\/\/(127\.0\.0\.1|localhost):3100\/?$/.test(BASE_URL)) {
+  throw new Error(
+    'Refusing to run the accessibility audit: BASE_URL must be the local test server (port 3100).',
+  );
+}
 
 test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
   let testContext: {
@@ -55,7 +61,6 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
       expect(violations.filter((v) => v.impact === 'critical' || v.impact === 'serious')).toHaveLength(0);
 
       // Test form labels
-      const emailInput = page.locator('input[type="email"]');
       const label = page.locator('label[for="email"]');
       expect(label).toBeDefined();
     });
@@ -83,7 +88,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
 
       // Verify tables have proper headers
       const tables = page.locator('table');
-      if (await tables.count() > 0) {
+      if ((await tables.count()) > 0) {
         const firstTable = tables.first();
         const headers = firstTable.locator('thead th');
         expect(await headers.count()).toBeGreaterThan(0);
@@ -104,9 +109,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
     });
 
     test('Building Dashboard accessible', async ({ page }) => {
-      await page.context().addCookies([
-        { name: 'auth_token', value: testContext.token, url: BASE_URL },
-      ]);
+      await page.context().addCookies([{ name: 'auth_token', value: testContext.token, url: BASE_URL }]);
 
       await page.goto(`${BASE_URL}/b/${testContext.buildingId}/home`);
       await page.waitForLoadState('networkidle');
@@ -121,9 +124,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
 
   test.describe('Chat Interface', () => {
     test('Chat page accessible', async ({ page }) => {
-      await page.context().addCookies([
-        { name: 'auth_token', value: testContext.token, url: BASE_URL },
-      ]);
+      await page.context().addCookies([{ name: 'auth_token', value: testContext.token, url: BASE_URL }]);
 
       await page.goto(`${BASE_URL}/b/${testContext.buildingId}/ask`);
       await injectAxe(page);
@@ -135,7 +136,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
 
       // Test input accessibility
       const input = page.locator('textarea, input[type="text"]').first();
-      if (await input.count() > 0) {
+      if ((await input.count()) > 0) {
         await input.focus();
         const focusStyle = await input.evaluate((el) => window.getComputedStyle(el).outline);
         expect(focusStyle).not.toBe('none');
@@ -143,7 +144,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
 
       // Test button accessibility
       const sendButton = page.locator('button:has-text("Send"), button:has-text("Ask")').first();
-      if (await sendButton.count() > 0) {
+      if ((await sendButton.count()) > 0) {
         const ariaLabel = await sendButton.getAttribute('aria-label');
         const title = await sendButton.getAttribute('title');
         expect(ariaLabel || title || (await sendButton.textContent())).toBeTruthy();
@@ -151,15 +152,13 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
     });
 
     test('Messages have proper ARIA labels', async ({ page }) => {
-      await page.context().addCookies([
-        { name: 'auth_token', value: testContext.token, url: BASE_URL },
-      ]);
+      await page.context().addCookies([{ name: 'auth_token', value: testContext.token, url: BASE_URL }]);
 
       await page.goto(`${BASE_URL}/b/${testContext.buildingId}/ask`);
 
       // Wait for a message to appear
       const messageContainer = page.locator('[role="article"]').first();
-      if (await messageContainer.count() > 0) {
+      if ((await messageContainer.count()) > 0) {
         const role = await messageContainer.getAttribute('role');
         expect(role).toBe('article');
       }
@@ -168,15 +167,13 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
 
   test.describe('Navigation & Role Switcher', () => {
     test('Role switcher accessible', async ({ page }) => {
-      await page.context().addCookies([
-        { name: 'auth_token', value: testContext.token, url: BASE_URL },
-      ]);
+      await page.context().addCookies([{ name: 'auth_token', value: testContext.token, url: BASE_URL }]);
 
       await page.goto(`${BASE_URL}/workspace`);
 
       // Find role switcher
       const roleSwitcher = page.locator('[role="combobox"], select').first();
-      if (await roleSwitcher.count() > 0) {
+      if ((await roleSwitcher.count()) > 0) {
         // Test keyboard activation
         await roleSwitcher.focus();
         await page.keyboard.press('ArrowDown');
@@ -192,9 +189,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
     });
 
     test('Navigation menu keyboard accessible', async ({ page }) => {
-      await page.context().addCookies([
-        { name: 'auth_token', value: testContext.token, url: BASE_URL },
-      ]);
+      await page.context().addCookies([{ name: 'auth_token', value: testContext.token, url: BASE_URL }]);
 
       await page.goto(`${BASE_URL}/workspace`);
 
@@ -240,13 +235,13 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
 
       // Attempt invalid submission
       const submitButton = page.locator('button[type="submit"]').first();
-      if (await submitButton.count() > 0) {
+      if ((await submitButton.count()) > 0) {
         await submitButton.click();
         await page.waitForTimeout(500);
 
         // Check for error messages linked to inputs
         const errorMessages = page.locator('[role="alert"], .error-message');
-        if (await errorMessages.count() > 0) {
+        if ((await errorMessages.count()) > 0) {
           // Verify error messages have proper ARIA attributes
           const firstError = errorMessages.first();
           const role = await firstError.getAttribute('role');
@@ -283,13 +278,10 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
       for (let i = 0; i < Math.min(count, 50); i++) {
         const el = elements.nth(i);
         const animation = await el.evaluate((e) => window.getComputedStyle(e).animation);
-        const transition = await el.evaluate((e) => window.getComputedStyle(e).transition);
 
         // If animation exists, should be none or have no duration
         if (animation !== 'none') {
-          const duration = await el.evaluate(
-            (e) => window.getComputedStyle(e).animationDuration || '0s',
-          );
+          const duration = await el.evaluate((e) => window.getComputedStyle(e).animationDuration || '0s');
           expect(duration).toMatch(/^0/); // Should be 0 or 0.0 seconds
         }
       }
@@ -304,11 +296,7 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
       const links = page.locator('a');
       const inputs = page.locator('input, textarea, select');
 
-      const interactiveElements = [
-        ...(await buttons.all()),
-        ...(await links.all()),
-        ...(await inputs.all()),
-      ];
+      const interactiveElements = [...(await buttons.all()), ...(await links.all()), ...(await inputs.all())];
 
       for (const element of interactiveElements.slice(0, 20)) {
         await element.focus();
@@ -322,25 +310,23 @@ test.describe('Accessibility Audit - WCAG 2.1 AA', () => {
     });
 
     test('Focus trap in modals', async ({ page }) => {
-      await page.context().addCookies([
-        { name: 'auth_token', value: testContext.token, url: BASE_URL },
-      ]);
+      await page.context().addCookies([{ name: 'auth_token', value: testContext.token, url: BASE_URL }]);
 
       await page.goto(`${BASE_URL}/workspace`);
 
       // Open a modal (e.g., settings or help)
       const modalTrigger = page.locator('button[aria-label*="Settings"], button[aria-label*="Help"]').first();
-      if (await modalTrigger.count() > 0) {
+      if ((await modalTrigger.count()) > 0) {
         await modalTrigger.click();
         await page.waitForTimeout(300);
 
         // Focus should stay within modal
         const modal = page.locator('[role="dialog"]').first();
-        if (await modal.count() > 0) {
+        if ((await modal.count()) > 0) {
           const focusableElements = modal.locator('button, a, input, select, textarea');
           const firstFocusable = focusableElements.first();
 
-          if (await firstFocusable.count() > 0) {
+          if ((await firstFocusable.count()) > 0) {
             await firstFocusable.focus();
             const focusedElement = await page.evaluate(() =>
               (document.activeElement as HTMLElement)?.closest('[role="dialog"]'),
