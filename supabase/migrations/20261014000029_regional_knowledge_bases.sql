@@ -1,6 +1,6 @@
 -- supabase/migrations/20261014_regional_knowledge_bases.sql
 -- Phase 6: Regional Knowledge Bases
--- Multi-tier knowledge base system: Regional → Universal KB (platform admin only)
+-- Multi-tier knowledge base system: Regional â†’ Universal KB (platform admin only)
 
 -- Regional knowledge base definitions
 create table public.regional_knowledge_bases (
@@ -160,14 +160,14 @@ begin
   -- Get jurisdiction for this region
   select jurisdiction into v_jurisdiction from public.regional_knowledge_bases where id = p_region_id;
   if v_jurisdiction is null then
-    raise not_found using message = 'Region not found';
+    raise exception 'Region not found' using errcode = 'P0002';
   end if;
 
   v_query_tsvector := to_tsvector('english', p_query);
 
   -- Search building documents in region
   return query
-  select
+  (select
     dc.id,
     d.id,
     d.title,
@@ -182,12 +182,12 @@ begin
   where br.region_id = p_region_id
   and dc.tsvector @@ v_query_tsvector
   order by ts_rank(dc.tsvector, v_query_tsvector) desc
-  limit (p_limit / 2)::int
+  limit (p_limit / 2)::int)
 
   union all
 
   -- Search legal corpus for jurisdiction
-  select
+  (select
     lc.id,
     null::uuid,
     lc.title,
@@ -199,7 +199,7 @@ begin
   where lc.jurisdiction = v_jurisdiction
   and lc.tsvector @@ v_query_tsvector
   order by ts_rank(lc.tsvector, v_query_tsvector) desc
-  limit (p_limit / 2)::int;
+  limit (p_limit / 2)::int);
 end; $$;
 
 -- RPC: Search universal knowledge base (all regions)

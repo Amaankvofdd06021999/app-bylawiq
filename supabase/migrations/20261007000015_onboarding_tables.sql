@@ -55,7 +55,7 @@ create policy "Org admins can see org assignments"
   for select
   using (
     org_id in (
-      select org_id from public.org_members where user_id = auth.uid() and role in ('org_owner', 'org_admin') and deleted_at is null
+      select org_id from public.org_members where user_id = auth.uid() and role in ('org_owner', 'org_admin') and status = 'active'
     )
     and deleted_at is null
   );
@@ -66,6 +66,6 @@ create policy "Org owner can manage assignments"
   for insert
   with check (
     org_id in (
-      select org_id from public.org_members where user_id = auth.uid() and role = 'org_owner' and deleted_at is null
+      select org_id from public.org_members where user_id = auth.uid() and role = 'org_owner' and status = 'active'
     )
   );

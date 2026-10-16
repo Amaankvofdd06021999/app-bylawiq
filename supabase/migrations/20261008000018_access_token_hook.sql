@@ -4,7 +4,7 @@
 -- This hook function is triggered by Supabase Auth when issuing/refreshing tokens.
 -- It adds session_role + session_building_id claims to the JWT.
 --
--- Deploy: Set this as the custom access token hook in Supabase Auth → Providers → Supabase
+-- Deploy: Set this as the custom access token hook in Supabase Auth â†’ Providers â†’ Supabase
 -- CLI: supabase secrets set CUSTOM_ACCESS_TOKEN_HOOK_FUNCTION=public.custom_access_token_hook
 --
 -- Behavior:
@@ -23,7 +23,7 @@ declare
   user_id uuid;
   memberships record;
   preferred_building_id uuid;
-  preferred_role app_role;
+  preferred_role public.app_role;
   accessible_ids uuid[];
   result jsonb;
 begin
@@ -60,15 +60,15 @@ begin
     and building_id = any(accessible_ids)
   order by
     case role
-      when 'org_owner'::app_role then 1
-      when 'org_admin'::app_role then 2
-      when 'portfolio_manager'::app_role then 3
-      when 'portfolio_assistant'::app_role then 4
-      when 'building_manager'::app_role then 5
-      when 'council_president'::app_role then 6
-      when 'council_member'::app_role then 7
-      when 'external_counsel'::app_role then 8
-      when 'owner_resident'::app_role then 9
+      when 'org_owner'::public.app_role then 1
+      when 'org_admin'::public.app_role then 2
+      when 'portfolio_manager'::public.app_role then 3
+      when 'portfolio_assistant'::public.app_role then 4
+      when 'building_manager'::public.app_role then 5
+      when 'council_president'::public.app_role then 6
+      when 'council_member'::public.app_role then 7
+      when 'external_counsel'::public.app_role then 8
+      when 'owner_resident'::public.app_role then 9
       else 10
     end,
     (select name from public.buildings where id = building_members.building_id)
@@ -104,6 +104,6 @@ grant execute on function public.custom_access_token_hook(jsonb) to authenticate
 
 -- Mark this function as the custom access token hook
 -- Note: This is metadata only. Actual deployment requires setting it in Supabase dashboard:
--- Auth → Providers → Supabase → Custom Access Token Hook
+-- Auth â†’ Providers â†’ Supabase â†’ Custom Access Token Hook
 -- Function name: public.custom_access_token_hook
 -- Input: jsonb, Output: jsonb

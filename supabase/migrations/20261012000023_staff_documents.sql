@@ -9,6 +9,51 @@
 -- Rollback: drop table public.insurance_policies; drop table public.vendor_contracts; drop table public.maintenance_logs;
 
 -- Maintenance logs (building repairs and maintenance history)
+-- Vendor contracts (referenced by maintenance_logs)
+create table public.vendor_contracts (
+  id uuid primary key default gen_random_uuid(),
+  building_id uuid not null references public.buildings(id) on delete cascade,
+
+  -- Vendor details
+  vendor_name text not null,
+  service_type text not null check(service_type in (
+    'plumbing', 'electrical', 'hvac', 'cleaning', 'security',
+    'landscaping', 'pest_control', 'insurance', 'property_management', 'other'
+  )),
+  contact_person text,
+  contact_email text,
+  contact_phone text,
+
+  -- Contract terms
+  contract_start_date date not null,
+  contract_end_date date not null,
+  renewal_reminder_days integer default 30, -- Send reminder X days before expiry
+
+  -- Pricing
+  monthly_cost numeric,
+  annual_cost numeric,
+  pricing_model text, -- "monthly", "annual", "per_incident", etc.
+
+  -- Scope
+  service_scope text, -- Description of what's included
+  emergency_available boolean default false,
+  response_time_hours integer, -- SLA response time
+
+  -- Status
+  status text not null default 'active' check(status in ('active', 'inactive', 'expiring', 'expired')),
+  auto_renew boolean default false,
+
+  -- Contract document
+  contract_document_id uuid references public.documents(id) on delete set null, -- Link to uploaded contract
+
+  -- Metadata
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  check (contract_end_date > contract_start_date)
+);
+
 create table public.maintenance_logs (
   id uuid primary key default gen_random_uuid(),
   building_id uuid not null references public.buildings(id) on delete cascade,
@@ -53,50 +98,6 @@ create index maintenance_logs_status_idx on public.maintenance_logs(building_id,
 create index maintenance_logs_severity_idx on public.maintenance_logs(building_id, severity);
 create index maintenance_logs_type_idx on public.maintenance_logs(building_id, issue_type);
 
--- Vendor contracts (service providers)
-create table public.vendor_contracts (
-  id uuid primary key default gen_random_uuid(),
-  building_id uuid not null references public.buildings(id) on delete cascade,
-
-  -- Vendor details
-  vendor_name text not null,
-  service_type text not null check(service_type in (
-    'plumbing', 'electrical', 'hvac', 'cleaning', 'security',
-    'landscaping', 'pest_control', 'insurance', 'property_management', 'other'
-  )),
-  contact_person text,
-  contact_email text,
-  contact_phone text,
-
-  -- Contract terms
-  contract_start_date date not null,
-  contract_end_date date not null,
-  renewal_reminder_days integer default 30, -- Send reminder X days before expiry
-
-  -- Pricing
-  monthly_cost numeric,
-  annual_cost numeric,
-  pricing_model text, -- "monthly", "annual", "per_incident", etc.
-
-  -- Scope
-  service_scope text, -- Description of what's included
-  emergency_available boolean default false,
-  response_time_hours integer, -- SLA response time
-
-  -- Status
-  status text not null default 'active' check(status in ('active', 'inactive', 'expiring', 'expired')),
-  auto_renew boolean default false,
-
-  -- Contract document
-  contract_document_id uuid references public.documents(id) on delete set null, -- Link to uploaded contract
-
-  -- Metadata
-  notes text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-
-  check (contract_end_date > contract_start_date)
-);
 
 create index vendor_contracts_building_idx on public.vendor_contracts(building_id, service_type);
 create index vendor_contracts_status_idx on public.vendor_contracts(building_id, status);

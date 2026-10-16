@@ -133,7 +133,7 @@ begin
   where d.id = p_document_id;
 
   if v_doc_record is null then
-    raise not_found using message = 'Document not found';
+    raise exception 'Document not found' using errcode = 'P0002';
   end if;
 
   v_org_id := v_doc_record.org_id;

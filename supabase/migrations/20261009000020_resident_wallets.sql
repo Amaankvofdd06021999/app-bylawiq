@@ -54,7 +54,7 @@ create index wallet_transactions_reason_idx on public.wallet_transactions(reason
 create or replace function public.auto_create_resident_wallet()
 returns trigger language plpgsql security definer set search_path='' as $$
 begin
-  if new.role = 'owner_resident'::app_role and new.status = 'active' then
+  if new.role = 'owner_resident'::public.app_role and new.status = 'active' then
     insert into public.resident_wallets(building_id, user_id)
     values(new.building_id, new.user_id)
     on conflict(building_id, user_id) do update

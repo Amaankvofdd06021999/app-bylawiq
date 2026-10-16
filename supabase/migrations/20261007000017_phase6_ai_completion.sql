@@ -1,4 +1,4 @@
--- Phase 6: AI/RAG Completion — Verification, Analytics, and Multi-Role Chats
+-- Phase 6: AI/RAG Completion ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Verification, Analytics, and Multi-Role Chats
 
 -- Table: verification_gate_events
 -- Tracks verification gate results for monitoring and improvement
@@ -118,7 +118,7 @@ CREATE POLICY citation_usage_user_access ON public.citation_usage
     OR (auth.uid() IN (
       SELECT user_id FROM public.building_members
       WHERE building_id = citation_usage.building_id
-        AND role IN ('building_manager', 'strata_manager')
+        AND role = 'building_manager'
         AND status = 'active'
     ))
   );
@@ -126,11 +126,11 @@ CREATE POLICY citation_usage_user_access ON public.citation_usage
 -- security_events: Platform admins and building staff can view
 CREATE POLICY security_events_admin_access ON public.security_events
   USING (
-    auth.uid() IN (SELECT user_id FROM public.platform_admins)
+    auth.uid() IN (SELECT user_id FROM public.org_members WHERE role = 'platform_admin' AND status = 'active')
     OR (auth.uid() IN (
       SELECT user_id FROM public.building_members
       WHERE building_id = security_events.building_id
-        AND role IN ('building_manager', 'strata_manager')
+        AND role = 'building_manager'
         AND status = 'active'
     ))
   );
@@ -144,13 +144,13 @@ CREATE POLICY intent_classifications_read ON public.intent_classifications
   FOR SELECT USING (true);
 
 CREATE POLICY intent_classifications_admin_write ON public.intent_classifications
-  FOR INSERT USING (
-    auth.uid() IN (SELECT user_id FROM public.platform_admins)
+  FOR INSERT WITH CHECK (
+    auth.uid() IN (SELECT user_id FROM public.org_members WHERE role = 'platform_admin' AND status = 'active')
   );
 
 CREATE POLICY intent_classifications_admin_update ON public.intent_classifications
   FOR UPDATE USING (
-    auth.uid() IN (SELECT user_id FROM public.platform_admins)
+    auth.uid() IN (SELECT user_id FROM public.org_members WHERE role = 'platform_admin' AND status = 'active')
   );
 
 -- Materialized view for verification gate metrics (by building, daily)

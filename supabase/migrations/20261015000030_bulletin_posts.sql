@@ -4,7 +4,7 @@ create table if not exists public.bulletin_posts (
   building_id uuid not null references public.buildings(id) on delete cascade,
   title text not null,
   body text not null,
-  author_id uuid not null references auth.users(id) on delete cascade,
+  author_id uuid not null references public.profiles(id) on delete cascade,
   pinned boolean default false not null,
   deleted_at timestamp with time zone,
   created_at timestamp with time zone default now() not null,
@@ -23,7 +23,7 @@ create policy "Users can read posts from their building"
       select 1 from public.building_members
       where building_members.building_id = bulletin_posts.building_id
         and building_members.user_id = auth.uid()
-        and building_members.deleted_at is null
+        and building_members.status = 'active'
     )
   );
 
@@ -37,7 +37,7 @@ create policy "Staff can create posts in their building"
       where building_members.building_id = bulletin_posts.building_id
         and building_members.user_id = auth.uid()
         and building_members.role != 'owner_resident'
-        and building_members.deleted_at is null
+        and building_members.status = 'active'
     )
     and bulletin_posts.author_id = auth.uid()
   );
@@ -54,7 +54,7 @@ create policy "Authors and managers can update posts"
         and building_members.user_id = auth.uid()
         and building_members.role != 'owner_resident'
         and building_members.role != 'council_member'
-        and building_members.deleted_at is null
+        and building_members.status = 'active'
     )
   );
 
@@ -70,7 +70,7 @@ create policy "Authors and managers can delete posts"
         and building_members.user_id = auth.uid()
         and building_members.role != 'owner_resident'
         and building_members.role != 'council_member'
-        and building_members.deleted_at is null
+        and building_members.status = 'active'
     )
   );
 

@@ -19,7 +19,7 @@
 create or replace function public.authorize_session(
   p_permission text,
   p_building uuid,
-  p_role app_role
+  p_role public.app_role
 ) returns boolean language sql stable security definer set search_path='' as $$
   select exists(
     select 1 from public.building_members m
@@ -43,10 +43,10 @@ comment on function public.authorize_session is 'Check permission and validate s
 
 -- 3. Create session_role_matches helper function
 -- Returns the session_role claim if it exists and is non-null
-create or replace function public.session_role() returns app_role language sql stable security definer set search_path='' as $$
+create or replace function public.session_role() returns public.app_role language sql stable security definer set search_path='' as $$
   select coalesce(
-    (auth.jwt() ->> 'session_role')::app_role,
-    null::app_role
+    (auth.jwt() ->> 'session_role')::public.app_role,
+    null::public.app_role
   );
 $$;
 
@@ -56,39 +56,42 @@ comment on function public.session_role is 'Extract session_role from JWT claims
 -- We update policies for tables that handle sensitive building-scoped data
 
 -- Documents: Enforce session role
-create or replace policy documents_read_session on public.documents
+drop policy if exists documents_read_session on public.documents;
+create policy documents_read_session on public.documents
   for select to authenticated
   using(
     public.authorize('vault.read', building_id)
     and (
-      public.session_role() = (select role from public.my_building_role(building_id))
+      public.session_role() = public.my_building_role(building_id)
       or public.session_role() is null  -- Grace period: if session not set, use old behavior
     )
     and (
-      public.session_role() <> 'owner_resident'::app_role
+      public.session_role() <> 'owner_resident'::public.app_role
       or owner_visible = true
     )
   );
 
 -- Chats: Enforce session role (building-scoped chats)
-create or replace policy chats_read_session on public.chats
+drop policy if exists chats_read_session on public.chats;
+create policy chats_read_session on public.chats
   for select to authenticated
   using(
     user_id = (select auth.uid())
     or (
       building_id is not null
       and public.authorize('chat.use', building_id)
-      and public.session_role() = (select role from public.my_building_role(building_id))
+      and public.session_role() = public.my_building_role(building_id)
     )
   );
 
 -- Disputes: Enforce session role
-create or replace policy disputes_read_session on public.disputes
+drop policy if exists disputes_read_session on public.disputes;
+create policy disputes_read_session on public.disputes
   for select to authenticated
   using(
     public.authorize('dispute.read', building_id)
     and (
-      public.session_role() = (select role from public.my_building_role(building_id))
+      public.session_role() = public.my_building_role(building_id)
       or public.session_role() is null
     )
   );
@@ -107,7 +110,7 @@ execute function public.audit_change();
 --   id uuid primary key default gen_random_uuid(),
 --   user_id uuid not null references auth.users(id),
 --   building_id uuid not null references public.buildings(id),
---   role app_role not null,
+--   role public.app_role not null,
 --   created_at timestamptz not null default now(),
 --   expires_at timestamptz not null,
 --   unique(user_id, building_id)  -- One active session per building per user

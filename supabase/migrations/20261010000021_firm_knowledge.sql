@@ -54,7 +54,7 @@ create table public.firm_document_chunks (
   content text not null,
 
   -- Embeddings (pgvector)
-  embedding vector(1536),
+  embedding public.vector(1024),
 
   -- Search
   tsvector_idx tsvector generated always as (to_tsvector('english', content)) stored,
@@ -143,7 +143,7 @@ create policy firm_chunks_read on public.firm_document_chunks
   using(
     exists(
       select 1 from public.firm_documents
-      where id = document_id and public.created_by = auth.uid()
+      where id = document_id and created_by = auth.uid()
       union all
       select 1 from public.firm_documents
       where id = document_id and published_at is not null and firm_id in (
@@ -199,9 +199,12 @@ returns table(
   title text
 ) language plpgsql security definer set search_path='' as $$
 declare
-  v_embedding vector(1536);
+  v_embedding public.vector(1024);
   v_query_tsvector tsvector;
 begin
+    if not exists(select 1 from public.org_members where org_id = p_firm_id and user_id = auth.uid() and status = 'active') then
+      raise insufficient_privilege using message = 'Not a member of this firm';
+    end if;
   -- Parse query to tsvector for BM25
   v_query_tsvector := to_tsvector('english', p_query);
 
@@ -245,6 +248,9 @@ create or replace function public.increment_firm_knowledge_stat(
 )
 returns void language plpgsql security definer set search_path='' as $$
 begin
+    if not exists(select 1 from public.firm_documents d join public.org_members m on m.org_id = d.firm_id where d.id = p_document_id and m.user_id = auth.uid() and m.status = 'active') then
+      raise insufficient_privilege using message = 'Not a member of this firm';
+    end if;
   insert into public.firm_knowledge_stats(document_id, building_id)
   values(p_document_id, p_building_id)
   on conflict(document_id, building_id) do update

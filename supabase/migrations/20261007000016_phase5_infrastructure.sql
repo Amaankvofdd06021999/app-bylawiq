@@ -67,12 +67,12 @@ create policy "Users can read reviews for their building"
   for select
   using (
     building_id in (
-      select building_id from public.building_members where user_id = auth.uid() and deleted_at is null
+      select building_id from public.building_members where user_id = auth.uid() and status = 'active'
     )
     or building_id in (
-      select building_id from public.org_members
-      join public.building_links on org_members.org_id = building_links.org_id
-      where org_members.user_id = auth.uid() and org_members.deleted_at is null
+      select l.building_id from public.org_members m
+      join public.firm_building_links l on l.firm_org_id = m.org_id and l.status = 'active'
+      where m.user_id = auth.uid() and m.status = 'active'
     )
   );
 
@@ -85,7 +85,7 @@ create policy "Firm owner can review documents"
       select 1 from public.org_members
       where org_members.user_id = auth.uid()
       and org_members.role = 'org_owner'
-      and org_members.deleted_at is null
+      and org_members.status = 'active'
     )
   );
 
@@ -116,7 +116,7 @@ create policy "Org members can read firm knowledge"
   for select
   using (
     org_id in (
-      select org_id from public.org_members where user_id = auth.uid() and deleted_at is null
+      select org_id from public.org_members where user_id = auth.uid() and status = 'active'
     )
   );
 
@@ -148,7 +148,7 @@ create table if not exists public.kb_passages (
   content text not null,
   source_url text,
   relevance_score float default 0.5,
-  embedding vector(1536),
+  embedding public.vector(1024),
   created_at timestamp with time zone default now()
 );
 
