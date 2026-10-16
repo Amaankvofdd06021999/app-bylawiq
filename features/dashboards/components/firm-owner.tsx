@@ -11,6 +11,7 @@ import {
   removeFirmMemberAction,
   revokeFirmInvitationAction,
 } from '@/features/firm-team/actions';
+import { FirmLibrary } from '@/features/firm-knowledge/components/firm-library';
 import type { FirmOwnerData } from '../types';
 import { Section, Stat, date, plural } from './parts';
 
@@ -242,6 +243,7 @@ export function FirmOwnerDashboard({ data, joinForm }: { data: FirmOwnerData; jo
           )}
         </Section>
       )}
+      {live && <FirmLibrary firmId={data.firm.id} documents={data.firmDocuments ?? []} />}
       {joinForm && <div style={{ marginTop: 32 }}>{joinForm}</div>}
     </div>
   );

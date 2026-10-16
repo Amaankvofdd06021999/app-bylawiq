@@ -108,6 +108,8 @@ export type FirmOwnerData = {
   codes?: { id: string; buildingId: string; buildingName: string; expiresAt: string }[];
   /** Pending firm team invitations, from the live firm home. */
   teamInvitations?: { id: string; email: string; role: string; expiresAt: string }[];
+  /** Published firm documents, from the live firm home. */
+  firmDocuments?: { id: string; title: string; kind: string; publishedAt: string | null }[];
 };
 export type AttentionKind = 'review' | 'deadline' | 'unsent' | 'law';
 export type AttentionItem = {

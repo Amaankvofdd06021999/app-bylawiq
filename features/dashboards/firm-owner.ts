@@ -68,6 +68,14 @@ export async function firmOwnerHome(user: SessionUser): Promise<FirmOwnerData | 
     .order('created_at', { ascending: false });
   checkDb(inviteError);
 
+  const { data: docs, error: docError } = await user.client
+    .from('firm_documents')
+    .select('id,title,doc_kind,published_at')
+    .eq('firm_id', firm.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  checkDb(docError);
+
   return {
     firstName: (profile?.display_name ?? '').split(' ')[0] || 'there',
     firm: { id: firm.id, name: firm.name },
@@ -76,6 +84,12 @@ export async function firmOwnerHome(user: SessionUser): Promise<FirmOwnerData | 
       name: r.building_name,
       linked: r.link_status === 'active',
       since: r.linked_at,
+    })),
+    firmDocuments: (docs ?? []).map((d) => ({
+      id: d.id,
+      title: d.title,
+      kind: d.doc_kind,
+      publishedAt: d.published_at,
     })),
     teamInvitations: (invites ?? []).map((i) => ({
       id: i.id,
