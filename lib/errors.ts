@@ -56,6 +56,11 @@ export function checkDb(error: { code?: string; message: string } | null) {
       'This building already has a strata management firm. The building must remove that firm first.',
     linked_member: 'Strata management access is managed as a whole. Remove the firm from Settings instead.',
     invalid_input: 'Check the details and try again.',
+    invitation_unavailable: 'This invitation is no longer valid. Ask for a new one.',
+    invitation_email_mismatch:
+      'This invitation was sent to a different email address. Sign in with that address to accept it.',
+    cannot_remove_self: 'You cannot remove yourself from the firm.',
+    invalid_expiry: 'Choose an expiry within 30 days.',
   };
   for (const [key, message] of Object.entries(safe))
     if (error.message.includes(key)) throw new AppError(key, message, 409);

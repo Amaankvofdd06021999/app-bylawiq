@@ -106,6 +106,8 @@ export type FirmOwnerData = {
     expiresAt: string;
   }[];
   codes?: { id: string; buildingId: string; buildingName: string; expiresAt: string }[];
+  /** Pending firm team invitations, from the live firm home. */
+  teamInvitations?: { id: string; email: string; role: string; expiresAt: string }[];
 };
 export type AttentionKind = 'review' | 'deadline' | 'unsent' | 'law';
 export type AttentionItem = {

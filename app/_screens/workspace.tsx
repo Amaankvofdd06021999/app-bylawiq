@@ -7,6 +7,7 @@ import { JoinBuildingForm } from '@/features/firm-links/components/join-building
 import { ReviewInbox } from '@/features/firm-links/components/review-inbox';
 import { FirmOwnerDashboard } from '@/features/dashboards/components/firm-owner';
 import { StrataManagerDashboard } from '@/features/dashboards/components/strata-manager';
+import { AcceptFirmInvite } from '@/features/firm-team/components/accept-firm-invite';
 import { orSignIn } from './guard';
 
 // The overview (`/workspace`, `/demo/workspace`). A firm owner gets the firm dashboard and a strata manager their
@@ -17,22 +18,27 @@ export async function WorkspaceScreen({
   searchParams,
 }: {
   source: DataSource;
-  searchParams: Promise<{ notice?: string; code?: string }>;
+  searchParams: Promise<{ notice?: string; code?: string; firmInvite?: string }>;
 }) {
-  const { notice, code } = await searchParams;
+  const { notice, code, firmInvite } = await searchParams;
   if (await orSignIn(source, source.isPlatformAdmin())) redirect(source.base + '/admin');
   const state = await orSignIn(source, source.workspace());
-  if (!state.profile.account_type) return <Onboarding />;
-  if (state.profile.account_type === 'single_building' && state.buildings[0] && notice !== 'access_removed')
+  if (!state.profile.consent_at) return <Onboarding />;
+  if (state.profile.bound_building_id && state.buildings[0] && notice !== 'access_removed')
     redirect(await source.landingPath());
   const [firms, dashboard] = await Promise.all([source.firmOrganizations(), source.workspaceDashboard()]);
   const joinForm = firms.length > 0 ? <JoinBuildingForm firms={firms} initialCode={code || ''} /> : undefined;
+  const acceptForm =
+    firmInvite && /^[A-Za-z0-9_-]{20,80}$/.test(firmInvite) ? (
+      <AcceptFirmInvite token={firmInvite} />
+    ) : undefined;
   const inbox =
     firms.length > 0 ? (
       <ReviewInbox items={await source.firmReviewInbox()} buildings={state.buildings} base={source.base} />
     ) : undefined;
   return (
     <Shell profile={state.profile} buildings={state.buildings}>
+      {acceptForm}
       {notice === 'access_removed' && (
         <p role="status" className="card" style={{ marginBottom: 20 }}>
           You no longer have access to that building, or it doesn’t exist.

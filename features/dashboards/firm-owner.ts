@@ -58,6 +58,16 @@ export async function firmOwnerHome(user: SessionUser): Promise<FirmOwnerData | 
     .maybeSingle();
   checkDb(profileError);
 
+  const { data: invites, error: inviteError } = await user.client
+    .from('firm_invitations')
+    .select('id,email,role,expires_at')
+    .eq('org_id', firm.id)
+    .is('accepted_at', null)
+    .is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false });
+  checkDb(inviteError);
+
   return {
     firstName: (profile?.display_name ?? '').split(' ')[0] || 'there',
     firm: { id: firm.id, name: firm.name },
@@ -66,6 +76,12 @@ export async function firmOwnerHome(user: SessionUser): Promise<FirmOwnerData | 
       name: r.building_name,
       linked: r.link_status === 'active',
       since: r.linked_at,
+    })),
+    teamInvitations: (invites ?? []).map((i) => ({
+      id: i.id,
+      email: i.email,
+      role: i.role,
+      expiresAt: i.expires_at,
     })),
     staff: team
       .filter((m) => m.status === 'active')

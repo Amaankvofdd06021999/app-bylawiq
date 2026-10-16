@@ -52,7 +52,7 @@ export async function signInAs(page: Page, account: LocalAccount) {
 export async function onboard(
   page: Page,
   options: {
-    accountType: 'Organization admin' | 'Building manager';
+    accountType: 'Organization admin' | 'Portfolio manager' | 'Building manager';
     name: string;
     organization: string;
     building: string;

@@ -1,20 +1,72 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Building2, Users } from 'lucide-react';
-import { Badge, Empty, PageHeading } from '@/components/ui';
+import { Badge, Button, Empty, PageHeading } from '@/components/ui';
 import { useBackend } from '@/components/backend';
+import {
+  inviteFirmMemberAction,
+  removeFirmMemberAction,
+  revokeFirmInvitationAction,
+} from '@/features/firm-team/actions';
 import type { FirmOwnerData } from '../types';
 import { Section, Stat, date, plural } from './parts';
 
+const ROLE_LABELS: Record<string, string> = {
+  org_owner: 'Owner',
+  org_admin: 'Organization admin',
+  portfolio_manager: 'Portfolio manager',
+};
+
 /**
- * The firm owner's home. Every figure comes from the database: the roster is the firm's building links, and the team
- * is its members. Sections without a source in the launch scope are not shown.
+ * The firm owner's home. Every figure comes from the database. The team controls (invite, revoke, remove) are shown
+ * only on the live home; the demo has no live team to change.
  */
 export function FirmOwnerDashboard({ data, joinForm }: { data: FirmOwnerData; joinForm?: ReactNode }) {
   const { base } = useBackend();
+  const router = useRouter();
+  const live = base === '';
   const linked = data.roster.filter((r) => r.linked).length;
+
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'portfolio_manager' | 'org_admin'>('portfolio_manager');
+  const [link, setLink] = useState<{ email: string; url: string } | null>(null);
+  const [teamError, setTeamError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function invite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setTeamError('');
+    const result = await inviteFirmMemberAction({ firmOrgId: data.firm.id, email, role });
+    setBusy(false);
+    if (result.ok) {
+      setLink({ email: result.email, url: result.url });
+      setEmail('');
+      router.refresh();
+    } else setTeamError(result.error);
+  }
+
+  async function revoke(invitationId: string) {
+    setBusy(true);
+    setTeamError('');
+    const result = await revokeFirmInvitationAction({ invitationId });
+    setBusy(false);
+    if (result.ok) router.refresh();
+    else setTeamError(result.error);
+  }
+
+  async function remove(userId: string) {
+    setBusy(true);
+    setTeamError('');
+    const result = await removeFirmMemberAction({ firmOrgId: data.firm.id, userId });
+    setBusy(false);
+    if (result.ok) router.refresh();
+    else setTeamError(result.error);
+  }
+
   return (
     <div className="dashboard">
       <PageHeading
@@ -75,6 +127,7 @@ export function FirmOwnerDashboard({ data, joinForm }: { data: FirmOwnerData; jo
                 <tr>
                   <th>Name</th>
                   <th>Role</th>
+                  {live && <th aria-label="Actions" />}
                 </tr>
               </thead>
               <tbody>
@@ -86,7 +139,22 @@ export function FirmOwnerDashboard({ data, joinForm }: { data: FirmOwnerData; jo
                         {p.you && <Badge>You</Badge>}
                       </span>
                     </td>
-                    <td>{p.role.replaceAll('_', ' ')}</td>
+                    <td>{ROLE_LABELS[p.role] ?? p.role.replaceAll('_', ' ')}</td>
+                    {live && (
+                      <td>
+                        {!p.you && p.role !== 'org_owner' && (
+                          <Button
+                            variant="secondary"
+                            size="small"
+                            disabled={busy}
+                            aria-label={`Remove ${p.name || 'member'} from the firm`}
+                            onClick={() => remove(p.userId)}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -100,6 +168,80 @@ export function FirmOwnerDashboard({ data, joinForm }: { data: FirmOwnerData; jo
           />
         )}
       </Section>
+      {live && (
+        <Section id="invitations" title="Invite a team member">
+          <form onSubmit={invite} className="form-stack">
+            <label>
+              Email address
+              <input
+                type="email"
+                name="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="off"
+              />
+            </label>
+            <label>
+              Role
+              <select value={role} onChange={(e) => setRole(e.target.value as typeof role)}>
+                <option value="portfolio_manager">Portfolio manager</option>
+                <option value="org_admin">Organization admin</option>
+              </select>
+            </label>
+            <Button busy={busy}>Send invitation</Button>
+          </form>
+          {link && (
+            <div className="card" style={{ marginTop: 16 }}>
+              <p className="form-note">
+                Send this link to {link.email}. It works once, for that email address, and expires in 14 days.
+              </p>
+              <code aria-label="Invitation link" style={{ wordBreak: 'break-all' }}>
+                {link.url}
+              </code>
+            </div>
+          )}
+          {data.teamInvitations && data.teamInvitations.length > 0 && (
+            <div className="resource-table" style={{ marginTop: 20 }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Pending invitation</th>
+                    <th>Role</th>
+                    <th className="hide-mobile">Expires</th>
+                    <th aria-label="Actions" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.teamInvitations.map((i) => (
+                    <tr key={i.id}>
+                      <td>{i.email}</td>
+                      <td>{ROLE_LABELS[i.role] ?? i.role}</td>
+                      <td className="hide-mobile">{date(i.expiresAt)}</td>
+                      <td>
+                        <Button
+                          variant="secondary"
+                          size="small"
+                          disabled={busy}
+                          aria-label={`Revoke invitation for ${i.email}`}
+                          onClick={() => revoke(i.id)}
+                        >
+                          Revoke
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {teamError && (
+            <p role="alert" className="form-error" style={{ marginTop: 12 }}>
+              {teamError}
+            </p>
+          )}
+        </Section>
+      )}
       {joinForm && <div style={{ marginTop: 32 }}>{joinForm}</div>}
     </div>
   );
