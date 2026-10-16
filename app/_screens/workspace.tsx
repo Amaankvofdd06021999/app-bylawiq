@@ -32,8 +32,9 @@ export async function WorkspaceScreen({
     firmInvite && /^[A-Za-z0-9_-]{20,80}$/.test(firmInvite) ? (
       <AcceptFirmInvite token={firmInvite} />
     ) : undefined;
+  // A firm owner always sees the inbox, even before joining any building; other people see it once they belong to a firm.
   const inbox =
-    firms.length > 0 ? (
+    firms.length > 0 || dashboard?.kind === 'firm_owner' ? (
       <ReviewInbox items={await source.firmReviewInbox()} buildings={state.buildings} base={source.base} />
     ) : undefined;
   return (
@@ -45,7 +46,7 @@ export async function WorkspaceScreen({
         </p>
       )}
       {dashboard?.kind === 'firm_owner' ? (
-        <FirmOwnerDashboard data={dashboard.data} joinForm={joinForm} />
+        <FirmOwnerDashboard data={dashboard.data} joinForm={joinForm} reviewInbox={inbox} />
       ) : dashboard?.kind === 'strata_manager' ? (
         <StrataManagerDashboard data={dashboard.data} joinForm={joinForm} reviewInbox={inbox} />
       ) : (

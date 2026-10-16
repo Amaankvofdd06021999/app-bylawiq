@@ -25,7 +25,15 @@ const ROLE_LABELS: Record<string, string> = {
  * The firm owner's home. Every figure comes from the database. The team controls (invite, revoke, remove) are shown
  * only on the live home; the demo has no live team to change.
  */
-export function FirmOwnerDashboard({ data, joinForm }: { data: FirmOwnerData; joinForm?: ReactNode }) {
+export function FirmOwnerDashboard({
+  data,
+  joinForm,
+  reviewInbox,
+}: {
+  data: FirmOwnerData;
+  joinForm?: ReactNode;
+  reviewInbox?: ReactNode;
+}) {
   const { base } = useBackend();
   const router = useRouter();
   const live = base === '';
@@ -82,6 +90,7 @@ export function FirmOwnerDashboard({ data, joinForm }: { data: FirmOwnerData; jo
         />
         <Stat label="Team" value={data.staff.length} note={plural(data.staff.length, 'person', 'people')} />
       </div>
+      {reviewInbox}
       <Section id="roster" title="Building roster" count={data.roster.length}>
         {data.roster.length ? (
           <div className="resource-table">
