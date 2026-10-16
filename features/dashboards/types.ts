@@ -53,37 +53,41 @@ export type PlatformAdminData = {
 export type FirmOwnerData = {
   firstName: string;
   firm: { id: string; name: string };
-  staff: {
-    userId: string;
-    name: string;
-    role: string;
-    buildings: number;
-    openReviews: number;
-    lastActive: string | null;
-    you: boolean;
-  }[];
+  /** The firm's building links. `linked` is false once the link is revoked. */
   roster: {
     buildingId: string;
     name: string;
     linked: boolean;
     since: string | null;
-    health: Health;
-    openDisputes: number;
-    pendingReviews: number;
+    /** Demo-only figures. The live firm home does not provide them. */
+    health?: Health;
+    openDisputes?: number;
+    pendingReviews?: number;
   }[];
-  turnaround: {
+  staff: {
+    userId: string;
+    name: string;
+    role: string;
+    you: boolean;
+    /** Demo-only figures. The live firm home does not provide them. */
+    buildings?: number;
+    openReviews?: number;
+    lastActive?: string | null;
+  }[];
+  /** Demo-only sections. The live firm home omits them until their data exists. */
+  turnaround?: {
     medianHours: number | null;
     decided: number;
     waiting: number;
     oldest: { id: string; title: string; buildingId: string; buildingName: string; days: number } | null;
   };
-  knowledge: {
+  knowledge?: {
     total: number;
     collections: CollectionSummary[];
     lastUpdated: string | null;
     buildingId: string | null;
   };
-  plan: {
+  plan?: {
     label: string;
     listPrice: number;
     price: number;
@@ -93,7 +97,7 @@ export type FirmOwnerData = {
     buildings: number;
     status: string;
   } | null;
-  invitations: {
+  invitations?: {
     id: string;
     buildingId: string;
     buildingName: string;
@@ -101,9 +105,8 @@ export type FirmOwnerData = {
     role: string;
     expiresAt: string;
   }[];
-  codes: { id: string; buildingId: string; buildingName: string; expiresAt: string }[];
+  codes?: { id: string; buildingId: string; buildingName: string; expiresAt: string }[];
 };
-
 export type AttentionKind = 'review' | 'deadline' | 'unsent' | 'law';
 export type AttentionItem = {
   id: string;

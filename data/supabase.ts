@@ -4,6 +4,7 @@ import { UnauthorizedError } from '@/lib/errors';
 import { requireUser } from '@/lib/auth/guards';
 import { buildingManagerHome } from '@/features/dashboards/building-home';
 import { strataPortfolio } from '@/features/dashboards/portfolio';
+import { firmOwnerHome } from '@/features/dashboards/firm-owner';
 import * as workspaceQueries from '@/features/workspace/queries';
 import * as firmQueries from '@/features/firm-links/queries';
 import * as residentQueries from '@/features/residents/queries';
@@ -90,7 +91,9 @@ export function supabaseSource(): DataSource {
       signedIn();
       const user = await requireUser();
       const portfolio = await strataPortfolio(user);
-      return portfolio ? { kind: 'strata_manager' as const, data: portfolio } : null;
+      if (portfolio) return { kind: 'strata_manager' as const, data: portfolio };
+      const firm = await firmOwnerHome(user);
+      return firm ? { kind: 'firm_owner' as const, data: firm } : null;
     },
     async buildingDashboard(buildingId: string) {
       signedIn();

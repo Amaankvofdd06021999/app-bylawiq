@@ -118,11 +118,11 @@ describe('firm owner dashboard', () => {
       tone: 'green',
       label: 'On track',
     }); // insurance summary confirmed
-    expect(d.roster.find((r) => r.name === 'Harbour View')?.health.tone).toBe('warning');
+    expect(d.roster.find((r) => r.name === 'Harbour View')?.health?.tone).toBe('warning');
     expect(d.turnaround).toMatchObject({ medianHours: 60, decided: 2, waiting: 2 });
-    expect(d.turnaround.oldest).toMatchObject({ title: 'Noise contravention · Unit 812', days: 7 });
-    expect(d.knowledge.total).toBe(8);
-    expect(d.knowledge.collections.map((c) => c.count)).toEqual([2, 2, 2, 2]);
+    expect(d.turnaround!.oldest).toMatchObject({ title: 'Noise contravention · Unit 812', days: 7 });
+    expect(d.knowledge!.total).toBe(8);
+    expect(d.knowledge!.collections.map((c) => c.count)).toEqual([2, 2, 2, 2]);
     expect(d.plan).toMatchObject({
       label: 'Strata Manager',
       listPrice: 199,
@@ -131,7 +131,7 @@ describe('firm owner dashboard', () => {
       seatsUsed: 3,
       buildings: 3,
     });
-    expect(d.invitations.map((i) => i.email)).toEqual(['noor.aziz@example.com']);
+    expect(d.invitations!.map((i) => i.email)).toEqual(['noor.aziz@example.com']);
   });
   it('is only for firm staff', () => {
     const s = seed();
