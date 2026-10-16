@@ -15,10 +15,10 @@ export function LegalDisclaimer({ buildingName }: LegalDisclaimerProps) {
       <div className="disclaimer-content">
         <h4>Legal Information Disclaimer</h4>
         <p>
-          This AI assistant provides information based on <strong>{buildingName}'s bylaws</strong> and
+          This AI assistant provides information based on <strong>{buildingName}’s bylaws</strong> and
           applicable <strong>British Columbia strata property law</strong>. This is{' '}
-          <strong>not legal advice</strong>. Always consult a qualified lawyer before taking action
-          on legal matters.
+          <strong>not legal advice</strong>. Always consult a qualified lawyer before taking action on legal
+          matters.
         </p>
         <ul>
           <li>Responses are grounded in provided building documents</li>

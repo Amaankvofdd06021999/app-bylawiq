@@ -1,8 +1,11 @@
 'use server';
 
 import { z } from 'zod';
-import { requireUser } from '@/lib/auth/guards';
-import { checkDb, ForbiddenError, errorMessage } from '@/lib/errors';
+import { createHash, randomBytes } from 'node:crypto';
+import { deliverInvitation } from '@/features/workspace/invitation-delivery';
+import { requireUser, requirePermission } from '@/lib/auth/guards';
+import { directoryFor } from '@/lib/directory';
+import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -18,7 +21,13 @@ const RemoveResidentSchema = z.object({
 const InviteResidentSchema = z.object({
   buildingId: z.string().uuid('Invalid building ID'),
   email: z.string().email('Invalid email'),
-  unitNumber: z.string().min(1, 'Unit number required').max(20),
+  unitNumber: z.string().trim().min(1, 'Unit number required').max(20),
+});
+
+const VerifyUnitSchema = z.object({
+  buildingId: z.string().uuid('Invalid building ID'),
+  userId: z.string().uuid('Invalid user ID'),
+  unitNumber: z.string().trim().min(1).max(20),
 });
 
 /**
@@ -32,17 +41,8 @@ export async function getResidentsAction(raw: unknown) {
 
     const db = await createClient();
 
-    // Verify user is staff in this building
-    const { data: member } = await db
-      .from('building_members')
-      .select('role')
-      .eq('building_id', input.buildingId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!member || member.role === 'owner_resident') {
-      throw new ForbiddenError('Only staff can view resident list');
-    }
+    // Permission-gated (decision D1): any staff role with member.read (council members see the list, read-only).
+    await requirePermission(user, 'member.read', input.buildingId);
 
     // Get all residents in building
     const { data: residents, error } = await db
@@ -52,25 +52,30 @@ export async function getResidentsAction(raw: unknown) {
       user_id,
       role,
       unit_number,
-      created_at,
-      profile:profiles(email, display_name)
-    `
+      unit_verified_at,
+      joined_at
+    `,
       )
       .eq('building_id', input.buildingId)
       .eq('role', 'owner_resident')
-      .is('deleted_at', null)
-      .order('created_at', { ascending: true });
+      .eq('status', 'active')
+      .order('joined_at', { ascending: true });
 
     checkDb(error);
+    const directory = await directoryFor(
+      user,
+      (residents ?? []).map((r) => r.user_id),
+    );
 
     return {
       ok: true,
-      residents: (residents || []).map((r: any) => ({
+      residents: (residents ?? []).map((r) => ({
         userId: r.user_id,
-        email: r.profile?.email,
-        name: r.profile?.display_name || 'Unknown',
+        email: directory.get(r.user_id)?.email ?? null,
+        name: directory.get(r.user_id)?.displayName || 'Unknown',
         unitNumber: r.unit_number,
-        joinedAt: r.created_at,
+        unitVerified: r.unit_verified_at !== null,
+        joinedAt: r.joined_at,
       })),
     };
   } catch (e) {
@@ -89,17 +94,8 @@ export async function removeResidentAction(raw: unknown) {
 
     const db = await createClient();
 
-    // Verify requestor is building manager
-    const { data: requestorMember } = await db
-      .from('building_members')
-      .select('role')
-      .eq('building_id', input.buildingId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!requestorMember || requestorMember.role !== 'building_manager') {
-      throw new ForbiddenError('Only building managers can remove residents');
-    }
+    // Permission-gated (decision D1): building managers and council presidents hold member.remove for their building.
+    await requirePermission(user, 'member.remove', input.buildingId);
 
     // Verify target is a resident in this building
     const { data: targetMember } = await db
@@ -139,116 +135,63 @@ export async function inviteResidentAction(raw: unknown) {
 
     const db = await createClient();
 
-    // Verify requestor is building manager
-    const { data: member } = await db
-      .from('building_members')
-      .select('role')
-      .eq('building_id', input.buildingId)
-      .eq('user_id', user.id)
-      .single();
+    // Permission-gated (decision D1): building managers and council presidents hold member.invite for their building.
+    await requirePermission(user, 'member.invite', input.buildingId);
 
-    if (!member || member.role !== 'building_manager') {
-      throw new ForbiddenError('Only building managers can invite residents');
-    }
+    // The invitation rules and the already-a-member check are in the database (create_resident_invitation). The unit is
+    // recorded on the invitation and stays unverified until a building manager confirms it (verify_resident_unit).
+    const token = randomBytes(32).toString('hex');
+    const { data: invitationId, error: inviteError } = await db.rpc('create_resident_invitation', {
+      p_building: input.buildingId,
+      p_email: input.email,
+      p_unit: input.unitNumber,
+      p_hash: createHash('sha256').update(token).digest('hex'),
+      p_expires: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+    checkDb(inviteError);
+    const link = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/invite/' + token;
 
-    // Check if user already exists
-    const { data: existingUser } = await db
-      .from('profiles')
-      .select('id')
-      .eq('email', input.email)
-      .single();
+    const emailStatus = await deliverInvitation(db, {
+      invitationId: String(invitationId),
+      buildingId: input.buildingId,
+      email: input.email,
+      role: 'owner_resident',
+      link,
+    });
 
-    let userId: string;
-
-    if (existingUser) {
-      // User exists - check if already member
-      const { data: existingMember } = await db
-        .from('building_members')
-        .select('id')
-        .eq('building_id', input.buildingId)
-        .eq('user_id', existingUser.id)
-        .eq('role', 'owner_resident')
-        .is('deleted_at', null)
-        .single();
-
-      if (existingMember) {
-        throw new ForbiddenError('User is already a resident in this building');
-      }
-
-      userId = existingUser.id;
-    } else {
-      // Create invitation (resident signs up later)
-      const inviteCode = crypto.randomUUID();
-      const { data: building } = await db
-        .from('buildings')
-        .select('name')
-        .eq('id', input.buildingId)
-        .single();
-
-      const { data: invitation, error: inviteError } = await db
-        .from('invitations')
-        .insert({
-          building_id: input.buildingId,
-          email: input.email,
-          role: 'owner_resident',
-          invite_code: inviteCode,
-          status: 'pending',
-          invited_by: user.id,
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      checkDb(inviteError);
-
-      // Send invitation email
-      try {
-        // Email will be triggered via Inngest or email service
-        // For now, just log that it should be sent
-        console.log(
-          `[EMAIL] Resident invitation: ${input.email} to ${building?.name} with code ${inviteCode}`
-        );
-      } catch (emailError) {
-        console.error('Failed to send invitation email:', emailError);
-      }
-
-      return { ok: true, invitationId: invitation.id };
-    }
-
-    // Add existing user to building
-    const { error: addError } = await db
-      .from('building_members')
-      .insert({
-        user_id: userId,
-        building_id: input.buildingId,
-        role: 'owner_resident',
-        unit_number: input.unitNumber,
-      });
-
-    checkDb(addError);
-
-    // Send welcome email to existing resident
-    try {
-      const { data: building } = await db
-        .from('buildings')
-        .select('name')
-        .eq('id', input.buildingId)
-        .single();
-
-      console.log(
-        `[EMAIL] Resident added: ${input.email} to ${building?.name}`
-      );
-    } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
-    }
-
-    return { ok: true };
+    return { ok: true, invitationId: String(invitationId), link, emailStatus };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
 }
 
 /**
+ * Confirm a resident's unit against the building's records. The database checks the caller (a building manager or council
+ * president) and that the unit matches what the resident entered; a resident cannot verify themselves.
+ */
+export async function verifyResidentUnitAction(raw: unknown) {
+  try {
+    const user = await requireUser();
+    const input = VerifyUnitSchema.parse(raw);
+    await requirePermission(user, 'member.invite', input.buildingId);
+    const db = await createClient();
+    checkDb(
+      (
+        await db.rpc('verify_resident_unit', {
+          p_building: input.buildingId,
+          p_user: input.userId,
+          p_unit: input.unitNumber,
+        })
+      ).error,
+    );
+    return { ok: true as const };
+  } catch (e) {
+    return { ok: false as const, error: errorMessage(e) };
+  }
+}
+
+/**
+ * Get resident profile/**
  * Get resident profile (by building manager)
  */
 export async function getResidentProfileAction(raw: unknown) {
@@ -282,26 +225,27 @@ export async function getResidentProfileAction(raw: unknown) {
         `
       user_id,
       unit_number,
-      created_at,
-      profile:profiles(email, display_name)
-    `
+      joined_at
+    `,
       )
       .eq('building_id', input.buildingId)
       .eq('user_id', input.residentId)
       .eq('role', 'owner_resident')
-      .is('deleted_at', null)
+      .eq('status', 'active')
       .single();
 
     checkDb(error);
+    if (!resident) throw new NotFoundError();
+    const directory = await directoryFor(user, [resident.user_id]);
 
     return {
       ok: true,
       resident: {
         userId: resident.user_id,
-        email: resident.profile?.email,
-        name: resident.profile?.display_name || 'Unknown',
+        email: directory.get(resident.user_id)?.email ?? null,
+        name: directory.get(resident.user_id)?.displayName || 'Unknown',
         unitNumber: resident.unit_number,
-        joinedAt: resident.created_at,
+        joinedAt: resident.joined_at,
       },
     };
   } catch (e) {

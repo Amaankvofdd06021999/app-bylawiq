@@ -8,6 +8,7 @@ const SUPABASE_STUBS = `create role anon; create role authenticated; create role
  create schema auth; create schema storage; create schema extensions;
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
  create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+ create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
  grant usage on schema auth,storage,public to authenticated,anon,service_role,supabase_auth_admin;
  grant execute on function auth.uid() to authenticated,anon,service_role,supabase_auth_admin;
  create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);

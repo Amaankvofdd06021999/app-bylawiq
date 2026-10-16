@@ -11,11 +11,7 @@ interface RequestChangesModalProps {
   onClose: () => void;
 }
 
-export function RequestChangesModal({
-  documentId,
-  buildingId,
-  onClose,
-}: RequestChangesModalProps) {
+export function RequestChangesModal({ documentId, buildingId, onClose }: RequestChangesModalProps) {
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -71,14 +67,12 @@ export function RequestChangesModal({
               maxLength={1000}
               className="textarea"
             />
-            <p className="char-count">
-              {comment.length} / 1000 characters
-            </p>
+            <p className="char-count">{comment.length} / 1000 characters</p>
           </div>
 
           <p className="info">
-            The document will be returned to the author for revision. They'll
-            see your feedback and can make changes before resubmitting.
+            The document will be returned to the author for revision. They’ll see your feedback and can make
+            changes before resubmitting.
           </p>
         </div>
 
@@ -86,11 +80,7 @@ export function RequestChangesModal({
           <Button variant="secondary" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleRequest}
-            disabled={loading || !comment.trim()}
-            busy={loading}
-          >
+          <Button onClick={handleRequest} disabled={loading || !comment.trim()} busy={loading}>
             {loading ? 'Sending...' : 'Request Changes'}
           </Button>
         </div>

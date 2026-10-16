@@ -7,38 +7,42 @@ import { PendingInvitationsTable } from '@/features/admin/components/pending-inv
 import { InviteForm } from '@/features/admin/components/invite-form';
 
 export default async function AdminTeamPage() {
-  const user = await requireUser();
+  await requireUser();
 
+  // Only the data load is guarded: rendering happens outside try, so errors in the JSX are not swallowed here.
+  let members: Awaited<ReturnType<typeof getTeamMembers>>;
+  let pendingInvitations: Awaited<ReturnType<typeof getPendingInvitations>>;
   try {
-    const [members, pendingInvitations] = await Promise.all([
-      getTeamMembers(),
-      getPendingInvitations(),
-    ]);
+    [members, pendingInvitations] = await Promise.all([getTeamMembers(), getPendingInvitations()]);
+  } catch (error) {
+    console.error('Error loading team members:', error);
+    redirect('/workspace');
+  }
 
-    return (
-      <div className="admin-section">
-        <PageHeading
-          title="Team Members"
-          description="Manage your organization's team, roles, and permissions."
-        />
+  return (
+    <div className="admin-section">
+      <PageHeading
+        title="Team Members"
+        description="Manage your organization's team, roles, and permissions."
+      />
 
-        <div className="space-y-8">
-          <InviteForm />
+      <div className="space-y-8">
+        <InviteForm />
 
+        <section>
+          <h2>Active Members ({members.filter((m) => m.status === 'active').length})</h2>
+          <TeamMembersTable members={members.filter((m) => m.status === 'active')} />
+        </section>
+
+        {pendingInvitations.length > 0 && (
           <section>
-            <h2>Active Members ({members.filter((m) => m.status === 'active').length})</h2>
-            <TeamMembersTable members={members.filter((m) => m.status === 'active')} />
+            <h2>Pending Invitations ({pendingInvitations.length})</h2>
+            <PendingInvitationsTable invitations={pendingInvitations} />
           </section>
+        )}
+      </div>
 
-          {pendingInvitations.length > 0 && (
-            <section>
-              <h2>Pending Invitations ({pendingInvitations.length})</h2>
-              <PendingInvitationsTable invitations={pendingInvitations} />
-            </section>
-          )}
-        </div>
-
-        <style jsx>{`
+      <style>{`
           .admin-section {
             max-width: 1200px;
             margin: 0 auto;
@@ -49,10 +53,6 @@ export default async function AdminTeamPage() {
             margin-top: 2rem;
           }
         `}</style>
-      </div>
-    );
-  } catch (error) {
-    console.error('Error loading team members:', error);
-    redirect('/workspace');
-  }
+    </div>
+  );
 }

@@ -48,7 +48,7 @@ export function LinkedBuildingsTable({ buildings, onRevoke }: LinkedBuildingsTab
   const handleRevoke = async (linkId: string, buildingName: string) => {
     if (
       !confirm(
-        `Revoke access to ${buildingName}? Firm staff will lose access to this building's data immediately.`
+        `Revoke access to ${buildingName}? Firm staff will lose access to this building's data immediately.`,
       )
     ) {
       return;
@@ -62,7 +62,7 @@ export function LinkedBuildingsTable({ buildings, onRevoke }: LinkedBuildingsTab
     if (result.ok) {
       onRevoke?.();
     } else {
-      setError(result.error);
+      setError(result.error ?? 'Something went wrong. Please try again.');
     }
   };
 
@@ -87,9 +87,7 @@ export function LinkedBuildingsTable({ buildings, onRevoke }: LinkedBuildingsTab
                 </div>
               </div>
 
-              <Badge
-                tone={statusConfig[building.status].color as 'success' | 'warning' | 'error'}
-              >
+              <Badge tone={statusConfig[building.status].color as 'success' | 'warning' | 'error'}>
                 {statusConfig[building.status].label}
               </Badge>
             </div>
@@ -131,7 +129,6 @@ export function LinkedBuildingsTable({ buildings, onRevoke }: LinkedBuildingsTab
                 <Button
                   variant="ghost"
                   size="small"
-                  tone="error"
                   onClick={() => handleRevoke(building.id, building.buildingName)}
                   busy={busy}
                   disabled={busy}

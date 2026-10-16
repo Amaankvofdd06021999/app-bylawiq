@@ -25,9 +25,9 @@ export type SupabaseProvider = {
     email_confirmed_at?: string;
     phone_confirmed_at?: string;
     last_sign_in_at?: string;
-    app_metadata: Record<string, any>;
-    user_metadata: Record<string, any>;
-    identities?: Array<any>;
+    app_metadata: Record<string, unknown>;
+    user_metadata: Record<string, unknown>;
+    identities?: Array<unknown>;
     created_at: string;
     updated_at: string;
   };
@@ -39,7 +39,7 @@ export type SupabaseProvider = {
 };
 
 export type TokenHookResponse = {
-  claims: Record<string, any>;
+  claims: Record<string, unknown>;
 };
 
 /**
@@ -85,8 +85,7 @@ async function determinePreferredBuilding(
   ];
 
   const sorted = [...memberships].sort(
-    (a, b) =>
-      permissionOrder.indexOf(a.role as string) - permissionOrder.indexOf(b.role as string),
+    (a, b) => permissionOrder.indexOf(a.role as string) - permissionOrder.indexOf(b.role as string),
   );
 
   return {

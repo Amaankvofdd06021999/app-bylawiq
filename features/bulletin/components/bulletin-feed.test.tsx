@@ -106,7 +106,7 @@ describe('BulletinFeed Component', () => {
           onPin={onPin}
           onEdit={onEdit}
           onDelete={onDelete}
-        />
+        />,
       );
 
       const buttons = screen.getAllByRole('button');
@@ -117,13 +117,7 @@ describe('BulletinFeed Component', () => {
       const onPin = vi.fn();
       const user = userEvent.setup();
 
-      render(
-        <BulletinFeed
-          posts={[mockPosts[0]]}
-          isStaff={true}
-          onPin={onPin}
-        />
-      );
+      render(<BulletinFeed posts={[mockPosts[0]]} isStaff={true} onPin={onPin} />);
 
       const pinButtons = screen.getAllByRole('button');
       await user.click(pinButtons[0]);
@@ -135,19 +129,11 @@ describe('BulletinFeed Component', () => {
       const onEdit = vi.fn();
       const user = userEvent.setup();
 
-      render(
-        <BulletinFeed
-          posts={[mockPosts[0]]}
-          isStaff={true}
-          onEdit={onEdit}
-        />
-      );
+      render(<BulletinFeed posts={[mockPosts[0]]} isStaff={true} onEdit={onEdit} />);
 
       const buttons = screen.getAllByRole('button');
       // Find Edit button by text or title
-      const editButton = buttons.find(
-        (btn) => btn.getAttribute('title') === 'Edit'
-      );
+      const editButton = buttons.find((btn) => btn.getAttribute('title') === 'Edit');
       if (editButton) {
         await user.click(editButton);
         expect(onEdit).toHaveBeenCalledWith(mockPosts[0]);
@@ -158,18 +144,10 @@ describe('BulletinFeed Component', () => {
       const onDelete = vi.fn();
       const user = userEvent.setup();
 
-      render(
-        <BulletinFeed
-          posts={[mockPosts[0]]}
-          isStaff={true}
-          onDelete={onDelete}
-        />
-      );
+      render(<BulletinFeed posts={[mockPosts[0]]} isStaff={true} onDelete={onDelete} />);
 
       const buttons = screen.getAllByRole('button');
-      const deleteButton = buttons.find(
-        (btn) => btn.getAttribute('title') === 'Delete'
-      );
+      const deleteButton = buttons.find((btn) => btn.getAttribute('title') === 'Delete');
       if (deleteButton) {
         await user.click(deleteButton);
         expect(onDelete).toHaveBeenCalledWith('post-1');
@@ -206,13 +184,7 @@ describe('BulletinFeed Component', () => {
     it('should have descriptive button titles for accessibility', () => {
       const onPin = vi.fn();
 
-      render(
-        <BulletinFeed
-          posts={[mockPosts[0]]}
-          isStaff={true}
-          onPin={onPin}
-        />
-      );
+      render(<BulletinFeed posts={[mockPosts[0]]} isStaff={true} onPin={onPin} />);
 
       const buttons = screen.getAllByRole('button');
       buttons.forEach((btn) => {

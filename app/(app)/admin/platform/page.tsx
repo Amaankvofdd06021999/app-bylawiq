@@ -1,19 +1,16 @@
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth/guards';
-import { createClient } from '@/lib/supabase/server';
+import { nextMfaStep } from '@/lib/auth/mfa-flow';
+import { readPlatformAdminStatus } from '@/features/admin/mfa/status';
 import { FeatureFlagsPanel } from '@/features/admin/components/feature-flags-panel';
 import { PlatformAuditLog } from '@/features/admin/components/platform-audit-log';
 import { PlatformStats } from '@/features/admin/components/platform-stats';
 
 export default async function PlatformAdminPage() {
   const user = await requireUser();
-  const db = await createClient();
-
-  // Verify platform admin
-  const { data: admin } = await db.auth.getUser();
-  if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-    redirect('/');
-  }
+  const step = nextMfaStep(await readPlatformAdminStatus(user));
+  if (step === 'forbidden') redirect('/');
+  if (step !== 'done') redirect('/admin/platform/mfa');
 
   return (
     <div className="page-container">
@@ -43,7 +40,7 @@ export default async function PlatformAdminPage() {
         </section>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .page-container {
           max-width: 1400px;
           margin: 0 auto;

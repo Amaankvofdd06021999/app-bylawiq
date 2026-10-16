@@ -2,7 +2,6 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import { db } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/auth/guards';
 import { checkDb, errorMessage, AppError } from '@/lib/errors';
 import { role } from '@/lib/schema';
@@ -90,11 +89,17 @@ export async function getAvailableRoles() {
 
     return {
       ok: true,
-      roles: (memberships || []).map((m: any) => ({
-        buildingId: m.building_id,
-        buildingName: m.buildings?.name || 'Unknown',
-        role: m.role,
-      })),
+      roles: (memberships || []).map((m) => {
+        // One building per membership (many-to-one), so PostgREST returns an object; the inferred type is an array.
+        const building: { name?: string | null } | null = Array.isArray(m.buildings)
+          ? (m.buildings[0] ?? null)
+          : (m.buildings as { name?: string | null } | null);
+        return {
+          buildingId: m.building_id,
+          buildingName: building?.name || 'Unknown',
+          role: m.role,
+        };
+      }),
     };
   } catch (e) {
     return { ok: false, error: errorMessage(e), roles: [] };

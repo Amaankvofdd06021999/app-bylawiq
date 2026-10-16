@@ -1,23 +1,15 @@
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth/guards';
-import { createClient } from '@/lib/supabase/server';
-import { ChatAnalyticsDashboard, type ChatAnalyticsData } from '@/features/chat/components/chat-analytics-dashboard';
-import { getPlatformChatAnalytics } from '@/features/chat/citations-analytics';
+import { nextMfaStep } from '@/lib/auth/mfa-flow';
+import { readPlatformAdminStatus } from '@/features/admin/mfa/status';
+import { ChatAnalyticsDashboard } from '@/features/chat/components/chat-analytics-dashboard';
 
 export default async function AdminChatAnalyticsPage() {
   const user = await requireUser();
-  const db = await createClient();
-
-  // Verify user is platform admin
-  const { data: admin } = await db
-    .from('platform_admins')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (!admin) {
-    redirect('/');
-  }
+  // Platform admins only, and only with MFA passed on this session (decision D15).
+  const step = nextMfaStep(await readPlatformAdminStatus(user));
+  if (step === 'forbidden') redirect('/');
+  if (step !== 'done') redirect('/admin/platform/mfa');
 
   return (
     <div className="analytics-page">
@@ -28,7 +20,7 @@ export default async function AdminChatAnalyticsPage() {
 
       <ChatAnalyticsDashboard role="platform_admin" />
 
-      <style jsx>{`
+      <style>{`
         .analytics-page {
           display: flex;
           flex-direction: column;

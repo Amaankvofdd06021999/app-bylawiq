@@ -1,11 +1,10 @@
 import 'server-only';
-import { z } from 'zod';
 import { generateText } from 'ai';
 import { MODELS } from '@/lib/ai/models';
 import type { SessionUser } from '@/lib/auth/guards';
 
 /**
- * Query expansion with Haiku
+ * Query expansion with the fast model
  * Expands a single query into variants for better retrieval coverage
  * "can we tow a car" → ["can we tow a car", "remove vehicle common property", "parking enforcement"]
  */
@@ -19,7 +18,7 @@ export interface QueryExpansion {
 export async function expandQuery(
   user: SessionUser,
   originalQuery: string,
-  buildingName?: string
+  buildingName?: string,
 ): Promise<QueryExpansion> {
   try {
     const systemPrompt = `You are a legal query expansion assistant. Your job is to expand queries for retrieval against building bylaws and BC strata legislation.

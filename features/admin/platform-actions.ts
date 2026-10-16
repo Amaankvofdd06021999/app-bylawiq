@@ -2,8 +2,17 @@
 
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
-import { checkDb, ForbiddenError, errorMessage } from '@/lib/errors';
+import { requirePlatformAdmin } from '@/lib/auth/platform-admin';
+import { directoryFor } from '@/lib/directory';
+import { checkDb, ForbiddenError, errorMessage, AppError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
+import {
+  getAllBuildings,
+  getAllOrganizations,
+  getAllUsers,
+  getFeatureFlags,
+  getRegionalKBStats,
+} from './platform-queries';
 
 /**
  * Platform Admin Actions
@@ -28,10 +37,7 @@ export async function toggleFeatureFlagAction(raw: unknown) {
     const db = await createClient();
 
     // Verify platform admin
-    const { data: claims } = await db.auth.getUser();
-    if (claims?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can manage feature flags');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can manage feature flags');
 
     // Update or create flag
     const { data: flag, error: upsertError } = await db
@@ -44,7 +50,7 @@ export async function toggleFeatureFlagAction(raw: unknown) {
           updated_at: new Date().toISOString(),
           updated_by: user.id,
         },
-        { onConflict: 'flag_name' }
+        { onConflict: 'flag_name' },
       )
       .select()
       .single();
@@ -52,19 +58,17 @@ export async function toggleFeatureFlagAction(raw: unknown) {
     checkDb(upsertError);
 
     // Log audit
-    await db
-      .from('platform_admin_audit')
-      .insert({
-        admin_id: user.id,
-        action: 'toggle_feature_flag',
-        resource_type: 'feature_flag',
-        resource_id: flag.id,
-        details: {
-          flag_name: input.flagName,
-          enabled: input.enabled,
-          description: input.description,
-        },
-      });
+    await db.from('platform_admin_audit').insert({
+      admin_id: user.id,
+      action: 'toggle_feature_flag',
+      resource_type: 'feature_flag',
+      resource_id: flag.id,
+      details: {
+        flag_name: input.flagName,
+        enabled: input.enabled,
+        description: input.description,
+      },
+    });
 
     return { ok: true, flag };
   } catch (e) {
@@ -79,35 +83,12 @@ export async function toggleFeatureFlagAction(raw: unknown) {
 export async function grantPlatformAdminAction(raw: unknown) {
   try {
     const user = await requireUser();
-    const input = z.object({ userId: z.string().uuid() }).parse(raw);
-
-    const db = await createClient();
+    z.object({ userId: z.string().uuid() }).parse(raw);
 
     // Verify requestor is platform admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can grant admin access');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can grant admin access');
 
-    // Update target user's metadata
-    const { error: updateError } = await db.auth.admin.updateUserById(input.userId, {
-      user_metadata: { role: 'platform_admin' },
-    });
-
-    if (updateError) throw updateError;
-
-    // Log audit
-    await db
-      .from('platform_admin_audit')
-      .insert({
-        admin_id: user.id,
-        action: 'grant_platform_admin',
-        resource_type: 'user',
-        resource_id: input.userId as any,
-        details: { target_user_id: input.userId },
-      });
-
-    return { ok: true };
+    throw new AppError('not_available', 'Platform admin access is managed in the database for now.', 501);
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
@@ -126,33 +107,10 @@ export async function revokePlatformAdminAction(raw: unknown) {
       throw new ForbiddenError('Cannot revoke your own admin access');
     }
 
-    const db = await createClient();
-
     // Verify requestor is platform admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can revoke admin access');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can revoke admin access');
 
-    // Update target user's metadata
-    const { error: updateError } = await db.auth.admin.updateUserById(input.userId, {
-      user_metadata: { role: null },
-    });
-
-    if (updateError) throw updateError;
-
-    // Log audit
-    await db
-      .from('platform_admin_audit')
-      .insert({
-        admin_id: user.id,
-        action: 'revoke_platform_admin',
-        resource_type: 'user',
-        resource_id: input.userId as any,
-        details: { target_user_id: input.userId },
-      });
-
-    return { ok: true };
+    throw new AppError('not_available', 'Platform admin access is managed in the database for now.', 501);
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
@@ -175,10 +133,7 @@ export async function breakGlassReadAction(raw: unknown) {
     const db = await createClient();
 
     // Verify platform admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can access break-glass');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can access break-glass');
 
     // Read document
     const { data: document, error: readError } = await db
@@ -190,20 +145,18 @@ export async function breakGlassReadAction(raw: unknown) {
     checkDb(readError);
 
     // Log high-audit break-glass access
-    await db
-      .from('platform_admin_audit')
-      .insert({
-        admin_id: user.id,
-        action: 'break_glass_read',
-        resource_type: 'document',
-        resource_id: input.documentId as any,
-        details: {
-          reason: input.reason,
-          building_id: document.building_id,
-          document_title: document.title,
-          accessed_at: new Date().toISOString(),
-        },
-      });
+    await db.from('platform_admin_audit').insert({
+      admin_id: user.id,
+      action: 'break_glass_read',
+      resource_type: 'document',
+      resource_id: input.documentId,
+      details: {
+        reason: input.reason,
+        building_id: document.building_id,
+        document_title: document.title,
+        accessed_at: new Date().toISOString(),
+      },
+    });
 
     return { ok: true, document };
   } catch (e) {
@@ -225,28 +178,16 @@ export async function getPlatformAuditLogAction(raw: unknown) {
       })
       .parse(raw);
 
-    const db = await createClient();
-
-    // Verify platform admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
+    const { data: isAdmin, error: adminError } = await user.client.rpc('is_platform_admin');
+    checkDb(adminError);
+    if (isAdmin !== true) {
       throw new ForbiddenError('Only platform admins can view platform audit log');
     }
 
+    const db = await createClient();
     let query = db
       .from('platform_admin_audit')
-      .select(
-        `
-      id,
-      admin_id,
-      action,
-      resource_type,
-      resource_id,
-      details,
-      created_at,
-      admin:profiles(display_name, email)
-    `
-      )
+      .select('id, admin_id, action, resource_type, resource_id, details, created_at')
       .order('created_at', { ascending: false });
 
     if (input.action) {
@@ -254,11 +195,49 @@ export async function getPlatformAuditLogAction(raw: unknown) {
     }
 
     const { data, error } = await query.limit(input.limit);
-
     checkDb(error);
 
-    return { ok: true, audit: data || [] };
+    const rows = data ?? [];
+    const directory = await directoryFor(
+      user,
+      rows.map((r) => r.admin_id),
+    );
+    const audit = rows.map((r) => ({
+      ...r,
+      admin: {
+        display_name: directory.get(r.admin_id)?.displayName ?? null,
+        email: directory.get(r.admin_id)?.email ?? null,
+      },
+    }));
+
+    return { ok: true, audit };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
+  }
+}
+
+export async function loadPlatformStatsAction() {
+  try {
+    const user = await requireUser();
+    await requirePlatformAdmin(user, 'Only platform admins can view platform statistics');
+    const [organizations, buildings, users, regionalKbs] = await Promise.all([
+      getAllOrganizations(),
+      getAllBuildings(),
+      getAllUsers(),
+      getRegionalKBStats(),
+    ]);
+    return { ok: true as const, organizations, buildings, users, regionalKbs };
+  } catch (e) {
+    return { ok: false as const, error: errorMessage(e) };
+  }
+}
+
+export async function loadFeatureFlagsAction() {
+  try {
+    const user = await requireUser();
+    await requirePlatformAdmin(user, 'Only platform admins can view feature flags');
+    return { ok: true as const, flags: await getFeatureFlags() };
+  } catch (e) {
+    return { ok: false as const, error: errorMessage(e) };
   }
 }

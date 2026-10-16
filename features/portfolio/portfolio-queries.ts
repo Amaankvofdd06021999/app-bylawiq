@@ -20,7 +20,7 @@ export async function getPortfolioDashboard(userId: string) {
 
   if (assignmentError) throw assignmentError;
 
-  const buildingIds = assignments?.map((a: any) => a.building_id) || [];
+  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
 
   if (buildingIds.length === 0) {
     return {
@@ -34,36 +34,55 @@ export async function getPortfolioDashboard(userId: string) {
     };
   }
 
-  // Get building details with metrics
-  const { data: buildings, error: buildingError } = await db
+  const { data: buildingRows, error: buildingError } = await db
     .from('buildings')
-    .select(
-      `
-      id,
-      name,
-      address,
-      city,
-      region,
-      (select count(*) from building_members where building_id = buildings.id and role = 'owner_resident' and deleted_at is null)::int as resident_count,
-      (select count(*) from documents where building_id = buildings.id)::int as document_count,
-      (select count(*) from disputes where building_id = buildings.id and deleted_at is null)::int as dispute_count
-    `
-    )
+    .select('id, name, address, municipality')
     .in('id', buildingIds)
     .order('name', { ascending: true });
-
   if (buildingError) throw buildingError;
 
-  const buildings_data = buildings || [];
+  const [residentRes, documentRes, disputeRes] = await Promise.all([
+    db
+      .from('building_members')
+      .select('building_id')
+      .in('building_id', buildingIds)
+      .eq('role', 'owner_resident')
+      .eq('status', 'active'),
+    db.from('documents').select('building_id').in('building_id', buildingIds),
+    db.from('disputes').select('building_id').in('building_id', buildingIds),
+  ]);
+  if (residentRes.error) throw residentRes.error;
+  if (documentRes.error) throw documentRes.error;
+  if (disputeRes.error) throw disputeRes.error;
+
+  const countBy = (rows: { building_id: string }[] | null) => {
+    const counts = new Map<string, number>();
+    for (const row of rows ?? []) counts.set(row.building_id, (counts.get(row.building_id) ?? 0) + 1);
+    return counts;
+  };
+  const residents = countBy(residentRes.data);
+  const documents = countBy(documentRes.data);
+  const disputes = countBy(disputeRes.data);
+
+  const buildings_data = (buildingRows ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    address: b.address,
+    city: b.municipality,
+    region: null,
+    resident_count: residents.get(b.id) ?? 0,
+    document_count: documents.get(b.id) ?? 0,
+    dispute_count: disputes.get(b.id) ?? 0,
+  }));
 
   // Calculate totals
   const totalStats = buildings_data.reduce(
-    (acc: any, b: any) => ({
+    (acc, b) => ({
       documents: acc.documents + (b.document_count || 0),
       disputes: acc.disputes + (b.dispute_count || 0),
       residents: acc.residents + (b.resident_count || 0),
     }),
-    { documents: 0, disputes: 0, residents: 0 }
+    { documents: 0, disputes: 0, residents: 0 },
   );
 
   return {
@@ -88,15 +107,15 @@ export async function getAssignedBuildings(userId: string) {
     .select(
       `
       building_id,
-      building:buildings(id, name, address, city, region)
-    `
+      building:buildings(id, name, address, municipality)
+    `,
     )
     .eq('user_id', userId)
     .is('deleted_at', null);
 
   if (error) throw error;
 
-  return (data || []).map((a: any) => a.building);
+  return (data || []).map((a) => a.building);
 }
 
 /**
@@ -112,7 +131,7 @@ export async function searchPortfolioDocuments(userId: string, query: string) {
     .eq('user_id', userId)
     .is('deleted_at', null);
 
-  const buildingIds = assignments?.map((a: any) => a.building_id) || [];
+  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
 
   if (buildingIds.length === 0) {
     return [];
@@ -129,7 +148,7 @@ export async function searchPortfolioDocuments(userId: string, query: string) {
       document_type,
       created_at,
       building:buildings(name, city)
-    `
+    `,
     )
     .in('building_id', buildingIds)
     .ilike('title', `%${query}%`)
@@ -154,7 +173,7 @@ export async function getPortfolioPendingReviews(userId: string) {
     .eq('user_id', userId)
     .is('deleted_at', null);
 
-  const buildingIds = assignments?.map((a: any) => a.building_id) || [];
+  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
 
   if (buildingIds.length === 0) {
     return [];
@@ -173,7 +192,7 @@ export async function getPortfolioPendingReviews(userId: string) {
       document:documents(title, submitted_by),
       building:buildings(name),
       submitter:profiles!documents.submitted_by(display_name)
-    `
+    `,
     )
     .in('building_id', buildingIds)
     .in('status', ['pending', 'changes_requested'])
@@ -197,7 +216,7 @@ export async function getPortfolioAnalytics(userId: string) {
     .eq('user_id', userId)
     .is('deleted_at', null);
 
-  const buildingIds = assignments?.map((a: any) => a.building_id) || [];
+  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
 
   if (buildingIds.length === 0) {
     return {
@@ -210,28 +229,32 @@ export async function getPortfolioAnalytics(userId: string) {
     };
   }
 
-  // Get document stats
-  const { data: docs } = await db
-    .from('documents')
-    .select('status')
-    .in('building_id', buildingIds);
-
-  const docCounts = {
-    created: docs?.filter((d: any) => d.status === 'draft').length || 0,
-    approved: docs?.filter((d: any) => d.status === 'approved').length || 0,
-    sent: docs?.filter((d: any) => d.status === 'sent').length || 0,
-  };
-
-  // Get dispute stats
-  const { data: disputes } = await db
-    .from('disputes')
+  // Notices (generated_documents) carry the draft, approved and sent states. documents holds ingested bylaws.
+  const { data: notices, error: noticesError } = await db
+    .from('generated_documents')
     .select('status')
     .in('building_id', buildingIds)
     .is('deleted_at', null);
+  if (noticesError) throw noticesError;
+
+  const docCounts = {
+    created: (notices ?? []).filter((d) => d.status === 'draft').length,
+    approved: (notices ?? []).filter((d) => d.status === 'approved').length,
+    sent: (notices ?? []).filter((d) => d.status === 'sent').length,
+  };
+
+  // Disputes have a stage, not a status. Resolved and withdrawn are the closed stages.
+  const closedStages = ['resolved', 'withdrawn'];
+  const { data: disputes, error: disputesError } = await db
+    .from('disputes')
+    .select('stage')
+    .in('building_id', buildingIds)
+    .is('deleted_at', null);
+  if (disputesError) throw disputesError;
 
   const disputeCounts = {
-    created: disputes?.filter((d: any) => d.status === 'open').length || 0,
-    closed: disputes?.filter((d: any) => d.status === 'closed').length || 0,
+    created: (disputes ?? []).filter((d) => !closedStages.includes(d.stage)).length,
+    closed: (disputes ?? []).filter((d) => closedStages.includes(d.stage)).length,
   };
 
   // Get resident stats
@@ -240,7 +263,7 @@ export async function getPortfolioAnalytics(userId: string) {
     .select('id')
     .in('building_id', buildingIds)
     .eq('role', 'owner_resident')
-    .is('deleted_at', null);
+    .eq('status', 'active');
 
   return {
     documentsCreated: docCounts.created,

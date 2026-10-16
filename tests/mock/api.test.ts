@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 // `mock/session.ts` reads/writes cookies via `next/headers`, which only works inside a real Next.js request
 // scope. This fakes that cookie jar in memory so `startDemo`/`demoSession` behave the same way they do in

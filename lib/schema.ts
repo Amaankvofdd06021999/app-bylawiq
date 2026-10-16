@@ -25,7 +25,7 @@ export const buildingSchema = z.object({
 export const profileSchema = z.object({
   id,
   display_name: z.string(),
-  account_type: z.enum(['admin', 'multi_building', 'single_building']).nullable(),
+  consent_at: z.string().nullable(),
   bound_building_id: id.nullable(),
 });
 export const rowSchema = z
@@ -51,3 +51,17 @@ export const chatSchema = z.object({
 export type Building = z.infer<typeof buildingSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type Row = z.infer<typeof rowSchema>;
+
+export const APP_ROLES = [
+  'platform_admin',
+  'org_owner',
+  'org_admin',
+  'portfolio_manager',
+  'portfolio_assistant',
+  'building_manager',
+  'council_president',
+  'council_member',
+  'external_counsel',
+  'owner_resident',
+] as const;
+export type AppRole = (typeof APP_ROLES)[number];

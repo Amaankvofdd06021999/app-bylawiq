@@ -17,7 +17,6 @@ import { Rate, Trend, Counter, Gauge } from 'k6/metrics';
 
 // Configuration
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
-const API_TOKEN = __ENV.API_TOKEN || 'test-token';
 const VIRTUAL_USERS = parseInt(__ENV.VUS || '10', 10);
 const DURATION = __ENV.DURATION || '5m';
 const RAMP_UP = parseInt(__ENV.RAMP_UP || '30', 10);
@@ -44,7 +43,7 @@ export const options = {
     dashboard_load_time: ['p(95)<2000'], // P95 < 2s
     wallet_deduction_time: ['p(95)<500'], // P95 < 500ms
     errors: ['rate<0.001'], // < 0.1% error rate
-  ],
+  },
   ext: {
     loadimpact: {
       projectID: 3456789,
@@ -101,7 +100,7 @@ export function testFirmOwnerDashboard(data) {
 
     check(res, {
       'status is 200': (r) => r.status === 200,
-      'response time < 2s': (r) => duration < 2000,
+      'response time < 2s': () => duration < 2000,
       'has staff list': (r) => r.json('data.staff') !== undefined,
       'has building roster': (r) => r.json('data.roster') !== undefined,
       'has turnaround metrics': (r) => r.json('data.turnaround') !== undefined,
@@ -154,7 +153,6 @@ export function testChatSubmission(data) {
 
     // For streaming responses, measure first chunk arrival
     if (res.body) {
-      const firstChunk = (res.body as string).split('\n')[0];
       const ttft = duration / 2; // Approximate TTFT as half of total time (conservative)
       ttftLatency.add(ttft);
     }
@@ -277,7 +275,7 @@ export function testFirmKnowledgeSearch(data) {
 /**
  * Main test function: Distribute VUs across test scenarios
  */
-export default function (data) {
+export default function loadTest(data) {
   concurrentUsers.add(__VU);
 
   // Distribute load: 40% dashboards, 35% chat, 15% wallet, 10% search

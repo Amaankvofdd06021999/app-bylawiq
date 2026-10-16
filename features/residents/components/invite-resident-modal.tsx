@@ -5,25 +5,31 @@ import { Button } from '@/components/ui';
 import { X } from 'lucide-react';
 import { inviteResidentAction } from '../resident-management-actions';
 
+// What the manager sees about the email. The link is always shown (decision D10).
+const EMAIL_NOTE: Record<string, string> = {
+  sent: 'We emailed the invitation. The link below also works.',
+  failed: 'The email could not be sent. Share the link below directly.',
+  not_configured: 'Email is not set up in this environment. Share the link below directly.',
+  skipped_staging:
+    'In this test environment, email goes only to test recipients. Share the link below directly.',
+};
+
 interface InviteResidentModalProps {
   buildingId: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function InviteResidentModal({
-  buildingId,
-  onClose,
-  onSuccess,
-}: InviteResidentModalProps) {
+export function InviteResidentModal({ buildingId, onClose, onSuccess }: InviteResidentModalProps) {
   const [email, setEmail] = useState('');
   const [unitNumber, setUnitNumber] = useState('');
+  const [sent, setSent] = useState<{ link: string; emailStatus: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleInvite = async () => {
     if (!email.trim() || !unitNumber.trim()) {
-      setError('Please fill in all fields');
+      setError('Enter the email address and the unit number');
       return;
     }
 
@@ -35,9 +41,9 @@ export function InviteResidentModal({
         unitNumber,
       });
 
-      if (result.ok) {
-        onSuccess();
-      } else {
+      if (result.ok && result.link) {
+        setSent({ link: result.link, emailStatus: result.emailStatus ?? 'not_configured' });
+      } else if (!result.ok) {
         setError(result.error || 'Failed to invite resident');
       }
     } catch (e) {
@@ -61,6 +67,19 @@ export function InviteResidentModal({
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
+            <label htmlFor="unit">Unit number</label>
+            <input
+              id="unit"
+              value={unitNumber}
+              onChange={(e) => setUnitNumber(e.target.value)}
+              placeholder="12A"
+              maxLength={20}
+              disabled={loading}
+              className="input"
+            />
+          </div>
+
+          <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input
               id="email"
@@ -73,36 +92,45 @@ export function InviteResidentModal({
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="unit">Unit Number</label>
-            <input
-              id="unit"
-              type="text"
-              value={unitNumber}
-              onChange={(e) => setUnitNumber(e.target.value)}
-              placeholder="101, 205, etc."
-              disabled={loading}
-              className="input"
-            />
-          </div>
-
-          <p className="info">
-            The resident will receive an invitation email. They need to sign up
-            or log in to accept the invitation.
-          </p>
+          {sent ? (
+            <div className="link-output" role="status">
+              <p>{EMAIL_NOTE[sent.emailStatus] ?? EMAIL_NOTE.not_configured}</p>
+              <p>
+                <a href={sent.link}>{sent.link}</a>
+              </p>
+            </div>
+          ) : (
+            <p className="info">
+              The resident accepts the invitation by signing in with this email address. The link expires in
+              14 days. Your building manager confirms the unit before the resident’s home shows it as
+              verified.
+            </p>
+          )}
         </div>
 
         <div className="modal-footer">
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleInvite}
-            disabled={loading || !email.trim() || !unitNumber.trim()}
-            busy={loading}
-          >
-            {loading ? 'Sending...' : 'Send Invitation'}
-          </Button>
+          {sent ? (
+            <Button
+              onClick={() => {
+                onSuccess();
+              }}
+            >
+              Done
+            </Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={onClose} disabled={loading}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleInvite}
+                disabled={loading || !email.trim() || !unitNumber.trim()}
+                busy={loading}
+              >
+                {loading ? 'Sending...' : 'Send Invitation'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

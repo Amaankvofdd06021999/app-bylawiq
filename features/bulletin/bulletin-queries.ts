@@ -25,7 +25,7 @@ export async function getBulletinFeed({
       created_at,
       updated_at,
       author:profiles(display_name)
-    `
+    `,
     )
     .eq('building_id', buildingId)
     .is('deleted_at', null) // Exclude soft-deleted posts
@@ -35,18 +35,22 @@ export async function getBulletinFeed({
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
-    id: row.id,
-    buildingId: row.building_id,
-    title: row.title,
-    body: row.body,
-    authorId: row.author_id,
-    authorName: row.author?.display_name || 'Anonymous',
-    pinned: row.pinned,
-    deletedAt: row.deleted_at,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  return (data || []).map((row) => {
+    // One profile per post (many-to-one), so PostgREST returns an object; the inferred type is an array.
+    const author = Array.isArray(row.author) ? (row.author[0] ?? null) : row.author;
+    return {
+      id: row.id,
+      buildingId: row.building_id,
+      title: row.title,
+      body: row.body,
+      authorId: row.author_id,
+      authorName: author?.display_name || 'Anonymous',
+      pinned: row.pinned,
+      deletedAt: row.deleted_at,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  });
 }
 
 /**
@@ -69,7 +73,7 @@ export async function getBulletinPost(postId: string): Promise<BulletinPost | nu
       created_at,
       updated_at,
       author:profiles(display_name)
-    `
+    `,
     )
     .eq('id', postId)
     .is('deleted_at', null)
@@ -83,7 +87,7 @@ export async function getBulletinPost(postId: string): Promise<BulletinPost | nu
     title: data.title,
     body: data.body,
     authorId: data.author_id,
-    authorName: data.author?.display_name || 'Anonymous',
+    authorName: (Array.isArray(data.author) ? data.author[0] : data.author)?.display_name || 'Anonymous',
     pinned: data.pinned,
     deletedAt: data.deleted_at,
     createdAt: data.created_at,

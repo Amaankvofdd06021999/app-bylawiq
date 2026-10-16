@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 import { id, role } from '@/lib/schema';
 const text = z.string().trim().min(1).max(200);
 export const mutationSchema = z.object({
@@ -30,6 +30,7 @@ export const mutationSchema = z.object({
     'member.change',
     'member.invite',
     'invite.revoke',
+    'invite.resend',
     'org.update',
     'chat.rename',
     'chat.archive',

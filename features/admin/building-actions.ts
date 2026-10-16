@@ -1,7 +1,8 @@
 'use server';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
-import { checkDb, ForbiddenError, errorMessage } from '@/lib/errors';
+import { logger } from '@/lib/logger';
+import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 
 const RevokeLinkSchema = z.object({
@@ -27,6 +28,7 @@ export async function revokeBuildingLinkAction(raw: unknown) {
       .single();
 
     checkDb(orgError);
+    if (!orgMember) throw new NotFoundError();
 
     if (!['org_owner', 'org_admin'].includes(orgMember.role)) {
       throw new ForbiddenError('Only organization owners and admins can revoke building links');
@@ -41,6 +43,7 @@ export async function revokeBuildingLinkAction(raw: unknown) {
       .single();
 
     checkDb(linkError);
+    if (!link) throw new NotFoundError();
 
     if (link.status === 'revoked') {
       return { ok: false, error: 'This link is already revoked' };
@@ -106,25 +109,22 @@ export async function revokeBuildingLinkAction(raw: unknown) {
     }
 
     // Notify building managers of revocation
-    const { data: building } = await db
-      .from('buildings')
-      .select('name, id')
-      .eq('id', link.building_id)
-      .single();
+    await db.from('buildings').select('name, id').eq('id', link.building_id).single();
 
     const { data: managers, error: managersError } = await db
       .from('building_members')
-      .select('user_id, profiles(email)')
+      .select('user_id')
       .eq('building_id', link.building_id)
       .eq('role', 'building_manager');
 
     checkDb(managersError);
 
     for (const manager of managers || []) {
-      console.log(
-        `[EMAIL] Building link revoked: ${manager.profiles?.email} ` +
-        `for building=${building?.name} building_id=${link.building_id}`
-      );
+      logger.info({
+        context: 'building_link_revoked_notice',
+        userId: manager.user_id,
+        buildingId: link.building_id,
+      });
     }
 
     return { ok: true };
@@ -152,11 +152,7 @@ export async function getBuildingDetailsAction(raw: unknown) {
     const db = await createClient();
 
     // Verify user has access
-    const { data: orgMember } = await db
-      .from('org_members')
-      .select('org_id')
-      .eq('user_id', user.id)
-      .single();
+    const { data: orgMember } = await db.from('org_members').select('org_id').eq('user_id', user.id).single();
 
     if (!orgMember) throw new ForbiddenError('Not authorized');
 
@@ -173,18 +169,21 @@ export async function getBuildingDetailsAction(raw: unknown) {
     // Get building info
     const { data: building, error: buildingError } = await db
       .from('buildings')
-      .select(`
+      .select(
+        `
         id,
         name,
         jurisdiction,
         created_at,
         documents(count),
         building_members(count)
-      `)
+      `,
+      )
       .eq('id', input.buildingId)
       .single();
 
     checkDb(buildingError);
+    if (!building) throw new NotFoundError();
 
     return {
       ok: true,

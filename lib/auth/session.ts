@@ -37,10 +37,12 @@ export const multiRoleSchema = z.object({
       }),
     }),
   ),
-  preferred: z.object({
-    buildingId: z.string().uuid(),
-    role: z.string(),
-  }).nullable(),
+  preferred: z
+    .object({
+      buildingId: z.string().uuid(),
+      role: z.string(),
+    })
+    .nullable(),
 });
 
 export type MultiRoleContext = z.infer<typeof multiRoleSchema>;
@@ -55,11 +57,13 @@ export const jwtClaimsSchema = z.object({
   email: z.string().email().optional(),
   email_verified: z.boolean().optional(),
   phone_verified: z.boolean().optional(),
-  app_metadata: z.object({
-    provider: z.string().optional(),
-    providers: z.array(z.string()).optional(),
-  }).optional(),
-  user_metadata: z.record(z.any()).optional(),
+  app_metadata: z
+    .object({
+      provider: z.string().optional(),
+      providers: z.array(z.string()).optional(),
+    })
+    .optional(),
+  user_metadata: z.record(z.string(), z.unknown()).optional(),
 
   // Custom session claims
   session_role: z.string(), // AppRole as string
@@ -75,7 +79,7 @@ export type JwtClaims = z.infer<typeof jwtClaimsSchema>;
  * Parse and validate session from JWT claims.
  * @throws if claims are invalid or session is expired
  */
-export function parseSessionClaims(claims: any): Session {
+export function parseSessionClaims(claims: unknown): Session {
   const validated = jwtClaimsSchema.parse(claims);
   return {
     userId: validated.sub,

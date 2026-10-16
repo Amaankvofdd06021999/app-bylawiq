@@ -1,8 +1,10 @@
-'use server';
+﻿'use server';
 import { createHash, randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { requireUser, requirePermission } from '@/lib/auth/guards';
 import { mutationSchema, values } from './schema';
+import { deliverInvitation } from './invitation-delivery';
+import type { InvitationEmailStatus } from '@/lib/email/invitations';
 import { checkDb, errorMessage, AppError } from '@/lib/errors';
 import { z } from 'zod';
 const permissions: Record<string, string> = {
@@ -24,7 +26,7 @@ const permissions: Record<string, string> = {
   'notice.save': 'document.draft',
   'notice.transition': 'chat.use',
   'notice.firm_review': 'document.draft',
-  'notice.firm_decision': 'review.act',
+  'notice.firm_decision': 'firm.review',
   'notice.comment': 'chat.use',
   'dispute.save': 'dispute.create',
   'dispute.event': 'dispute.update',
@@ -33,12 +35,15 @@ const permissions: Record<string, string> = {
   'member.invite': 'member.invite',
   'org.update': 'building.update',
   'invite.revoke': 'member.invite',
+  'invite.resend': 'member.invite',
   'chat.rename': 'chat.use',
   'chat.archive': 'chat.use',
 };
 export async function mutateAction(
   raw: unknown,
-): Promise<{ ok: true; id?: string; url?: string } | { ok: false; error: string }> {
+): Promise<
+  { ok: true; id?: string; url?: string; emailStatus?: InvitationEmailStatus } | { ok: false; error: string }
+> {
   try {
     const user = await requireUser();
     const input = mutationSchema.parse(raw);
@@ -47,6 +52,7 @@ export async function mutateAction(
     const b = input.buildingId;
     let result: { data: unknown; error: { code?: string; message: string } | null };
     let link: string | undefined;
+    let emailStatus: InvitationEmailStatus | undefined;
     const requiredId = () => z.uuid().parse(input.id);
     // Validate record identity against the selected building, including RPC targets.
     const scopedTables: Record<string, string> = {
@@ -326,11 +332,48 @@ export async function mutateAction(
           p_expires: v.expiresAt,
         });
         link = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/invite/' + token;
+        if (!result.error && typeof result.data === 'string') {
+          emailStatus = await deliverInvitation(db, {
+            invitationId: result.data,
+            buildingId: b,
+            email: v.email,
+            role: v.role,
+            link,
+          });
+        }
         break;
       }
       case 'invite.revoke':
         result = await db.rpc('revoke_invitation', { p_id: requiredId() });
         break;
+      case 'invite.resend': {
+        // Replaces the link: the old token stops working. The new link is sent by email when a provider is configured.
+        const token = randomBytes(32).toString('hex');
+        const id = requiredId();
+        result = await db.rpc('rotate_invitation', {
+          p_id: id,
+          p_hash: createHash('sha256').update(token).digest('hex'),
+          p_expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+        link = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/invite/' + token;
+        if (!result.error) {
+          const { data: invitation } = await db
+            .from('invitations')
+            .select('id, email, role, building_id')
+            .eq('id', id)
+            .maybeSingle();
+          if (invitation) {
+            emailStatus = await deliverInvitation(db, {
+              invitationId: invitation.id,
+              buildingId: invitation.building_id,
+              email: invitation.email,
+              role: invitation.role,
+              link,
+            });
+          }
+        }
+        break;
+      }
       case 'org.update': {
         const v = z
           .object({
@@ -376,6 +419,7 @@ export async function mutateAction(
             ? String(data.id)
             : undefined,
       url: link,
+      emailStatus,
     };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };

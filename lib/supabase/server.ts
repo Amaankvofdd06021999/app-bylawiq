@@ -2,7 +2,7 @@ import 'server-only';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { publicEnv } from '@/lib/env';
-export async function db() {
+export async function createClient() {
   const jar = await cookies();
   const env = publicEnv();
   return createServerClient(env.url, env.key, {

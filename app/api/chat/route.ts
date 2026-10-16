@@ -1,11 +1,12 @@
 import { after } from 'next/server';
 import { z } from 'zod';
-import { requireUser, requirePermission } from '@/lib/auth/guards';
+import { requireUser, requirePermission, type SessionUser } from '@/lib/auth/guards';
 import { sameOrigin } from '@/lib/security/origin';
 import { rateLimit } from '@/lib/security/rate-limit';
-import { checkDb, errorResponse, NotFoundError } from '@/lib/errors';
+import { checkDb, errorResponse, NotFoundError, RateLimitError } from '@/lib/errors';
 import { chatSchema } from '@/lib/schema';
 import { generateAnswer, replayStream } from '@/features/chat/stream';
+import { auditRateLimit } from '@/features/chat/resident-verification-gate';
 import { logger } from '@/lib/logger';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -42,7 +43,20 @@ export async function POST(req: Request) {
       .eq('chat_id', chat.id)
       .maybeSingle();
     if (prior.data) return replayStream(user, prior.data.id, req.signal);
-    await rateLimit(user.id);
+    try {
+      await rateLimit(user.id);
+    } catch (e) {
+      // Record the hit for building chats (doc 11 audit trail). The request is still refused.
+      if (chat.building_id && e instanceof RateLimitError) {
+        await auditRateLimit({
+          userId: user.id,
+          buildingId: chat.building_id,
+          limitType: 'minute',
+          attemptedAt: new Date().toISOString(),
+        });
+      }
+      throw e;
+    }
     const history = await user.client
       .from('messages')
       .select('role,parts')
@@ -78,13 +92,15 @@ export async function POST(req: Request) {
           .map((p) => p.text || '')
           .join('\n'),
       }));
-    const work = generateAnswer(user, chat, run.data.id, v.message.parts[0].text, priorMessages);
+    if (!run.data) throw new NotFoundError();
+    const runId = run.data.id;
+    const work = generateAnswer(user, chat, runId, v.message.parts[0].text, priorMessages);
     after(async () => {
       await work;
       // Deduct wallet credits after chat completes (residents only)
-      await deductChatCredits(user, chat.id, chat.building_id);
+      if (chat.building_id) await deductChatCredits(user, chat.id, chat.building_id);
     });
-    return replayStream(user, run.data.id, req.signal);
+    return replayStream(user, runId, req.signal);
   } catch (e) {
     return errorResponse(e);
   }
@@ -121,9 +137,9 @@ async function deductChatCredits(user: SessionUser, chatId: string, buildingId: 
 
     // Estimate token usage: ~4 chars per token average
     let estimatedTokens = 0;
-    (messages || []).forEach((msg: any) => {
-      const parts = msg.parts || [];
-      parts.forEach((p: any) => {
+    (messages || []).forEach((msg) => {
+      const parts = (msg.parts ?? []) as Array<{ type?: string; text?: string }>;
+      parts.forEach((p) => {
         if (p.type === 'text' && p.text) {
           estimatedTokens += Math.ceil(p.text.length / 4);
         }
@@ -162,12 +178,12 @@ async function deductChatCredits(user: SessionUser, chatId: string, buildingId: 
         context: 'insufficient_credits',
       });
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.error({
       userId: user.id,
       buildingId: buildingId,
       chatId,
-      error: err.message,
+      error: err instanceof Error ? err.message : 'unknown',
       context: 'chat_credits_exception',
     });
   }

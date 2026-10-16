@@ -3,12 +3,12 @@ import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 import { RateLimitError } from '@/lib/errors';
 import { secret } from '@/lib/env';
-import { db } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { createHmac } from 'node:crypto';
 import { checkDb } from '@/lib/errors';
 export async function rateLimit(id: string, kind: 'chat' | 'upload' | 'auth' = 'chat') {
   if (!process.env.UPSTASH_REDIS_REST_URL) {
-    const client = await db();
+    const client = await createClient();
     const key = kind + ':' + id;
     const limit = kind === 'upload' ? 50 : kind === 'auth' ? 10 : 30;
     const window = kind === 'upload' ? 3600 : kind === 'auth' ? 900 : 60;

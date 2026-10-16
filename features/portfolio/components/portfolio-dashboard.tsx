@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPortfolioDashboard, getPortfolioAnalytics } from '../portfolio-queries';
+import { loadPortfolioAction } from '../portfolio-actions';
 import { Building, FileText, AlertCircle, Users } from 'lucide-react';
 
 interface Building {
@@ -41,25 +41,26 @@ export function PortfolioDashboard({ userId }: PortfolioDashboardProps) {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Reload when the signed-in user changes. State is set only when the request resolves; a stale answer is ignored.
   useEffect(() => {
-    loadData();
+    let active = true;
+    loadPortfolioAction()
+      .then((result) => {
+        if (!active) return;
+        if (!result.ok) throw new Error(result.error);
+        setDashboard(result.dashboard);
+        setAnalytics(result.analytics);
+      })
+      .catch((e: unknown) => {
+        console.error('Failed to load portfolio data:', e);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [userId]);
-
-  const loadData = async () => {
-    try {
-      const [dashboardData, analyticsData] = await Promise.all([
-        getPortfolioDashboard(userId),
-        getPortfolioAnalytics(userId),
-      ]);
-
-      setDashboard(dashboardData);
-      setAnalytics(analyticsData);
-    } catch (e) {
-      console.error('Failed to load portfolio data:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return <div className="loading">Loading portfolio...</div>;
@@ -70,7 +71,7 @@ export function PortfolioDashboard({ userId }: PortfolioDashboardProps) {
       <div className="empty-state">
         <Building size={48} />
         <h2>No buildings yet</h2>
-        <p>You haven't been assigned to manage any buildings yet.</p>
+        <p>You haven’t been assigned to manage any buildings yet.</p>
       </div>
     );
   }

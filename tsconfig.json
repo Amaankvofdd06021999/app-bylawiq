@@ -17,5 +17,11 @@
     "paths": { "@/*": ["./*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
-  "exclude": ["node_modules", "kb"]
+  "exclude": [
+    "node_modules",
+    "kb",
+    "scripts/load-test.ts",
+    "scripts/a11y-test.ts",
+    "**/*.integration.test.ts"
+  ]
 }

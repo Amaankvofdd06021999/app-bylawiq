@@ -473,6 +473,7 @@ export function residentData(s: MockState, userId: string, buildingId: string): 
       freeTotal: FREE_QUESTIONS,
     },
     prices: PRICES,
+    unitVerified: true,
     alerts: s.alerts
       .filter((a) => a.buildingId === buildingId)
       .sort((a, b) => b.created_at.localeCompare(a.created_at))

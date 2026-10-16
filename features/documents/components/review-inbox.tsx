@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { Button, Card } from '@/components/ui';
@@ -26,49 +26,53 @@ interface PendingReview {
   };
 }
 
-interface ReviewInboxProps {
-  orgId: string;
-  userId: string;
+async function fetchPendingReviews(): Promise<PendingReview[]> {
+  const result = await getPendingReviewsAction({ limit: 100 });
+  if (!result.ok) throw new Error(result.error || 'Failed to load reviews');
+  return result.reviews || [];
 }
 
-export function ReviewInbox({ orgId, userId }: ReviewInboxProps) {
+export function ReviewInbox() {
   const [reviews, setReviews] = useState<PendingReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedReview, setSelectedReview] = useState<PendingReview | null>(null);
   const [modalMode, setModalMode] = useState<'approve' | 'request' | null>(null);
+  const [now] = useState(() => Date.now());
 
-  useEffect(() => {
-    loadReviews();
-  }, []);
-
-  const loadReviews = async () => {
-    try {
-      setLoading(true);
-      const result = await getPendingReviewsAction({ limit: 100 });
-
-      if (result.ok) {
-        setReviews(result.reviews || []);
-      } else {
-        setError(result.error || 'Failed to load reviews');
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error loading reviews');
-    } finally {
-      setLoading(false);
-    }
+  // Reload after a decision. The list is only applied when the request resolves.
+  const reloadReviews = () => {
+    fetchPendingReviews()
+      .then(setReviews)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Error loading reviews'));
   };
+
+  // Load on mount. Updates happen only in the promise callbacks; a late answer after unmount is ignored.
+  useEffect(() => {
+    let active = true;
+    fetchPendingReviews()
+      .then((rows) => {
+        if (active) setReviews(rows);
+      })
+      .catch((e: unknown) => {
+        if (active) setError(e instanceof Error ? e.message : 'Error loading reviews');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleModalClose = () => {
     setModalMode(null);
     setSelectedReview(null);
-    loadReviews(); // Refresh the list
+    reloadReviews(); // Refresh the list
   };
 
   const daysWaiting = (createdAt: string) => {
-    const days = Math.floor(
-      (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const days = Math.floor((now - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
     return days;
   };
 
@@ -96,12 +100,8 @@ export function ReviewInbox({ orgId, userId }: ReviewInboxProps) {
             <div className="review-header">
               <div className="review-info">
                 <h3 className="doc-title">{review.document?.title}</h3>
-                <p className="building-name">
-                  Building: {review.building?.name}
-                </p>
-                <p className="submitter">
-                  Submitted by: {review.submitter?.display_name}
-                </p>
+                <p className="building-name">Building: {review.building?.name}</p>
+                <p className="submitter">Submitted by: {review.submitter?.display_name}</p>
               </div>
 
               <div className="status-indicator">

@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, MessageSquare, CheckCircle, AlertCircle, DollarSign, Loader } from 'lucide-react';
+import { TrendingUp, MessageSquare, CheckCircle, DollarSign, Loader } from 'lucide-react';
 import { Card } from '@/components/ui';
-import { getBuildingChatAnalytics, getFirmChatAnalytics, getPlatformChatAnalytics } from '../citations-analytics';
+import {
+  loadBuildingChatAnalyticsAction,
+  loadFirmChatAnalyticsAction,
+  loadPlatformChatAnalyticsAction,
+} from '../analytics-actions';
 
 export interface ChatAnalyticsData {
   period: string;
@@ -26,7 +30,12 @@ interface ChatAnalyticsDashboardProps {
   role: 'building_manager' | 'strata_manager' | 'firm_owner' | 'platform_admin';
 }
 
-export function ChatAnalyticsDashboard({ data: initialData, buildingId, orgId, role }: ChatAnalyticsDashboardProps) {
+export function ChatAnalyticsDashboard({
+  data: initialData,
+  buildingId,
+  orgId,
+  role,
+}: ChatAnalyticsDashboardProps) {
   const [loading, setLoading] = useState(!initialData);
   const [data, setData] = useState<ChatAnalyticsData | null>(initialData || null);
 
@@ -38,9 +47,11 @@ export function ChatAnalyticsDashboard({ data: initialData, buildingId, orgId, r
         let analytics;
 
         if (role === 'building_manager' && buildingId) {
-          analytics = await getBuildingChatAnalytics(buildingId, 30);
+          const result = await loadBuildingChatAnalyticsAction({ buildingId });
+          if (!result.ok) throw new Error(result.error);
+          analytics = result.analytics;
           setData({
-            period: analytics.period,
+            period: analytics.period ?? '',
             totalSessions: analytics.totalSessions,
             failureRate: analytics.failureRate,
             rateLimited: analytics.rateLimited,
@@ -51,29 +62,33 @@ export function ChatAnalyticsDashboard({ data: initialData, buildingId, orgId, r
             verificationPassRate: 1 - analytics.failureRate,
           });
         } else if (role === 'firm_owner' && orgId) {
-          analytics = await getFirmChatAnalytics(orgId, 30);
+          const result = await loadFirmChatAnalyticsAction({ orgId });
+          if (!result.ok) throw new Error(result.error);
+          analytics = result.analytics;
           setData({
-            period: analytics.period,
+            period: analytics.period ?? '',
             totalSessions: analytics.totalSessions,
             failureRate: analytics.failureRate,
             rateLimited: 0,
             averageTokensPerResponse: 850,
             totalTokensUsed: 0,
             estimatedCost: analytics.totalSpend,
-            uniqueUsers: analytics.uniqueResidents,
+            uniqueUsers: analytics.uniqueResidents ?? 0,
             verificationPassRate: 1 - analytics.failureRate,
           });
         } else if (role === 'platform_admin') {
-          analytics = await getPlatformChatAnalytics(30);
+          const result = await loadPlatformChatAnalyticsAction();
+          if (!result.ok) throw new Error(result.error);
+          analytics = result.analytics;
           setData({
-            period: analytics.period,
+            period: analytics.period ?? '',
             totalSessions: analytics.totalSessions,
             failureRate: analytics.failureRate,
             rateLimited: 0,
             averageTokensPerResponse: 850,
             totalTokensUsed: 0,
             estimatedCost: analytics.totalSpend,
-            uniqueUsers: analytics.uniqueResidents,
+            uniqueUsers: analytics.uniqueResidents ?? 0,
             verificationPassRate: 1 - analytics.failureRate,
           });
         }
@@ -104,7 +119,7 @@ export function ChatAnalyticsDashboard({ data: initialData, buildingId, orgId, r
     );
   }
 
-  const statCards = [
+  const statCards: StatCardProps[] = [
     {
       label: 'Total Questions',
       value: data.totalSessions.toLocaleString(),

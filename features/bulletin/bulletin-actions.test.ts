@@ -5,6 +5,8 @@ import {
   pinBulletinPostAction,
   deleteBulletinPostAction,
 } from './bulletin-actions';
+import { requireUser } from '@/lib/auth/guards';
+import { createClient } from '@/lib/supabase/server';
 
 vi.mock('@/lib/auth/guards', () => ({
   requireUser: vi.fn(),
@@ -15,135 +17,152 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 vi.mock('@/lib/errors', () => ({
-  checkDb: vi.fn(),
+  checkDb: (error: unknown) => {
+    if (error) throw error;
+  },
   ForbiddenError: class ForbiddenError extends Error {},
-  errorMessage: (e: any) => e.message || 'Unknown error',
+  NotFoundError: class NotFoundError extends Error {
+    constructor(message = 'Not found') {
+      super(message);
+    }
+  },
+  errorMessage: (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Please try again.'),
 }));
 
-import { requireUser } from '@/lib/auth/guards';
-import { createClient } from '@/lib/supabase/server';
+type Result = { data: unknown; error: unknown };
+type Call = { table: string; op: string; args: unknown[] };
 
-describe('Bulletin Actions', () => {
-  const mockUser = { id: 'user-1', email: 'test@example.com' };
-  const buildingId = 'building-1';
-  const postId = 'post-1';
+// A small stand-in for the Supabase query builder. Each table answers with the result given for it; every call is
+// recorded so a test can check what was written.
+function fakeDb(results: Record<string, Result>, calls: Call[]) {
+  return {
+    from(table: string) {
+      const result = results[table] ?? { data: null, error: null };
+      const builder = {
+        select: (...args: unknown[]) => record(table, 'select', args),
+        eq: (...args: unknown[]) => record(table, 'eq', args),
+        is: (...args: unknown[]) => record(table, 'is', args),
+        insert: (...args: unknown[]) => record(table, 'insert', args),
+        update: (...args: unknown[]) => record(table, 'update', args),
+        single: async () => result,
+        maybeSingle: async () => result,
+      };
+      function record(t: string, op: string, args: unknown[]) {
+        calls.push({ table: t, op, args });
+        return builder;
+      }
+      return builder;
+    },
+  };
+}
+
+const buildingId = '11111111-1111-4111-8111-111111111111';
+const postId = '22222222-2222-4222-8222-222222222222';
+
+describe('Bulletin actions', () => {
+  let calls: Call[];
+
+  function useDb(results: Record<string, Result>) {
+    calls = [];
+    vi.mocked(createClient).mockResolvedValue(fakeDb(results, calls) as never);
+  }
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (requireUser as any).mockResolvedValue(mockUser);
+    vi.mocked(requireUser).mockResolvedValue({ id: 'user-1', email: 'test@example.com' } as never);
   });
 
   describe('createBulletinPostAction', () => {
-    it('should create a bulletin post for staff', async () => {
-      const mockDb = {
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { role: 'building_manager' },
-          error: null,
-        }),
-        insert: vi.fn().mockReturnThis(),
-      };
+    const input = { buildingId, title: 'Water shut off', body: 'Tuesday 9am to noon.' };
 
-      (createClient as any).mockResolvedValue(mockDb);
-
-      const input = {
-        buildingId,
-        title: 'Test Post',
-        body: 'Test body content',
-      };
-
-      // The actual result depends on the Supabase mock setup
-      // In production, this would create a post
+    it('refuses residents', async () => {
+      useDb({ building_members: { data: { role: 'owner_resident' }, error: null } });
+      const r = await createBulletinPostAction(input);
+      expect(r).toEqual({ ok: false, error: 'Residents cannot post to bulletin' });
+      expect(calls.some((c) => c.op === 'insert')).toBe(false);
     });
 
-    it('should reject residents posting', async () => {
-      const mockDb = {
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { role: 'owner_resident' },
-          error: null,
-        }),
-      };
-
-      (createClient as any).mockResolvedValue(mockDb);
-
-      const input = {
-        buildingId,
-        title: 'Test Post',
-        body: 'Test body content',
-      };
-
-      // Should return error: "Residents cannot post to bulletin"
+    it('refuses someone who is not a member of the building', async () => {
+      useDb({ building_members: { data: null, error: null } });
+      const r = await createBulletinPostAction(input);
+      expect(r).toEqual({ ok: false, error: 'You are not a member of this building' });
     });
 
-    it('should reject non-members', async () => {
-      const mockDb = {
-        from: vi.fn().mockReturnThis(),
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: null,
-          error: { message: 'No rows returned' },
-        }),
-      };
+    it('lets staff post, recording the author and building', async () => {
+      useDb({
+        building_members: { data: { role: 'building_manager' }, error: null },
+        bulletin_posts: { data: { id: postId }, error: null },
+      });
+      const r = await createBulletinPostAction(input);
+      expect(r).toEqual({ ok: true, postId });
+      const insert = calls.find((c) => c.table === 'bulletin_posts' && c.op === 'insert');
+      expect(insert?.args[0]).toMatchObject({ building_id: buildingId, author_id: 'user-1', pinned: false });
+    });
 
-      (createClient as any).mockResolvedValue(mockDb);
-
-      // Should return error: "You are not a member of this building"
+    it('rejects invalid input before touching the database', async () => {
+      useDb({});
+      const r = await createBulletinPostAction({ ...input, buildingId: 'not-a-uuid' });
+      expect(r.ok).toBe(false);
+      expect(calls).toHaveLength(0);
     });
   });
 
   describe('updateBulletinPostAction', () => {
-    it('should update post as author', async () => {
-      // Test that author can update their own post
+    it('lets the author edit their own post', async () => {
+      useDb({ bulletin_posts: { data: { author_id: 'user-1', building_id: buildingId }, error: null } });
+      const r = await updateBulletinPostAction({ postId, buildingId, title: 'Corrected' });
+      expect(r).toEqual({ ok: true });
+      expect(calls.some((c) => c.table === 'bulletin_posts' && c.op === 'update')).toBe(true);
     });
 
-    it('should update post as manager', async () => {
-      // Test that building manager can update any post
+    it('refuses a resident editing someone else’s post', async () => {
+      useDb({
+        bulletin_posts: { data: { author_id: 'user-2', building_id: buildingId }, error: null },
+        building_members: { data: { role: 'owner_resident' }, error: null },
+      });
+      const r = await updateBulletinPostAction({ postId, buildingId, title: 'Mine now' });
+      expect(r).toEqual({ ok: false, error: 'You can only edit your own posts' });
     });
 
-    it('should reject resident updates', async () => {
-      // Test that residents cannot update posts
-    });
-
-    it('should reject unauthorized users', async () => {
-      // Test that non-members cannot update posts
+    it('reports a missing post as not found', async () => {
+      useDb({ bulletin_posts: { data: null, error: null } });
+      const r = await updateBulletinPostAction({ postId, buildingId, title: 'Gone' });
+      expect(r.ok).toBe(false);
     });
   });
 
   describe('pinBulletinPostAction', () => {
-    it('should pin post as manager', async () => {
-      // Test that manager can pin posts
+    it('refuses residents', async () => {
+      useDb({ building_members: { data: { role: 'owner_resident' }, error: null } });
+      const r = await pinBulletinPostAction({ postId, buildingId, pinned: true });
+      expect(r).toEqual({ ok: false, error: 'Only building managers can pin posts' });
     });
 
-    it('should reject non-managers', async () => {
-      // Test that residents and council members cannot pin
-    });
-
-    it('should toggle pin status', async () => {
-      // Test that pinned status can be toggled
+    it('lets a building manager pin a post', async () => {
+      useDb({ building_members: { data: { role: 'building_manager' }, error: null } });
+      const r = await pinBulletinPostAction({ postId, buildingId, pinned: true });
+      expect(r).toEqual({ ok: true });
+      const update = calls.find((c) => c.table === 'bulletin_posts' && c.op === 'update');
+      expect(update?.args[0]).toEqual({ pinned: true });
     });
   });
 
   describe('deleteBulletinPostAction', () => {
-    it('should soft delete post as author', async () => {
-      // Test that author can delete their own post
+    it('soft-deletes the post for its author', async () => {
+      useDb({ bulletin_posts: { data: { author_id: 'user-1', building_id: buildingId }, error: null } });
+      const r = await deleteBulletinPostAction({ postId, buildingId });
+      expect(r).toEqual({ ok: true });
+      const update = calls.find((c) => c.table === 'bulletin_posts' && c.op === 'update');
+      expect(update?.args[0]).toHaveProperty('deleted_at');
     });
 
-    it('should soft delete post as manager', async () => {
-      // Test that manager can delete any post
-    });
-
-    it('should reject resident deletes', async () => {
-      // Test that residents cannot delete posts
-    });
-
-    it('should set deleted_at timestamp', async () => {
-      // Test that soft delete sets deleted_at, not actual deletion
+    it('refuses a resident deleting someone else’s post', async () => {
+      useDb({
+        bulletin_posts: { data: { author_id: 'user-2', building_id: buildingId }, error: null },
+        building_members: { data: { role: 'owner_resident' }, error: null },
+      });
+      const r = await deleteBulletinPostAction({ postId, buildingId });
+      expect(r).toEqual({ ok: false, error: 'You can only delete your own posts' });
     });
   });
 });

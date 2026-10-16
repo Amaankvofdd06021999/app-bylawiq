@@ -71,7 +71,7 @@ describe('firm staff and platform admin', () => {
     expect(isPlatformAdmin(s, IDS.users.alex)).toBe(true);
     expect(isPlatformAdmin(s, IDS.users.dana)).toBe(false);
     expect(s.members.some((m) => m.user_id === IDS.users.alex)).toBe(false);
-    expect(s.profiles.find((p) => p.id === IDS.users.alex)?.account_type).toBe('admin');
+    expect(s.profiles.find((p) => p.id === IDS.users.alex)?.bound_building_id).toBeNull();
   });
   it('lets the resident ask on her own building only, without the real chat.use permission', () => {
     const s = seed();

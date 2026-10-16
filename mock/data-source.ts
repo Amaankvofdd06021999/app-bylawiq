@@ -42,7 +42,7 @@ export async function demoSource(): Promise<DataSource> {
       return {
         ...state,
         nav: {
-          home: state.profile.account_type === 'single_building' && hasBuildingHome(s, userId, buildingId),
+          home: state.profile.bound_building_id !== null && hasBuildingHome(s, userId, buildingId),
           residentNav: hasResidentHome(s, userId, buildingId),
           firmKnowledge: firmTabFor(s, userId, buildingId),
         },
@@ -115,7 +115,7 @@ export async function demoSource(): Promise<DataSource> {
         );
       if (owner) return { kind: 'firm_owner', data: firmOwnerDashboard(s, userId) };
       // A single-building person with no firm only reaches the overview after losing access: the plain list.
-      if (firm == null && source.workspace(s, userId).profile.account_type === 'single_building') return null;
+      if (firm == null && source.workspace(s, userId).profile.bound_building_id !== null) return null;
       return { kind: 'strata_manager', data: strataManagerDashboard(s, userId) };
     },
     async buildingDashboard(buildingId) {

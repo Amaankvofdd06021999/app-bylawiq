@@ -26,9 +26,21 @@ export function BuyCreditsButton({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [done, setDone] = useState<number | null>(null);
+  const live = backend.base === '';
   async function buy() {
     setBusy(true);
     setError('');
+    if (live) {
+      // Live: the resident pays on Stripe; the webhook adds the credits once the payment succeeds.
+      const r = await backend.startCreditCheckout({ buildingId: data.building.id });
+      if (!r.ok) {
+        setBusy(false);
+        setError(r.error);
+        return;
+      }
+      window.location.assign(r.url);
+      return;
+    }
     const r = await backend.buyCredits({ buildingId: data.building.id });
     setBusy(false);
     if (!r.ok) {
@@ -55,7 +67,7 @@ export function BuyCreditsButton({
         open={open}
         onOpenChange={setOpen}
         title={`Buy ${pack.credits} credits`}
-        description="Demo — no real charge."
+        description={live ? 'You will pay on Stripe’s secure page.' : 'Demo — no real charge.'}
       >
         {done != null ? (
           <div className="form-stack">
@@ -80,9 +92,16 @@ export function BuyCreditsButton({
               {creditWord(data.prices.draftNotice)} and a reply to a strata letter{' '}
               {creditWord(data.prices.letterReply)}. Explainers are included. Credits don’t expire.
             </p>
-            <p className="form-note">
-              <strong>Demo — no real charge.</strong> No card is asked for or charged.
-            </p>
+            {live ? (
+              <p className="form-note">
+                Credits are added once Stripe confirms your payment. You will not be charged until you confirm
+                on the payment page.
+              </p>
+            ) : (
+              <p className="form-note">
+                <strong>Demo — no real charge.</strong> No card is asked for or charged.
+              </p>
+            )}
             {error && (
               <p className="form-error" role="alert">
                 {error}
@@ -93,7 +112,7 @@ export function BuyCreditsButton({
                 Cancel
               </Button>
               <Button busy={busy} onClick={buy}>
-                Pay ${pack.price} (demo)
+                {live ? `Continue to payment · $${pack.price}` : `Pay $${pack.price} (demo)`}
               </Button>
             </div>
           </div>
@@ -116,7 +135,9 @@ export function CreditsCard({ data, manage = true }: { data: ResidentData; manag
       <p className="form-note">
         {w.freeLeft > 0
           ? `${w.freeLeft} of ${w.freeTotal} free questions left, then 1 credit a question.`
-          : `Your ${w.freeTotal} free questions are used. Each question now uses 1 credit.`}
+          : w.freeTotal > 0
+            ? `Your ${w.freeTotal} free questions are used. Each question now uses 1 credit.`
+            : 'Each question uses 1 credit.'}
       </p>
       {w.credits < data.prices.draftNotice && (
         <p className="inline-callout" style={{ marginTop: 12 }}>

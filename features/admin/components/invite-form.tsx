@@ -29,7 +29,7 @@ export function InviteForm({ onSuccess }: InviteFormProps) {
       setRole('portfolio_manager');
       onSuccess?.();
     } else {
-      setError(result.error);
+      setError(result.error ?? 'Something went wrong. Please try again.');
     }
   };
 
@@ -52,12 +52,7 @@ export function InviteForm({ onSuccess }: InviteFormProps) {
 
         <div className="form-group">
           <label htmlFor="role">Role</label>
-          <Select
-            id="role"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            disabled={busy}
-          >
+          <Select id="role" value={role} onChange={(e) => setRole(e.target.value)} disabled={busy}>
             <option value="portfolio_manager">Portfolio Manager</option>
             <option value="portfolio_assistant">Assistant Manager</option>
             <option value="org_admin">Admin</option>

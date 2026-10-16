@@ -38,6 +38,12 @@ interface SearchResult {
   relevance_score: number;
 }
 
+// Returns the stats, or null when they cannot be read. No state here, so it can run from an effect or a handler.
+async function fetchRegionStats(regionId: string) {
+  const result = await getRegionStatsAction({ regionId });
+  return result.ok ? result.stats : null;
+}
+
 export function RegionalKbViewer() {
   const [regions, setRegions] = useState<RegionOption[]>([]);
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
@@ -48,31 +54,31 @@ export function RegionalKbViewer() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Load regions on mount
+  // Load regions on mount. Updates happen only in the promise callbacks.
   useEffect(() => {
-    (async () => {
-      const result = await getAllRegionsAction();
-      if (result.ok) {
-        setRegions(result.regions);
-        if (result.regions.length > 0) {
-          setSelectedRegionId(result.regions[0].id);
-          loadRegionStats(result.regions[0].id);
-        }
+    let active = true;
+    getAllRegionsAction().then((result) => {
+      if (!active || !result.ok) return;
+      setRegions(result.regions);
+      if (result.regions.length > 0) {
+        const first = result.regions[0].id;
+        setSelectedRegionId(first);
+        fetchRegionStats(first).then((stats) => {
+          if (active && stats) setSelectedRegionStats(stats);
+        });
       }
-    })();
+    });
+    return () => {
+      active = false;
+    };
   }, []);
-
-  const loadRegionStats = async (regionId: string) => {
-    const result = await getRegionStatsAction({ regionId });
-    if (result.ok) {
-      setSelectedRegionStats(result.stats);
-    }
-  };
 
   const handleRegionChange = (regionId: string) => {
     setSelectedRegionId(regionId);
     setSearchResults([]);
-    loadRegionStats(regionId);
+    fetchRegionStats(regionId).then((stats) => {
+      if (stats) setSelectedRegionStats(stats);
+    });
   };
 
   const handleSearch = async () => {
@@ -96,7 +102,7 @@ export function RegionalKbViewer() {
       if (result.ok) {
         setSearchResults(result.results);
       } else {
-        setError(result.error);
+        setError(result.error ?? 'Something went wrong. Please try again.');
       }
     } finally {
       setBusy(false);
@@ -116,10 +122,7 @@ export function RegionalKbViewer() {
       {/* Region Selector */}
       <Card className="region-selector">
         <label>Select Region</label>
-        <select
-          value={selectedRegionId || ''}
-          onChange={(e) => handleRegionChange(e.target.value)}
-        >
+        <select value={selectedRegionId || ''} onChange={(e) => handleRegionChange(e.target.value)}>
           {regions.map((r) => (
             <option key={r.id} value={r.id}>
               {r.region_name} ({r.jurisdiction}) · {r.building_count} buildings
@@ -128,7 +131,15 @@ export function RegionalKbViewer() {
         </select>
 
         {selectedRegionStats && (
-          <div className="region-stats grid" style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
+          <div
+            className="region-stats grid"
+            style={{
+              marginTop: 16,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: 16,
+            }}
+          >
             <div className="stat-card">
               <dt>Buildings</dt>
               <dd>{selectedRegionStats.building_count}</dd>
@@ -143,7 +154,11 @@ export function RegionalKbViewer() {
             </div>
             <div className="stat-card">
               <dt>Updated</dt>
-              <dd>{selectedRegionStats.last_updated ? new Date(selectedRegionStats.last_updated).toLocaleDateString() : 'N/A'}</dd>
+              <dd>
+                {selectedRegionStats.last_updated
+                  ? new Date(selectedRegionStats.last_updated).toLocaleDateString()
+                  : 'N/A'}
+              </dd>
             </div>
           </div>
         )}
@@ -158,7 +173,6 @@ export function RegionalKbViewer() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Search regional knowledge base..."
-            prefix={<Search size={16} />}
           />
           <Button onClick={handleSearch} busy={busy}>
             Search
@@ -190,11 +204,7 @@ export function RegionalKbViewer() {
       {/* Search Results */}
       <div className="search-results">
         {searchResults.length === 0 && searchQuery ? (
-          <Empty
-            icon={<Search />}
-            title="No results"
-            description="Try a different search term."
-          />
+          <Empty icon={<Search />} title="No results" description="Try a different search term." />
         ) : (
           searchResults.map((result, i) => (
             <Card key={i} className="result-card">

@@ -62,6 +62,13 @@ export function ResidentHome({ data }: { data: ResidentData }) {
         title={`Hi ${data.firstName}.`}
         description="Your building’s bylaws, explained — and help writing to council when you need it."
       />
+      {data.unit && (
+        <p className="form-note" role="status">
+          {data.unitVerified
+            ? `Unit ${data.unit} is verified by your building manager.`
+            : `Unit ${data.unit} is waiting for your building manager to verify it.`}
+        </p>
+      )}
       <div className="split-grid dash-split">
         <section className="dash-section" aria-label="Credits">
           <CreditsCard data={data} />

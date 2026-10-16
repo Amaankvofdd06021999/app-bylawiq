@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
-import { Mail, Trash2, Clock } from 'lucide-react';
+import { Mail, Trash2 } from 'lucide-react';
 import type { PendingInvitation } from '../queries';
 import { resendInvitationAction, revokeInvitationAction } from '../admin-actions';
 
@@ -13,15 +13,20 @@ export function PendingInvitationsTable({ invitations }: PendingInvitationsTable
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState(invitations);
+  // The new link is shown once, to the admin who issued it. Email is not sent.
+  const [link, setLink] = useState<string | null>(null);
 
-  const handleResend = async (invitationId: string, email: string) => {
+  const handleResend = async (invitationId: string) => {
     try {
       setIsLoading(invitationId);
       setError(null);
+      setLink(null);
 
-      const result = await resendInvitationAction({ invitationId, email });
+      const result = await resendInvitationAction({ invitationId });
 
-      if (!result.ok) {
+      if (result.ok && result.link) {
+        setLink(result.link);
+      } else if (!result.ok) {
         setError(result.error || 'Failed to resend invitation');
       }
     } catch (e) {
@@ -64,10 +69,17 @@ export function PendingInvitationsTable({ invitations }: PendingInvitationsTable
 
   return (
     <div className="table-container">
+      {link && (
+        <p className="form-note" role="status">
+          New link (copy it now; it is not shown again): <code>{link}</code>
+        </p>
+      )}
       {error && (
         <div className="error-banner">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="close-btn">×</button>
+          <button onClick={() => setError(null)} className="close-btn">
+            Ã—
+          </button>
         </div>
       )}
 
@@ -98,7 +110,7 @@ export function PendingInvitationsTable({ invitations }: PendingInvitationsTable
                 </td>
                 <td className="actions-cell">
                   <button
-                    onClick={() => handleResend(invitation.id, invitation.email)}
+                    onClick={() => handleResend(invitation.id)}
                     disabled={isLoading === invitation.id}
                     className="action-btn resend-btn"
                     title="Resend invitation"

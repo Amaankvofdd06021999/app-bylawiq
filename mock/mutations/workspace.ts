@@ -148,7 +148,7 @@ export function mutate(s: MockState, userId: string, raw: unknown): Result<{ id?
         const profile = s.profiles.find((p) => p.id === userId);
         if (
           !firm ||
-          profile?.account_type === 'single_building' ||
+          (profile?.bound_building_id ?? null) !== null ||
           !s.orgMembers.some(
             (m) =>
               m.org_id === x.orgId &&
@@ -730,7 +730,7 @@ export function mutate(s: MockState, userId: string, raw: unknown): Result<{ id?
           raise('forbidden');
         const profile = s.profiles.find((p) => emailOf(p.id) === x.email);
         if (
-          profile?.account_type === 'single_building' &&
+          profile?.bound_building_id != null &&
           profile.bound_building_id !== b &&
           managingOrgs(s, profile.bound_building_id).some((o) => managingOrgs(s, b).includes(o))
         )

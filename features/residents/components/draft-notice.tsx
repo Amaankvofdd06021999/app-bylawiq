@@ -6,7 +6,8 @@ import { Badge, Button, Empty, PageHeading } from '@/components/ui';
 import { useBackend } from '@/components/backend';
 import type { ResidentData } from '../types';
 import { LegalBanner } from './legal-banner';
-import { PaywallDialog, useDraftTool } from './paywall-dialog';
+import { PaywallDialog } from './paywall-dialog';
+import { useDraftTool } from './use-draft-tool';
 import { DraftView } from './my-drafts';
 import { creditWord } from './credits-card';
 /** Shown instead of a paid tool while the platform has resident AI turned off. */
@@ -146,7 +147,6 @@ export function DraftNotice({ data }: { data: ResidentData }) {
         needed={price}
         credits={tool.paywallCredits ?? data.wallet.credits}
         pack={data.prices.pack}
-        onBought={tool.retry}
       />
     </>
   );

@@ -16,8 +16,8 @@ export function BuildingLinkingInfo() {
           <div className="step-content">
             <h4>Building Manager Initiates</h4>
             <p>
-              The building's council president or manager goes to their building settings and clicks
-              "Link Strata Firm".
+              The building’s council president or manager goes to their building settings and clicks “Link
+              Strata Firm”.
             </p>
           </div>
           <Building2 size={20} className="step-icon" />
@@ -30,8 +30,8 @@ export function BuildingLinkingInfo() {
           <div className="step-content">
             <h4>Code is Generated</h4>
             <p>
-              They generate a unique linking code (format: XXXX-XXXX) that expires in 7 days and is
-              valid for one-time use.
+              They generate a unique linking code (format: XXXX-XXXX) that expires in 7 days and is valid for
+              one-time use.
             </p>
           </div>
           <Key size={20} className="step-icon" />
@@ -43,10 +43,7 @@ export function BuildingLinkingInfo() {
           <div className="step-number">3</div>
           <div className="step-content">
             <h4>You Accept the Code</h4>
-            <p>
-              Your organization owner or admin receives the code and enters it here to activate the
-              link.
-            </p>
+            <p>Your organization owner or admin receives the code and enters it here to activate the link.</p>
           </div>
           <Key size={20} className="step-icon" />
         </div>
@@ -58,8 +55,7 @@ export function BuildingLinkingInfo() {
           <div className="step-content">
             <h4>Link is Active</h4>
             <p>
-              Your team gains access to the building's documents, disputes, and can draft notices
-              for review.
+              Your team gains access to the building’s documents, disputes, and can draft notices for review.
             </p>
           </div>
           <Building2 size={20} className="step-icon" />
@@ -68,8 +64,8 @@ export function BuildingLinkingInfo() {
 
       <div className="info-footer">
         <p className="text-small">
-          <strong>Revoke anytime:</strong> Click the "Revoke Access" button on any linked building
-          to immediately remove your firm's access.
+          <strong>Revoke anytime:</strong> Click the “Revoke Access” button on any linked building to
+          immediately remove your firm’s access.
         </p>
       </div>
 

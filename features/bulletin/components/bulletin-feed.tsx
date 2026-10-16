@@ -10,13 +10,7 @@ interface BulletinFeedProps {
   onDelete?: (postId: string) => void;
 }
 
-export function BulletinFeed({
-  posts,
-  isStaff = false,
-  onPin,
-  onEdit,
-  onDelete,
-}: BulletinFeedProps) {
+export function BulletinFeed({ posts, isStaff = false, onPin, onEdit, onDelete }: BulletinFeedProps) {
   if (posts.length === 0) {
     return (
       <div className="empty-state">
@@ -28,58 +22,53 @@ export function BulletinFeed({
 
   return (
     <div className="feed">
-      {posts.map((post) => (
-        <article key={post.id} className="post">
-          <div className="post-header">
-            <div className="post-title-row">
-              {post.pinned && (
-                <span className="pinned-badge">
-                  <Pin size={14} /> Pinned
-                </span>
-              )}
-              <h3 className="post-title">{post.title}</h3>
-            </div>
-            {isStaff && (
-              <div className="post-actions">
-                {onPin && (
-                  <button
-                    className="action-btn"
-                    onClick={() => onPin(post.id, !post.pinned)}
-                    title={post.pinned ? 'Unpin' : 'Pin to top'}
-                  >
-                    <Pin size={16} />
-                  </button>
+      {/* Pinned first, then the order given (the server sorts newest first). Array sort is stable. */}
+      {[...posts]
+        .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+        .map((post) => (
+          <article key={post.id} className="post">
+            <div className="post-header">
+              <div className="post-title-row">
+                {post.pinned && (
+                  <span className="pinned-badge">
+                    <Pin size={14} /> Pinned
+                  </span>
                 )}
-                {onEdit && (
-                  <button
-                    className="action-btn"
-                    onClick={() => onEdit(post)}
-                    title="Edit"
-                  >
-                    Edit
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    className="action-btn delete"
-                    onClick={() => onDelete(post.id)}
-                    title="Delete"
-                  >
-                    Delete
-                  </button>
-                )}
+                <h3 className="post-title">{post.title}</h3>
               </div>
-            )}
-          </div>
+              {isStaff && (
+                <div className="post-actions">
+                  {onPin && (
+                    <button
+                      className="action-btn"
+                      onClick={() => onPin(post.id, !post.pinned)}
+                      title={post.pinned ? 'Unpin' : 'Pin to top'}
+                    >
+                      <Pin size={16} />
+                    </button>
+                  )}
+                  {onEdit && (
+                    <button className="action-btn" onClick={() => onEdit(post)} title="Edit">
+                      Edit
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button className="action-btn delete" onClick={() => onDelete(post.id)} title="Delete">
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
-          <div className="post-meta">
-            <span className="author">By {post.authorName}</span>
-            <span className="date">{new Date(post.createdAt).toLocaleDateString()}</span>
-          </div>
+            <div className="post-meta">
+              <span className="author">By {post.authorName}</span>
+              <span className="date">{new Date(post.createdAt).toLocaleDateString()}</span>
+            </div>
 
-          <div className="post-body">{post.body}</div>
-        </article>
-      ))}
+            <div className="post-body">{post.body}</div>
+          </article>
+        ))}
 
       <style jsx>{`
         .feed {

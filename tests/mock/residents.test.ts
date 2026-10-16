@@ -74,16 +74,16 @@ describe('resident home data', () => {
     const s = seed();
     const d = residentData(s, u.priya, b.seaside);
     const { ok } = passages(s);
-    expect(d.explainers.map((e) => e.sectionRef)).toEqual(['3.1', '3.2', '4.1', '4.4', 'R.2', 'R.6']);
-    for (const e of d.explainers) {
+    expect((d.explainers ?? []).map((e) => e.sectionRef)).toEqual(['3.1', '3.2', '4.1', '4.4', 'R.2', 'R.6']);
+    for (const e of d.explainers ?? []) {
       expect(ok).toContain(e.source.content);
       expect(e.source.kind).toBe('building');
       expect(e.summary.length).toBeGreaterThan(0);
     }
-    const quiet = d.explainers.find((e) => e.sectionRef === '3.1')!;
+    const quiet = (d.explainers ?? []).find((e) => e.sectionRef === '3.1')!;
     expect(quiet.label).toBe('Noise and quiet hours');
     expect(quiet.facts).toEqual(expect.arrayContaining(['10:00 pm', '7:00 am', '9:00 am']));
-    expect(d.explainers.find((e) => e.sectionRef === 'R.6')!.label).toBe('Fines');
+    expect((d.explainers ?? []).find((e) => e.sectionRef === 'R.6')!.label).toBe('Fines');
   });
   it('is only for residents of that building', () => {
     const s = seed();

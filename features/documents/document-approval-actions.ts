@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
+import { directoryFor } from '@/lib/directory';
 import { checkDb, ForbiddenError, NotFoundError, errorMessage } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 
@@ -86,15 +87,13 @@ export async function submitDocumentForReviewAction(raw: unknown) {
     checkDb(updateError);
 
     // Create review entry (pending approval)
-    const { error: reviewError } = await db
-      .from('document_reviews')
-      .insert({
-        document_id: input.documentId,
-        building_id: input.buildingId,
-        reviewer_id: user.id,
-        status: 'pending',
-        comment: 'Awaiting firm owner review',
-      });
+    const { error: reviewError } = await db.from('document_reviews').insert({
+      document_id: input.documentId,
+      building_id: input.buildingId,
+      reviewer_id: user.id,
+      status: 'pending',
+      comment: 'Awaiting firm owner review',
+    });
 
     checkDb(reviewError);
 
@@ -215,13 +214,20 @@ export async function requestDocumentChangesAction(raw: unknown) {
       throw new ForbiddenError('Only submitted documents can be updated');
     }
 
+    const { data: currentReview, error: currentReviewError } = await db
+      .from('document_reviews')
+      .select('changes_requested_count')
+      .eq('document_id', input.documentId)
+      .maybeSingle();
+    checkDb(currentReviewError);
+
     // Update review status to "changes_requested"
     const { error: reviewError } = await db
       .from('document_reviews')
       .update({
         status: 'changes_requested',
         comment: input.comment,
-        changes_requested_count: db.raw('changes_requested_count + 1'),
+        changes_requested_count: (currentReview?.changes_requested_count ?? 0) + 1,
         updated_at: new Date().toISOString(),
       })
       .eq('document_id', input.documentId);
@@ -297,15 +303,15 @@ export async function sendApprovedDocumentAction(raw: unknown) {
     checkDb(updateError);
 
     // Send email to recipient with document link
-    const { data: document } = await db
+    const { data: sentDocument } = await db
       .from('documents')
       .select('title')
       .eq('id', input.documentId)
       .single();
 
     console.log(
-      `[EMAIL] Document approval: ${input.recipientEmail} document=${document?.title} ` +
-      `document_id=${input.documentId}`
+      `[EMAIL] Document approval: ${input.recipientEmail} document=${sentDocument?.title} ` +
+        `document_id=${input.documentId}`,
     );
 
     return { ok: true, message: `Document sent to ${input.recipientEmail}` };
@@ -317,6 +323,24 @@ export async function sendApprovedDocumentAction(raw: unknown) {
 /**
  * Get pending reviews for firm owner
  */
+const ReviewRowSchema = z.array(
+  z.object({
+    id: z.string(),
+    document_id: z.string(),
+    building_id: z.string(),
+    status: z.enum(['pending', 'changes_requested']),
+    comment: z.string().nullable(),
+    changes_requested_count: z.number(),
+    created_at: z.string(),
+    document: z
+      .union([
+        z.object({ title: z.string(), submitted_by: z.string().nullable() }),
+        z.array(z.object({ title: z.string(), submitted_by: z.string().nullable() })),
+      ])
+      .nullable(),
+    building: z.union([z.object({ name: z.string() }), z.array(z.object({ name: z.string() }))]).nullable(),
+  }),
+);
 export async function getPendingReviewsAction(raw: unknown) {
   try {
     const user = await requireUser();
@@ -353,9 +377,8 @@ export async function getPendingReviewsAction(raw: unknown) {
       changes_requested_count,
       created_at,
       document:documents(title, submitted_by),
-      building:buildings(name),
-      submitter:profiles!documents.submitted_by(display_name)
-    `
+      building:buildings(name)
+    `,
       )
       .eq('status', 'pending')
       .order('created_at', { ascending: true })
@@ -363,7 +386,35 @@ export async function getPendingReviewsAction(raw: unknown) {
 
     checkDb(error);
 
-    return { ok: true, reviews: reviews || [] };
+    const one = <T>(value: T | T[] | null): T | undefined =>
+      Array.isArray(value) ? value[0] : (value ?? undefined);
+    const rows = ReviewRowSchema.parse(reviews ?? []);
+    const submitterIds = rows
+      .map((r) => one(r.document)?.submitted_by)
+      .filter((id): id is string => Boolean(id));
+    const directory = await directoryFor(user, submitterIds);
+    return {
+      ok: true,
+      reviews: rows.map((r) => {
+        const document = one(r.document);
+        const building = one(r.building);
+        const submitterEntry = document?.submitted_by ? directory.get(document.submitted_by) : undefined;
+        return {
+          id: r.id,
+          documentId: r.document_id,
+          buildingId: r.building_id,
+          status: r.status,
+          comment: r.comment ?? undefined,
+          changesRequestedCount: r.changes_requested_count,
+          createdAt: r.created_at,
+          document: document ? { title: document.title } : undefined,
+          building: building ? { name: building.name } : undefined,
+          submitter: submitterEntry
+            ? { display_name: submitterEntry.displayName || submitterEntry.email }
+            : undefined,
+        };
+      }),
+    };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }

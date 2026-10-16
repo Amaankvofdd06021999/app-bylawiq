@@ -9,12 +9,12 @@ interface AuditEntry {
   admin_id: string;
   action: string;
   resource_type: string;
-  resource_id?: string;
-  details: Record<string, any>;
+  resource_id?: string | null;
+  details: Record<string, unknown> | null;
   created_at: string;
   admin?: {
-    display_name: string;
-    email: string;
+    display_name: string | null;
+    email: string | null;
   };
 }
 
@@ -24,29 +24,25 @@ export function PlatformAuditLog() {
   const [error, setError] = useState('');
   const [selectedAction, setSelectedAction] = useState('');
 
+  // Reload when the filter changes. State is set only when the request resolves; a stale answer is ignored.
   useEffect(() => {
-    loadAuditLog();
-  }, [selectedAction]);
-
-  const loadAuditLog = async () => {
-    try {
-      setLoading(true);
-      const result = await getPlatformAuditLogAction({
-        limit: 50,
-        action: selectedAction || undefined,
+    let active = true;
+    getPlatformAuditLogAction({ limit: 50, action: selectedAction || undefined })
+      .then((result) => {
+        if (!active) return;
+        if (result.ok) setEntries(result.audit || []);
+        else setError(result.error || 'Failed to load audit log');
+      })
+      .catch((e: unknown) => {
+        if (active) setError(e instanceof Error ? e.message : 'Error loading audit log');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
-
-      if (result.ok) {
-        setEntries(result.audit || []);
-      } else {
-        setError(result.error || 'Failed to load audit log');
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error loading audit log');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      active = false;
+    };
+  }, [selectedAction]);
 
   const actions = [
     'toggle_feature_flag',
@@ -89,15 +85,12 @@ export function PlatformAuditLog() {
                   <Lock size={14} />
                   {entry.action.replace(/_/g, ' ')}
                 </div>
-                <span className="timestamp">
-                  {new Date(entry.created_at).toLocaleString()}
-                </span>
+                <span className="timestamp">{new Date(entry.created_at).toLocaleString()}</span>
               </div>
 
               <div className="entry-body">
                 <p className="admin">
-                  <strong>Admin:</strong>{' '}
-                  {entry.admin?.display_name || entry.admin_id}
+                  <strong>Admin:</strong> {entry.admin?.display_name || entry.admin_id}
                 </p>
                 <p className="resource">
                   <strong>Resource:</strong> {entry.resource_type}
@@ -114,9 +107,7 @@ export function PlatformAuditLog() {
                 {entry.details && Object.keys(entry.details).length > 0 && (
                   <details className="details">
                     <summary>Details</summary>
-                    <pre className="details-content">
-                      {JSON.stringify(entry.details, null, 2)}
-                    </pre>
+                    <pre className="details-content">{JSON.stringify(entry.details, null, 2)}</pre>
                   </details>
                 )}
               </div>

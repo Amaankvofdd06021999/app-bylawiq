@@ -1,7 +1,6 @@
 'use server';
-import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
-import { checkDb, ForbiddenError, errorMessage } from '@/lib/errors';
+import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 import {
   CreateBulletinPostSchema,
@@ -27,7 +26,7 @@ export async function createBulletinPostAction(raw: unknown) {
       .select('role')
       .eq('building_id', input.buildingId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     checkDb(memberError);
 
@@ -78,9 +77,10 @@ export async function updateBulletinPostAction(raw: unknown) {
       .eq('id', input.postId)
       .eq('building_id', input.buildingId)
       .is('deleted_at', null)
-      .single();
+      .maybeSingle();
 
     checkDb(getError);
+    if (!post) throw new NotFoundError();
 
     // Verify authorization (author or manager)
     if (post.author_id !== user.id) {
@@ -97,7 +97,7 @@ export async function updateBulletinPostAction(raw: unknown) {
     }
 
     // Update post
-    const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
+    const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (input.title) updateData.title = input.title;
     if (input.body) updateData.body = input.body;
 
@@ -131,7 +131,7 @@ export async function pinBulletinPostAction(raw: unknown) {
       .select('role')
       .eq('building_id', input.buildingId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     checkDb(memberError);
 
@@ -171,9 +171,10 @@ export async function deleteBulletinPostAction(raw: unknown) {
       .eq('id', input.postId)
       .eq('building_id', input.buildingId)
       .is('deleted_at', null)
-      .single();
+      .maybeSingle();
 
     checkDb(getError);
+    if (!post) throw new NotFoundError();
 
     // Verify authorization
     if (post.author_id !== user.id) {

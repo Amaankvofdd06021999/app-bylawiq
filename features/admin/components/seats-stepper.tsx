@@ -52,7 +52,7 @@ export function SeatsStepper({ billing, utilization, onUpdate }: SeatsStepperPro
       setSuccess(`Seats updated to ${seats}`);
       onUpdate?.();
     } else {
-      setError(result.error);
+      setError(result.error ?? 'Something went wrong. Please try again.');
       setSeats(billing.seats); // Reset on error
     }
   };
@@ -70,9 +70,7 @@ export function SeatsStepper({ billing, utilization, onUpdate }: SeatsStepperPro
             {utilization} of {billing.seats} in use
           </p>
           {utilization > 0 && (
-            <p className="seats-usage">
-              {Math.round((utilization / billing.seats) * 100)}% utilization
-            </p>
+            <p className="seats-usage">{Math.round((utilization / billing.seats) * 100)}% utilization</p>
           )}
         </div>
 
@@ -122,7 +120,9 @@ export function SeatsStepper({ billing, utilization, onUpdate }: SeatsStepperPro
         {seatCost > 0 && (
           <>
             <div className="pricing-row">
-              <span>{seats} seats × ${seatCost.toFixed(2)}</span>
+              <span>
+                {seats} seats × ${seatCost.toFixed(2)}
+              </span>
               <span>${(seats * seatCost).toFixed(2)}/mo</span>
             </div>
             <div className="pricing-divider" />
@@ -143,11 +143,7 @@ export function SeatsStepper({ billing, utilization, onUpdate }: SeatsStepperPro
       {success && <p className="form-success">{success}</p>}
 
       <div className="seats-actions">
-        <Button
-          disabled={seats === billing.seats || busy}
-          busy={busy}
-          onClick={handleSave}
-        >
+        <Button disabled={seats === billing.seats || busy} busy={busy} onClick={handleSave}>
           Update Seats
         </Button>
         {seats !== billing.seats && (

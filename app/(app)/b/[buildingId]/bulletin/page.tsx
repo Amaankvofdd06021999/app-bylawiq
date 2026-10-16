@@ -16,11 +16,7 @@ export default async function BulletinPage({ params }: Props) {
   const db = await createClient();
 
   // Get building info
-  const { data: building } = await db
-    .from('buildings')
-    .select('id, name')
-    .eq('id', buildingId)
-    .single();
+  const { data: building } = await db.from('buildings').select('id, name').eq('id', buildingId).single();
 
   if (!building) {
     redirect('/');
@@ -68,7 +64,7 @@ export default async function BulletinPage({ params }: Props) {
         </section>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .page-container {
           max-width: 900px;
           margin: 0 auto;

@@ -1,6 +1,6 @@
-import 'server-only';
+﻿import 'server-only';
 import { requireUser, requirePermission } from '@/lib/auth/guards';
-import { checkDb, NotFoundError } from '@/lib/errors';
+import { checkDb } from '@/lib/errors';
 import type { FirmKnowledgeResult, FirmKnowledgeStats } from './types';
 
 /**
@@ -67,45 +67,9 @@ export async function searchFirmKnowledge(
 }
 
 /**
- * Get firm's published documents
- */
-export async function firmDocuments(firmId: string): Promise<FirmKnowledgeResult['document_id'][]> {
-  const user = await requireUser();
-
-  // Verify user is firm staff
-  const { data: orgMember, error: orgError } = await user.client
-    .from('org_members')
-    .select('role')
-    .eq('org_id', firmId)
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .maybeSingle();
-
-  checkDb(orgError);
-  if (!orgMember) {
-    return [];
-  }
-
-  // Fetch published documents
-  const { data: documents, error: docsError } = await user.client
-    .from('firm_documents')
-    .select('id, title, doc_kind, created_at, view_count, used_count')
-    .eq('firm_id', firmId)
-    .not('published_at', 'is', null)
-    .order('created_at', { ascending: false });
-
-  checkDb(docsError);
-
-  return documents || [];
-}
-
-/**
  * Get knowledge statistics for a building
  */
-export async function firmKnowledgeStats(
-  firmId: string,
-  buildingId: string,
-): Promise<FirmKnowledgeStats[]> {
+export async function firmKnowledgeStats(firmId: string, buildingId: string): Promise<FirmKnowledgeStats[]> {
   const user = await requireUser();
 
   // Verify building access
@@ -130,13 +94,27 @@ export async function firmKnowledgeStats(
 
   checkDb(statsError);
 
-  return (stats || []).map((s: any) => ({
-    documentId: s.document_id,
-    title: s.firm_documents?.title || 'Unknown',
-    kind: s.firm_documents?.doc_kind || 'guide',
-    views: s.view_count || 0,
-    uses: s.used_count || 0,
-    lastViewedAt: s.last_viewed_at ? new Date(s.last_viewed_at) : null,
-    lastUsedAt: s.last_used_at ? new Date(s.last_used_at) : null,
-  }));
+  const DOC_KINDS = ['template', 'policy', 'precedent', 'research', 'guide'] as const;
+  type Doc = { title: string | null; doc_kind: string | null };
+  type StatRow = {
+    document_id: string;
+    view_count: number | null;
+    used_count: number | null;
+    last_viewed_at: string | null;
+    last_used_at: string | null;
+    // One document per stat row (many-to-one), so PostgREST returns an object; the inferred type is an array.
+    firm_documents: Doc | Doc[] | null;
+  };
+  return (stats || []).map((s: StatRow) => {
+    const doc = Array.isArray(s.firm_documents) ? (s.firm_documents[0] ?? null) : s.firm_documents;
+    return {
+      documentId: s.document_id,
+      title: doc?.title || 'Unknown',
+      kind: DOC_KINDS.find((k) => k === doc?.doc_kind) ?? 'guide',
+      views: s.view_count || 0,
+      uses: s.used_count || 0,
+      lastViewedAt: s.last_viewed_at ? new Date(s.last_viewed_at) : null,
+      lastUsedAt: s.last_used_at ? new Date(s.last_used_at) : null,
+    };
+  });
 }

@@ -1,9 +1,8 @@
 'use client';
-import { useState } from 'react';
 import { Check, ArrowRight } from 'lucide-react';
 import { Button, Badge, Card } from '@/components/ui';
 import type { BillingAccount } from '../billing-queries';
-import { PLAN_DETAILS } from '../billing-queries';
+import { PLAN_DETAILS } from '../plan-details';
 
 interface PlanCardProps {
   billing: BillingAccount;

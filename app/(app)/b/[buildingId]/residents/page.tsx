@@ -14,25 +14,16 @@ export default async function ResidentsPage({ params }: Props) {
   const db = await createClient();
 
   // Get building info
-  const { data: building } = await db
-    .from('buildings')
-    .select('id, name')
-    .eq('id', buildingId)
-    .single();
+  const { data: building } = await db.from('buildings').select('id, name').eq('id', buildingId).single();
 
   if (!building) {
     redirect('/');
   }
 
   // Verify user is building manager
-  const { data: member } = await db
-    .from('building_members')
-    .select('role')
-    .eq('building_id', buildingId)
-    .eq('user_id', user.id)
-    .single();
-
-  if (!member || member.role !== 'building_manager') {
+  // Permission-gated (decision D1): the page is for staff who hold member.read in this building.
+  const allowed = await user.client.rpc('authorize', { p_permission: 'member.read', p_building: buildingId });
+  if (allowed.data !== true) {
     redirect('/');
   }
 
@@ -45,7 +36,7 @@ export default async function ResidentsPage({ params }: Props) {
 
       <ResidentManagement buildingId={buildingId} buildingName={building.name} />
 
-      <style jsx>{`
+      <style>{`
         .page-container {
           max-width: 1200px;
           margin: 0 auto;

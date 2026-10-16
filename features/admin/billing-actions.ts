@@ -1,13 +1,12 @@
 'use server';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
-import { checkDb, ForbiddenError, errorMessage } from '@/lib/errors';
+import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 
 const UpdateSeatsSchema = z.object({
   seats: z.number().int().min(3, 'Minimum 3 seats required'),
 });
-
 
 /**
  * Update seat count for the organization's plan
@@ -27,13 +26,14 @@ export async function updateSeatsAction(raw: unknown) {
       .single();
 
     checkDb(orgError);
+    if (!orgMember) throw new NotFoundError();
 
     if (!['org_owner', 'org_admin'].includes(orgMember.role)) {
       throw new ForbiddenError('Only organization owners and admins can update billing');
     }
 
     // Get current billing account
-    const { data: billing, error: billingError } = await db
+    const { error: billingError } = await db
       .from('billing_accounts')
       .select('seats')
       .eq('org_id', orgMember.org_id)

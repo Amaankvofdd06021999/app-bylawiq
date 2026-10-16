@@ -120,30 +120,28 @@ export async function setupTestData() {
     if (buildingError) throw buildingError;
 
     // Insert building members
-    const { error: memberError } = await db
-      .from('building_members')
-      .insert([
-        {
-          user_id: users.managerA.id,
-          building_id: buildings.buildingA.id,
-          role: users.managerA.role,
-        },
-        {
-          user_id: users.managerB.id,
-          building_id: buildings.buildingB.id,
-          role: users.managerB.role,
-        },
-        {
-          user_id: users.residentA.id,
-          building_id: buildings.buildingA.id,
-          role: users.residentA.role,
-        },
-        {
-          user_id: users.residentB.id,
-          building_id: buildings.buildingB.id,
-          role: users.residentB.role,
-        },
-      ]);
+    const { error: memberError } = await db.from('building_members').insert([
+      {
+        user_id: users.managerA.id,
+        building_id: buildings.buildingA.id,
+        role: users.managerA.role,
+      },
+      {
+        user_id: users.managerB.id,
+        building_id: buildings.buildingB.id,
+        role: users.managerB.role,
+      },
+      {
+        user_id: users.residentA.id,
+        building_id: buildings.buildingA.id,
+        role: users.residentA.role,
+      },
+      {
+        user_id: users.residentB.id,
+        building_id: buildings.buildingB.id,
+        role: users.residentB.role,
+      },
+    ]);
 
     if (memberError) throw memberError;
 
@@ -193,7 +191,8 @@ export async function getVisiblePosts(userId: string) {
 
   const { data, error } = await db
     .from('bulletin_posts')
-    .select(`
+    .select(
+      `
       id,
       building_id,
       title,
@@ -203,7 +202,8 @@ export async function getVisiblePosts(userId: string) {
       deleted_at,
       created_at,
       updated_at
-    `)
+    `,
+    )
     .eq('user_id', userId)
     .is('deleted_at', null);
 
@@ -216,11 +216,9 @@ export async function getVisiblePosts(userId: string) {
  */
 export async function assertCanSeePost(userId: string, postId: string) {
   const posts = await getVisiblePosts(userId);
-  const canSee = posts.some((p: any) => p.id === postId);
+  const canSee = posts.some((p: { id: string }) => p.id === postId);
   if (!canSee) {
-    throw new Error(
-      `User ${userId} cannot see post ${postId} (RLS violation or post deleted)`
-    );
+    throw new Error(`User ${userId} cannot see post ${postId} (RLS violation or post deleted)`);
   }
 }
 
@@ -229,7 +227,7 @@ export async function assertCanSeePost(userId: string, postId: string) {
  */
 export async function assertCannotSeePost(userId: string, postId: string) {
   const posts = await getVisiblePosts(userId);
-  const canSee = posts.some((p: any) => p.id === postId);
+  const canSee = posts.some((p: { id: string }) => p.id === postId);
   if (canSee) {
     throw new Error(`User ${userId} can see post ${postId} (RLS failed)`);
   }

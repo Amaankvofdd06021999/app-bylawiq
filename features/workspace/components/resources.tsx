@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -90,10 +90,14 @@ export function Resources({
   const info: Record<string, [string, string, string]> = {
     documents: [
       'Documents',
-      'Your building’s documents. Organized, searchable, and ready to cite.',
+      'Your buildingâ€™s documents. Organized, searchable, and ready to cite.',
       'Upload document',
     ],
-    agents: ['AI agents', 'Purpose-built assistants, grounded in your building’s knowledge.', 'Create agent'],
+    agents: [
+      'AI agents',
+      'Purpose-built assistants, grounded in your buildingâ€™s knowledge.',
+      'Create agent',
+    ],
     knowledge: ['Knowledge bases', 'Organize the sources your agents can search.', 'Create knowledge base'],
     bylaws: ['Bylaws', 'One place for every bylaw, amendment, and filing.', 'New bylaw'],
     notices: [
@@ -314,7 +318,7 @@ export function Resources({
               <Search size={17} />
               <input
                 aria-label={'Search ' + title}
-                placeholder={'Search ' + title.toLowerCase() + '…'}
+                placeholder={'Search ' + title.toLowerCase() + 'â€¦'}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -364,7 +368,7 @@ export function Resources({
                 query
                   ? 'No matching records'
                   : section === 'updates'
-                    ? 'You’re all caught up'
+                    ? 'Youâ€™re all caught up'
                     : 'A clear place to start'
               }
               description={
@@ -373,8 +377,10 @@ export function Resources({
                   : section === 'updates'
                     ? 'Verified changes and filing reminders will appear here. Municipal coverage is shown separately.'
                     : section === 'documents'
-                      ? 'Upload your registered bylaws first. We’ll show the indexing stages and ask you to verify the detected structure.'
-                      : 'Add your first record to begin building your workspace.'
+                      ? 'Upload your registered bylaws first. Weâ€™ll show the indexing stages and ask you to verify the detected structure.'
+                      : cta && permission && can(permission)
+                        ? 'Add your first record to begin building your workspace.'
+                        : 'Nothing has been added here yet.'
               }
               action={
                 cta && permission && can(permission) ? (
@@ -403,7 +409,7 @@ export function Resources({
                     {section === 'agents' ? (
                       <>
                         <ShieldCheck size={12} style={{ display: 'inline', marginRight: 5 }} />
-                        Citation guard · Building scope
+                        Citation guard Â· Building scope
                       </>
                     ) : (
                       <>
@@ -616,11 +622,11 @@ export function Resources({
                               <small>
                                 {section === 'documents'
                                   ? pretty(str(row, 'type')) +
-                                    ' · ' +
+                                    ' Â· ' +
                                     (Number(row.byte_size || 0) / 1024).toFixed(0) +
                                     ' KB'
                                   : section === 'members'
-                                    ? str(row, 'user_id').slice(0, 8)
+                                    ? str(row, 'email')
                                     : str(row, 'reference', building.strata_plan_no || '')}
                               </small>
                             </span>
@@ -705,9 +711,23 @@ export function Resources({
                   <div>
                     <h3>{str(i, 'email')}</h3>
                     <p>
-                      {pretty(str(i, 'role'))} · Expires {str(i, 'expires_at').slice(0, 10)}
+                      {pretty(str(i, 'role'))} Â· Expires {str(i, 'expires_at').slice(0, 10)}
                     </p>
                   </div>
+                  <Button
+                    size="small"
+                    variant="ghost"
+                    onClick={() =>
+                      setForm({
+                        title: 'New invitation link',
+                        operation: 'invite.resend',
+                        id: i.id,
+                        fields: [],
+                      })
+                    }
+                  >
+                    New link
+                  </Button>
                   <Button size="small" variant="ghost" onClick={() => act('invite.revoke', i.id)}>
                     Revoke
                   </Button>
@@ -733,7 +753,7 @@ export function Resources({
         description={
           confirm?.op === 'agent.deploy'
             ? 'This publishes an immutable configuration version for members of this building.'
-            : 'This action will be recorded in the building’s audit history.'
+            : 'This action will be recorded in the buildingâ€™s audit history.'
         }
       >
         <p className="form-note">
@@ -829,7 +849,7 @@ export function Resources({
                           <strong>{pretty(str(e, 'stage'))}</strong>
                           <p>{str(e, 'summary')}</p>
                           <small>
-                            Occurred {str(e, 'occurred_at')} · Logged {str(e, 'logged_at')}
+                            Occurred {str(e, 'occurred_at')} Â· Logged {str(e, 'logged_at')}
                           </small>
                         </div>
                       ))}
@@ -964,11 +984,9 @@ function SettingsView({
         <dl>
           <dt>Name</dt>
           <dd>{profile.display_name}</dd>
-          <dt>Account type</dt>
-          <dd>{pretty(profile.account_type || 'New account')}</dd>
           <dt>Access</dt>
           <dd>
-            {profile.account_type === 'single_building'
+            {profile.bound_building_id !== null
               ? 'Permanently bound to one building'
               : 'Assigned buildings only'}
           </dd>
@@ -1128,7 +1146,7 @@ function UploadForm({
             Choose a file
             <input type="file" name="file" required accept=".pdf,.docx,.txt,.md" />
           </label>
-          <p className="form-note">PDF, DOCX, TXT, or Markdown · Up to 20 MB</p>
+          <p className="form-note">PDF, DOCX, TXT, or Markdown · Up to 4 MB</p>
         </div>
         <label>
           Document title
@@ -1356,7 +1374,7 @@ function Editor({
               ? 'Draft a bylaw'
               : 'Draft correspondence'
         }
-        description={building.name + ' · Every edit is recorded as a new version.'}
+        description={building.name + ' Â· Every edit is recorded as a new version.'}
         wide
       >
         <form className="form-stack" onSubmit={save}>
@@ -1447,9 +1465,14 @@ function Editor({
             <Button type="button" variant="secondary" onClick={onClose}>
               Close
             </Button>
-            {editable && (isBylaw || ['draft', 'pending_review', 'changes_requested'].includes(status)) && (
-              <Button busy={busy}>Save {isBylaw ? 'new version' : 'draft'}</Button>
-            )}
+            {editable &&
+              (isBylaw || ['draft', 'pending_review', 'changes_requested'].includes(status)) &&
+              !(
+                !isBylaw &&
+                status === 'pending_review' &&
+                str(row, 'review_by') === 'firm' &&
+                linkedMember
+              ) && <Button busy={busy}>Save {isBylaw ? 'new version' : 'draft'}</Button>}
           </div>
         </form>
         {row.id && !isBylaw && (
@@ -1516,7 +1539,7 @@ function Editor({
             {status === 'pending_review' &&
               str(row, 'review_by') === 'firm' &&
               linkedMember &&
-              permissions.includes('review.act') && (
+              permissions.includes('firm.review') && (
                 <>
                   <Button
                     variant="secondary"
@@ -1571,7 +1594,7 @@ function Editor({
               )}
             {status === 'pending_review' &&
               str(row, 'review_by') === 'firm' &&
-              !(linkedMember && permissions.includes('review.act')) && (
+              !(linkedMember && permissions.includes('firm.review')) && (
                 <Badge tone="warning">With strata management for review</Badge>
               )}
             {status === 'pending_review' &&
@@ -1736,10 +1759,10 @@ function Editor({
               <div className="activity-row" key={v.id}>
                 <div>
                   <h3>
-                    Version {str(v, 'version')} · {pretty(str(v, 'status'))}
+                    Version {str(v, 'version')} Â· {pretty(str(v, 'status'))}
                   </h3>
                   <p>
-                    {str(v, 'created_at').slice(0, 10)} · {str(v, 'rationale', 'No rationale recorded')}
+                    {str(v, 'created_at').slice(0, 10)} Â· {str(v, 'rationale', 'No rationale recorded')}
                   </p>
                 </div>
               </div>

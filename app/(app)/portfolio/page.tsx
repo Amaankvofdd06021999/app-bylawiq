@@ -4,15 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 import { PortfolioDashboard } from '@/features/portfolio/components/portfolio-dashboard';
 
 export default async function PortfolioPage() {
-  const user = await requireUser();
+  const user = await requireUser().catch(() => redirect('/login'));
   const db = await createClient();
 
   // Verify user is multi-building (strata manager)
-  const { data: assignments } = await db
-    .from('org_assignments')
-    .select('id')
-    .eq('user_id', user.id)
-    .limit(1);
+  const { data: assignments } = await db.from('org_assignments').select('id').eq('user_id', user.id).limit(1);
 
   if (!assignments || assignments.length === 0) {
     redirect('/');
@@ -27,7 +23,7 @@ export default async function PortfolioPage() {
 
       <PortfolioDashboard userId={user.id} />
 
-      <style jsx>{`
+      <style>{`
         .page-container {
           max-width: 1400px;
           margin: 0 auto;

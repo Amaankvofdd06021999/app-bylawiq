@@ -11,11 +11,7 @@ interface ApproveDocumentModalProps {
   onClose: () => void;
 }
 
-export function ApproveDocumentModal({
-  documentId,
-  buildingId,
-  onClose,
-}: ApproveDocumentModalProps) {
+export function ApproveDocumentModal({ documentId, buildingId, onClose }: ApproveDocumentModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -53,10 +49,7 @@ export function ApproveDocumentModal({
           {error && <div className="error-message">{error}</div>}
 
           <p>Are you sure you want to approve this document?</p>
-          <p className="note">
-            Once approved, you can send it to the recipient on behalf of the
-            building.
-          </p>
+          <p className="note">Once approved, you can send it to the recipient on behalf of the building.</p>
         </div>
 
         <div className="modal-footer">

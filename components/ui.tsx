@@ -4,7 +4,13 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { X, LoaderCircle, ArrowUpRight, ShieldCheck } from 'lucide-react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type {
+  ButtonHTMLAttributes,
+  HTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+} from 'react';
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 const buttonVariants = cva('button', {
   variants: {
@@ -139,4 +145,16 @@ export function TrustNote() {
       <ArrowUpRight size={14} />
     </div>
   );
+}
+
+export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('card', className)} {...props} />;
+}
+
+export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  return <input className={cn(className)} {...props} />;
+}
+
+export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select className={cn(className)} {...props} />;
 }

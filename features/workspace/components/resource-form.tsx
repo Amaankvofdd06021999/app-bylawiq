@@ -1,8 +1,18 @@
-'use client';
+﻿'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Modal } from '@/components/ui';
 import { useBackend } from '@/components/backend';
+import type { InvitationEmailStatus } from '@/lib/email/invitations';
+
+// What the person sees about the email. The link is always shown below it (decision D10).
+const EMAIL_NOTE: Record<InvitationEmailStatus, string> = {
+  sent: 'We emailed the invitation. The link below also works.',
+  failed: 'The email could not be sent. Share the link below directly.',
+  not_configured: 'Email is not set up in this environment. Share the link below directly.',
+  skipped_staging:
+    'In this test environment, email goes only to test recipients. Share the link below directly.',
+};
 export type Field = {
   name: string;
   label: string;
@@ -35,13 +45,14 @@ export function ResourceForm({
   id?: string;
   fields: Field[];
   extra?: Record<string, unknown>;
-  onSaved?: (r: { id?: string; url?: string }) => void;
+  onSaved?: (r: { id?: string; url?: string; emailStatus?: InvitationEmailStatus }) => void;
 }) {
   const router = useRouter(),
     backend = useBackend();
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
-    [link, setLink] = useState('');
+    [link, setLink] = useState(''),
+    [emailStatus, setEmailStatus] = useState<InvitationEmailStatus | undefined>(undefined);
   return (
     <Modal open={open} onOpenChange={(v) => !v && onClose()} title={title} description={description}>
       <form
@@ -76,6 +87,7 @@ export function ResourceForm({
           }
           onSaved?.(r);
           router.refresh();
+          setEmailStatus(r.emailStatus);
           if (r.url) setLink(r.url);
           else onClose();
         }}
@@ -133,6 +145,7 @@ export function ResourceForm({
         {link && (
           <div className="link-output">
             <p>Invitation created. Share this private link with the intended recipient:</p>
+            {emailStatus && <p role="status">{EMAIL_NOTE[emailStatus]}</p>}
             <a href={link}>{link}</a>
             <Button
               variant="secondary"

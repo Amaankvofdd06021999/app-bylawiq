@@ -21,12 +21,9 @@ export async function getPendingReviewsForFirmOwner(userId: string) {
   if (!org) return [];
 
   // Get buildings linked to this org
-  const { data: links } = await db
-    .from('building_links')
-    .select('building_id')
-    .eq('org_id', org.org_id);
+  const { data: links } = await db.from('building_links').select('building_id').eq('org_id', org.org_id);
 
-  const buildingIds = links?.map((l: any) => l.building_id) || [];
+  const buildingIds = links?.map((l: { building_id: string }) => l.building_id) || [];
 
   if (buildingIds.length === 0) return [];
 
@@ -44,8 +41,8 @@ export async function getPendingReviewsForFirmOwner(userId: string) {
       created_at,
       document:documents(title, submitted_by),
       building:buildings(name),
-      submitter:profiles!documents.submitted_by(display_name)
-    `
+      submitter:profiles(display_name)
+    `,
     )
     .in('building_id', buildingIds)
     .in('status', ['pending', 'changes_requested'])
@@ -71,7 +68,7 @@ export async function getDocumentReviewHistory(documentId: string) {
       created_at,
       updated_at,
       reviewer:profiles(display_name, email)
-    `
+    `,
     )
     .eq('document_id', documentId)
     .order('created_at', { ascending: true });
@@ -99,10 +96,10 @@ export async function getDocumentApprovalStatus(documentId: string) {
       approved_at,
       sent_by,
       sent_at,
-      submitter:profiles!documents.submitted_by(display_name),
+      submitter:profiles(display_name),
       approver:profiles!documents.approved_by(display_name),
       sender:profiles!documents.sent_by(display_name)
-    `
+    `,
     )
     .eq('id', documentId)
     .single();
@@ -127,7 +124,7 @@ export async function getPendingDocumentsInBuilding(buildingId: string) {
       status,
       submitted_at,
       submitted_by:profiles!documents.submitted_by(display_name)
-    `
+    `,
     )
     .eq('building_id', buildingId)
     .eq('status', 'submitted')
@@ -151,7 +148,7 @@ export async function getDocumentSentHistory(buildingId: string) {
       title,
       sent_at,
       sent_by:profiles!documents.sent_by(display_name)
-    `
+    `,
     )
     .eq('building_id', buildingId)
     .eq('status', 'sent')
@@ -179,16 +176,14 @@ export async function getApprovalTimeline(documentId: string) {
       approved_at,
       sent_at,
       status
-    `
+    `,
     )
     .eq('id', documentId)
     .single();
 
   if (!document) return null;
 
-  const timeline = [
-    { event: 'Created', timestamp: document.created_at, status: 'draft' },
-  ];
+  const timeline = [{ event: 'Created', timestamp: document.created_at, status: 'draft' }];
 
   if (document.submitted_at) {
     timeline.push({ event: 'Submitted for Review', timestamp: document.submitted_at, status: 'submitted' });

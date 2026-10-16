@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreatePostForm } from './create-post-form';
 
@@ -54,13 +54,13 @@ describe('CreatePostForm Component', () => {
     });
 
     it('should enforce 5000 character limit on body', async () => {
-      const user = userEvent.setup();
+      // Set the value in one change: typing 5,100 keystrokes is slow and leaks into the tests after it.
       render(<CreatePostForm buildingId={buildingId} />);
 
       const bodyInput = screen.getByLabelText('Content') as HTMLTextAreaElement;
       const longBody = 'a'.repeat(5100);
 
-      await user.type(bodyInput, longBody);
+      fireEvent.change(bodyInput, { target: { value: longBody } });
 
       expect(bodyInput.value).toHaveLength(5000);
       expect(screen.getByText('5000 / 5000')).toBeInTheDocument();
@@ -131,7 +131,7 @@ describe('CreatePostForm Component', () => {
   describe('Form Submission', () => {
     it('should call createBulletinPostAction on submit', async () => {
       const user = userEvent.setup();
-      (createBulletinPostAction as any).mockResolvedValue({ ok: true });
+      vi.mocked(createBulletinPostAction).mockResolvedValue({ ok: true, postId: 'post-1' });
 
       render(<CreatePostForm buildingId={buildingId} />);
 
@@ -154,7 +154,7 @@ describe('CreatePostForm Component', () => {
 
     it('should clear form after successful submission', async () => {
       const user = userEvent.setup();
-      (createBulletinPostAction as any).mockResolvedValue({ ok: true });
+      vi.mocked(createBulletinPostAction).mockResolvedValue({ ok: true, postId: 'post-1' });
 
       render(<CreatePostForm buildingId={buildingId} />);
 
@@ -174,7 +174,7 @@ describe('CreatePostForm Component', () => {
 
     it('should display error on submission failure', async () => {
       const user = userEvent.setup();
-      (createBulletinPostAction as any).mockResolvedValue({
+      vi.mocked(createBulletinPostAction).mockResolvedValue({
         ok: false,
         error: 'Permission denied',
       });
@@ -197,7 +197,7 @@ describe('CreatePostForm Component', () => {
     it('should call onSuccess callback after submission', async () => {
       const user = userEvent.setup();
       const onSuccess = vi.fn();
-      (createBulletinPostAction as any).mockResolvedValue({ ok: true });
+      vi.mocked(createBulletinPostAction).mockResolvedValue({ ok: true, postId: 'post-1' });
 
       render(<CreatePostForm buildingId={buildingId} onSuccess={onSuccess} />);
 
@@ -216,11 +216,8 @@ describe('CreatePostForm Component', () => {
 
     it('should show loading state while submitting', async () => {
       const user = userEvent.setup();
-      (createBulletinPostAction as any).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ ok: true }), 100)
-          )
+      vi.mocked(createBulletinPostAction).mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, postId: 'post-1' }), 100)),
       );
 
       render(<CreatePostForm buildingId={buildingId} />);
@@ -242,11 +239,8 @@ describe('CreatePostForm Component', () => {
 
     it('should disable form inputs while submitting', async () => {
       const user = userEvent.setup();
-      (createBulletinPostAction as any).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ ok: true }), 100)
-          )
+      vi.mocked(createBulletinPostAction).mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, postId: 'post-1' }), 100)),
       );
 
       render(<CreatePostForm buildingId={buildingId} />);
@@ -272,7 +266,7 @@ describe('CreatePostForm Component', () => {
   describe('Error Handling', () => {
     it('should persist form state on error', async () => {
       const user = userEvent.setup();
-      (createBulletinPostAction as any).mockResolvedValue({
+      vi.mocked(createBulletinPostAction).mockResolvedValue({
         ok: false,
         error: 'Server error',
       });
@@ -311,13 +305,13 @@ describe('CreatePostForm Component', () => {
 
       expect(screen.getByPlaceholderText('Enter post title')).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText('Share important information with your community')
+        screen.getByPlaceholderText('Share important information with your community'),
       ).toBeInTheDocument();
     });
 
     it('should support keyboard submission', async () => {
       const user = userEvent.setup();
-      (createBulletinPostAction as any).mockResolvedValue({ ok: true });
+      vi.mocked(createBulletinPostAction).mockResolvedValue({ ok: true, postId: 'post-1' });
 
       render(<CreatePostForm buildingId={buildingId} />);
 

@@ -41,6 +41,8 @@ export type ResidentData = {
   firstName: string;
   name: string;
   unit: string | null;
+  /** A building manager has confirmed the unit against the building's records. */
+  unitVerified: boolean;
   building: { id: string; name: string };
   /** Resident AI is on for this building (the platform flag). Off pauses Ask, explainers and drafting. */
   aiOn: boolean;
@@ -50,7 +52,8 @@ export type ResidentData = {
   documents: { id: string; title: string; type: string; at: string }[];
   history: CreditEntry[];
   drafts: ResidentDraftView[];
-  explainers: Explainer[];
+  /** Bylaw explainers exist only in the demo until legal approval; the live home leaves this out and shows them paused. */
+  explainers?: Explainer[];
 };
 /** Result of a paid drafting tool: the saved draft, or why not (`paywall` when the credits don't cover it). */
 export type DraftResult =

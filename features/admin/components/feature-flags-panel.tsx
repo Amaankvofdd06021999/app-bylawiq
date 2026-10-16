@@ -1,8 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui';
-import { getFeatureFlags } from '../platform-queries';
+import { loadFeatureFlagsAction } from '../platform-actions';
 import { toggleFeatureFlagAction } from '../platform-actions';
 
 interface FeatureFlag {
@@ -19,21 +18,25 @@ export function FeatureFlagsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Load once on mount. State is set only when the request resolves; a late answer after unmount is ignored.
   useEffect(() => {
-    loadFlags();
+    let active = true;
+    loadFeatureFlagsAction()
+      .then((result) => {
+        if (!active) return;
+        if (!result.ok) throw new Error(result.error);
+        setFlags(result.flags);
+      })
+      .catch((e: unknown) => {
+        if (active) setError(e instanceof Error ? e.message : 'Failed to load flags');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
-
-  const loadFlags = async () => {
-    try {
-      setLoading(true);
-      const data = await getFeatureFlags();
-      setFlags(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load flags');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleToggle = async (flagName: string, currentState: boolean) => {
     try {
@@ -45,9 +48,7 @@ export function FeatureFlagsPanel() {
 
       if (result.ok) {
         setFlags((prev) =>
-          prev.map((f) =>
-            f.flag_name === flagName ? { ...f, enabled: !currentState } : f
-          )
+          prev.map((f) => (f.flag_name === flagName ? { ...f, enabled: !currentState } : f)),
         );
       } else {
         setError(result.error || 'Failed to toggle flag');
@@ -71,12 +72,8 @@ export function FeatureFlagsPanel() {
             <div key={flag.id} className="flag-item">
               <div className="flag-info">
                 <h3 className="flag-name">{flag.flag_name}</h3>
-                {flag.description && (
-                  <p className="flag-desc">{flag.description}</p>
-                )}
-                <p className="flag-meta">
-                  Last updated: {new Date(flag.updated_at).toLocaleDateString()}
-                </p>
+                {flag.description && <p className="flag-desc">{flag.description}</p>}
+                <p className="flag-meta">Last updated: {new Date(flag.updated_at).toLocaleDateString()}</p>
               </div>
               <div className="flag-control">
                 <div className={`toggle ${flag.enabled ? 'on' : 'off'}`}>
@@ -86,9 +83,7 @@ export function FeatureFlagsPanel() {
                     onChange={() => handleToggle(flag.flag_name, flag.enabled)}
                     className="checkbox"
                   />
-                  <span className="toggle-label">
-                    {flag.enabled ? 'ON' : 'OFF'}
-                  </span>
+                  <span className="toggle-label">{flag.enabled ? 'ON' : 'OFF'}</span>
                 </div>
               </div>
             </div>

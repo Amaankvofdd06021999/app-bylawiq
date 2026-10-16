@@ -130,7 +130,7 @@ export function Shell({
         e.preventDefault();
         router.push(href('ask'));
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b' && profile.account_type !== 'single_building') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b' && profile.bound_building_id === null) {
         e.preventDefault();
         setSwitcher(true);
       }
@@ -149,7 +149,7 @@ export function Shell({
       <aside className={'sidebar ' + (mobile ? 'sidebar-open' : '')}>
         <Link
           href={
-            profile.account_type === 'single_building'
+            profile.bound_building_id !== null
               ? href(home || resident ? 'home' : (items[0]?.[0] ?? 'ask'))
               : base + '/workspace'
           }
@@ -159,9 +159,9 @@ export function Shell({
         </Link>
         <button
           className="workspace-picker"
-          onClick={() => profile.account_type !== 'single_building' && setSwitcher(true)}
+          onClick={() => profile.bound_building_id === null && setSwitcher(true)}
           aria-label="Select building"
-          disabled={profile.account_type === 'single_building'}
+          disabled={profile.bound_building_id !== null}
         >
           <span className="building-avatar">
             <Building2 size={21} />
@@ -169,10 +169,10 @@ export function Shell({
           <span>
             <strong>{active?.name || 'Your workspace'}</strong>
             <small>
-              {profile.account_type === 'single_building' ? 'Building workspace' : 'Management workspace'}
+              {profile.bound_building_id !== null ? 'Building workspace' : 'Management workspace'}
             </small>
           </span>
-          {profile.account_type !== 'single_building' && <ChevronDown size={15} />}
+          {profile.bound_building_id === null && <ChevronDown size={15} />}
         </button>
         {canAsk && (
           <Link onClick={() => setMobile(false)} className="new-chat" href={href('ask')}>
@@ -181,7 +181,7 @@ export function Shell({
           </Link>
         )}
         <nav aria-label="Main navigation">
-          {profile.account_type !== 'single_building' && (
+          {profile.bound_building_id === null && (
             <Link
               onClick={() => setMobile(false)}
               className={pathname === base + '/workspace' ? 'nav-item active' : 'nav-item'}
@@ -262,11 +262,7 @@ export function Shell({
             <span>
               <strong>{profile.display_name || 'Your account'}</strong>
               <small>
-                {profile.account_type === 'admin'
-                  ? 'Organization admin'
-                  : profile.account_type === 'multi_building'
-                    ? 'Portfolio manager'
-                    : 'Building member'}
+                {profile.bound_building_id !== null ? 'Building member' : 'Multi-building account'}
               </small>
             </span>
             <Settings size={15} />

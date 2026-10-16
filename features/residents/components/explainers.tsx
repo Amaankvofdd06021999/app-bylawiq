@@ -10,7 +10,8 @@ import { ToolPaused } from './draft-notice';
 export function Explainers({ data }: { data: ResidentData }) {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
-  const shown = data.explainers.filter(
+  const all = data.explainers ?? [];
+  const shown = all.filter(
     (e) => !q || (e.label + ' ' + e.source.content + ' ' + e.sectionRef).toLowerCase().includes(q),
   );
   const heading = (
@@ -42,10 +43,10 @@ export function Explainers({ data }: { data: ResidentData }) {
           />
         </div>
         <span className="form-note">
-          {shown.length} of {data.explainers.length} sections
+          {shown.length} of {all.length} sections
         </span>
       </div>
-      {!data.explainers.length ? (
+      {!all.length ? (
         <Empty
           icon={<BookOpen />}
           title="No bylaws to explain yet"

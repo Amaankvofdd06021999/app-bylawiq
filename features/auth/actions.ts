@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { headers } from 'next/headers';
 import { createHash } from 'node:crypto';
-import { db } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/auth/guards';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { checkDb, errorMessage, AppError } from '@/lib/errors';
@@ -20,7 +20,7 @@ export async function authAction(raw: unknown) {
     const h = await headers();
     const ip = h.get('x-real-ip') || h.get('x-forwarded-for')?.split(',')[0] || 'unknown';
     await rateLimit(createHash('sha256').update(ip).digest('hex'), 'auth');
-    const client = await db();
+    const client = await createClient();
     const appUrlValue = appUrl();
     if (v.mode === 'forgot') {
       const { error } = await client.auth.resetPasswordForEmail(v.email, {

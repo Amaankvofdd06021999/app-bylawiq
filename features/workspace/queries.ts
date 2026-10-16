@@ -1,3 +1,4 @@
+import { directoryFor } from '@/lib/directory';
 import 'server-only';
 import { requireUser } from '@/lib/auth/guards';
 import { buildingSchema, profileSchema, rowSchema, chatSchema } from '@/lib/schema';
@@ -9,7 +10,7 @@ export async function workspace() {
   const responses = await Promise.all([
     user.client
       .from('profiles')
-      .select('id,display_name,account_type,bound_building_id')
+      .select('id,display_name,consent_at,bound_building_id')
       .eq('id', user.id)
       .single(),
     user.client
@@ -45,13 +46,31 @@ export async function listResource(resource: Resource, buildingId: string) {
     .eq('building_id', buildingId)
     .limit(250);
   checkDb(error);
-  return z
+  const rows = z
     .array(
       resource === 'audit'
         ? rowSchema.extend({ id: z.union([z.string(), z.number()]).transform(String) })
         : rowSchema,
     )
     .parse(data);
+  if (resource === 'updates') {
+    const now = Date.now();
+    return rows.filter(
+      (r) =>
+        r.state !== 'actioned' &&
+        r.state !== 'dismissed' &&
+        !(r.state === 'snoozed' && r.snoozed_until && new Date(String(r.snoozed_until)).getTime() > now),
+    );
+  }
+  if (resource !== 'members') return rows;
+  const people = await directoryFor(
+    user,
+    rows.map((r) => String(r.user_id)),
+  );
+  return rows.map((r) => {
+    const person = people.get(String(r.user_id));
+    return { ...r, email: person?.email ?? null, title: person?.displayName || person?.email || '' };
+  });
 }
 export async function buildingWorkspace(buildingId: string) {
   const state = await workspace();
@@ -78,16 +97,23 @@ export async function buildingWorkspace(buildingId: string) {
     .eq('user_id', user.id)
     .maybeSingle();
   checkDb(own.error);
+  // Firm review is link-scoped (decision D2): the database answers it from the firm relationship, not from the role.
+  const firmReview = await user.client.rpc('authorize', {
+    p_permission: 'firm.review',
+    p_building: buildingId,
+  });
+  checkDb(firmReview.error);
+  const rolePermissions = z
+    .array(z.object({ permission: z.string() }))
+    .parse(permissions)
+    .map((p) => p.permission);
   return {
     ...state,
     building,
     unreadUpdates: unread.count ?? 0,
     linkedMember:
       z.object({ via_link_id: z.uuid().nullable() }).nullable().parse(own.data)?.via_link_id != null,
-    permissions: z
-      .array(z.object({ permission: z.string() }))
-      .parse(permissions)
-      .map((p) => p.permission),
+    permissions: firmReview.data === true ? [...rolePermissions, 'firm.review'] : rolePermissions,
   };
 }
 export async function conversation(chatId: string) {

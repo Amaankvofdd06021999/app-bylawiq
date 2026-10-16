@@ -8,7 +8,7 @@ export function configured() {
 
 export function validateApiKeys() {
   const required = {
-    ANTHROPIC_API_KEY: 'Claude API for chat and drafting',
+    GROQ_API_KEY: 'Groq API for chat, drafting and ranking',
     NEXT_PUBLIC_SUPABASE_URL: 'Supabase database URL',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: 'Supabase anonymous key',
   };
@@ -21,11 +21,7 @@ export function validateApiKeys() {
 
   for (const [key, desc] of Object.entries(required)) {
     if (!process.env[key]) {
-      throw new AppError(
-        'config_error',
-        `Missing required configuration: ${key} (${desc})`,
-        503
-      );
+      throw new AppError('config_error', `Missing required configuration: ${key} (${desc})`, 503);
     }
   }
 

@@ -10,6 +10,7 @@ import { createChatAction, branchChatAction } from '@/features/chat/actions';
 import { signOutAction } from '@/features/auth/actions';
 import type { DraftInput, DraftResult } from '@/features/residents/types';
 import type { FirmDocInput } from '@/features/knowledge/types';
+import { createCreditCheckoutAction } from '@/features/residents/checkout-actions';
 /** The seam between screens and whatever serves them: the real server actions and API, or the demo's mock ones. */
 export type Backend = {
   base: '' | '/demo'; // prefix for app links: `${base}/b/${id}/${section}`, `${base}/workspace`
@@ -31,6 +32,10 @@ export type Backend = {
   buyCredits: (raw: {
     buildingId: string;
   }) => Promise<{ ok: true; credits: number } | { ok: false; error: string }>;
+  /** Real card checkout: returns the Stripe page to send the resident to. Credits are added by the webhook after payment. */
+  startCreditCheckout: (raw: {
+    buildingId: string;
+  }) => Promise<{ ok: true; url: string } | { ok: false; error: string }>;
   residentDraft: (raw: DraftInput) => Promise<DraftResult>;
   saveFirmDoc: (raw: FirmDocInput) => Promise<{ ok: true; id: string } | { ok: false; error: string }>;
   deleteFirmDoc: (raw: { id: string }) => Promise<{ ok: true } | { ok: false; error: string }>;
@@ -52,6 +57,7 @@ const real: Backend = {
   signOut: signOutAction,
   setFlag: noFlags,
   buyCredits: notYet,
+  startCreditCheckout: createCreditCheckoutAction,
   residentDraft: notYet,
   saveFirmDoc: notYet,
   deleteFirmDoc: notYet,

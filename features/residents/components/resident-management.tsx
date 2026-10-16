@@ -3,14 +3,19 @@
 import { useEffect, useState } from 'react';
 import { Button, Card } from '@/components/ui';
 import { UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
-import { getResidentsAction, removeResidentAction } from '../resident-management-actions';
+import {
+  getResidentsAction,
+  removeResidentAction,
+  verifyResidentUnitAction,
+} from '../resident-management-actions';
 import { InviteResidentModal } from './invite-resident-modal';
 
 interface Resident {
   userId: string;
-  email: string;
+  email: string | null;
   name: string;
   unitNumber?: string;
+  unitVerified: boolean;
   joinedAt: string;
 }
 
@@ -19,32 +24,44 @@ interface ResidentManagementProps {
   buildingName: string;
 }
 
-export function ResidentManagement({ buildingId, buildingName }: ResidentManagementProps) {
+// No state here, so it can run from an effect or a handler.
+async function fetchResidents(buildingId: string) {
+  const result = await getResidentsAction({ buildingId });
+  if (!result.ok) throw new Error(result.error || 'Failed to load residents');
+  return result.residents || [];
+}
+
+export function ResidentManagement({ buildingId }: ResidentManagementProps) {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState<string | null>(null);
 
+  // Load on mount and when the building changes. Updates happen only in the promise callbacks.
   useEffect(() => {
-    loadResidents();
-  }, []);
+    let active = true;
+    fetchResidents(buildingId)
+      .then((rows) => {
+        if (active) setResidents(rows);
+      })
+      .catch((e: unknown) => {
+        if (active) setError(e instanceof Error ? e.message : 'Error loading residents');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [buildingId]);
 
-  const loadResidents = async () => {
-    try {
-      setLoading(true);
-      const result = await getResidentsAction({ buildingId });
-
-      if (result.ok) {
-        setResidents(result.residents || []);
-      } else {
-        setError(result.error || 'Failed to load residents');
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error loading residents');
-    } finally {
-      setLoading(false);
-    }
+  // Reload after an invite or removal.
+  const reloadResidents = () => {
+    fetchResidents(buildingId)
+      .then(setResidents)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Error loading residents'));
   };
 
   const handleRemove = async (userId: string) => {
@@ -69,9 +86,23 @@ export function ResidentManagement({ buildingId, buildingName }: ResidentManagem
     }
   };
 
+  const handleVerify = async (resident: Resident) => {
+    if (!resident.unitNumber) return;
+    setVerifying(resident.userId);
+    setError('');
+    const result = await verifyResidentUnitAction({
+      buildingId,
+      userId: resident.userId,
+      unitNumber: resident.unitNumber,
+    });
+    setVerifying(null);
+    if (result.ok) reloadResidents();
+    else setError(result.error);
+  };
+
   const handleInviteSuccess = () => {
     setShowInviteModal(false);
-    loadResidents();
+    reloadResidents();
   };
 
   if (loading) {
@@ -117,6 +148,9 @@ export function ResidentManagement({ buildingId, buildingName }: ResidentManagem
               </div>
               <div className="col-unit">
                 <p className="unit">{resident.unitNumber || '—'}</p>
+                {resident.unitNumber && (
+                  <p className="form-note">{resident.unitVerified ? 'Verified' : 'Not verified'}</p>
+                )}
               </div>
               <div className="col-joined">
                 <div className="date-cell">
@@ -125,11 +159,21 @@ export function ResidentManagement({ buildingId, buildingName }: ResidentManagem
                 </div>
               </div>
               <div className="col-actions">
+                {resident.unitNumber && !resident.unitVerified && (
+                  <Button
+                    onClick={() => handleVerify(resident)}
+                    disabled={verifying === resident.userId}
+                    variant="secondary"
+                    size="small"
+                  >
+                    {verifying === resident.userId ? 'Verifying...' : 'Verify unit'}
+                  </Button>
+                )}
                 <Button
                   onClick={() => handleRemove(resident.userId)}
                   disabled={deleting === resident.userId}
                   variant="danger"
-                  size="sm"
+                  size="small"
                 >
                   <Trash2 size={14} />
                   {deleting === resident.userId ? 'Removing...' : 'Remove'}

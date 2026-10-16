@@ -33,7 +33,7 @@ export function Portfolio({ profile, buildings }: { profile: Profile; buildings:
         <div className="card">
           <span className="stat-label">Your account</span>
           <div className="stat-value" style={{ fontSize: 23 }}>
-            {profile.account_type === 'admin' ? 'Organization' : 'Portfolio'}
+            Portfolio
           </div>
           <span className="stat-note">Permissions follow building assignments</span>
         </div>

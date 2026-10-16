@@ -48,7 +48,7 @@ export function CreatePostForm({ buildingId, onSuccess }: CreatePostFormProps) {
     });
 
     if (!result.ok) {
-      setError(result.error);
+      setError(result.error ?? 'Something went wrong. Please try again.');
       setIsLoading(false);
       return;
     }
@@ -93,9 +93,7 @@ export function CreatePostForm({ buildingId, onSuccess }: CreatePostFormProps) {
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">{error}</div>
-      )}
+      {error && <div className="error-message">{error}</div>}
 
       <Button type="submit" disabled={!isValid || isLoading} busy={isLoading}>
         {isLoading ? 'Posting...' : 'Post to Bulletin'}

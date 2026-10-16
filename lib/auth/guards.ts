@@ -1,11 +1,11 @@
 import 'server-only';
-import { db } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { ForbiddenError, UnauthorizedError, checkDb } from '@/lib/errors';
 import { parseSessionClaims, isSessionValid, type Session } from './session';
 import type { AppRole } from '@/lib/schema';
 
 export async function requireUser() {
-  const client = await db();
+  const client = await createClient();
   const { data, error } = await client.auth.getClaims();
   if (error || !data?.claims?.sub) throw new UnauthorizedError();
   return {

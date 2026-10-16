@@ -36,7 +36,7 @@ type NamedBuilding = Pick<Building, 'id' | 'name'>;
 // `availableLayers` today: the real chat route answers from building and legal sources and has no layer
 // filter yet, so the real app shows no chips rather than chips that change nothing.
 const LAYER_ORDER: readonly Layer[] = ['building', 'legal', 'firm'];
-const LAYER_CHIP: Record<Layer, string> = { building: 'Building', firm: 'Firm', legal: 'Law' };
+const LAYER_CHIP: Partial<Record<Layer, string>> = { building: 'Building', firm: 'Firm', legal: 'Law' };
 // A building source is labelled with its own building's name, or "Another building" when this page can't name it.
 function sourceBadge(s: Source, buildings: readonly NamedBuilding[]): string {
   return s.kind === 'building'
@@ -183,6 +183,17 @@ export function AskHome({
   async function buyAndAsk() {
     setBuying(true);
     setBuyError('');
+    if (backend.base === '') {
+      // Live: payment happens on Stripe, so this page is left and the question is not kept. The copy says so.
+      const c = await backend.startCreditCheckout({ buildingId: building.id });
+      if (!c.ok) {
+        setBuying(false);
+        setBuyError(c.error);
+        return;
+      }
+      window.location.assign(c.url);
+      return;
+    }
     const r = await backend.buyCredits({ buildingId: building.id });
     setBuying(false);
     if (!r.ok) {
@@ -484,13 +495,22 @@ export function AskHome({
         description="Your question wasn’t sent and no credit was used."
       >
         <div className="form-stack">
-          <p className="form-note">
-            Each question uses 1 credit once your free questions are used. Your question stays in the box —
-            buy credits and it’s sent straight away.
-          </p>
-          <p className="form-note">
-            <strong>Demo — no real charge.</strong> No card is asked for or charged.
-          </p>
+          {backend.base === '' ? (
+            <p className="form-note">
+              Each question uses 1 credit once your free questions are used. You will pay on Stripe’s secure
+              page. Your question was not sent, so send it again once your credits are added.
+            </p>
+          ) : (
+            <>
+              <p className="form-note">
+                Each question uses 1 credit once your free questions are used. Your question stays in the box
+                — buy credits and it’s sent straight away.
+              </p>
+              <p className="form-note">
+                <strong>Demo — no real charge.</strong> No card is asked for or charged.
+              </p>
+            </>
+          )}
           {buyError && (
             <p className="form-error" role="alert">
               {buyError}
@@ -501,7 +521,7 @@ export function AskHome({
               See credit options
             </Link>
             <Button busy={buying} onClick={buyAndAsk}>
-              Buy 100 credits · $20 and ask
+              {backend.base === '' ? 'Continue to payment · $20' : 'Buy 100 credits · $20 and ask'}
             </Button>
           </div>
         </div>
@@ -638,6 +658,17 @@ export function Conversation({
   async function buyAndAsk() {
     setBuying(true);
     setBuyError('');
+    if (backend.base === '') {
+      // Live: payment happens on Stripe, so this page is left and the question is not kept. The copy says so.
+      const c = await backend.startCreditCheckout({ buildingId: building.id });
+      if (!c.ok) {
+        setBuying(false);
+        setBuyError(c.error);
+        return;
+      }
+      window.location.assign(c.url);
+      return;
+    }
     const r = await backend.buyCredits({ buildingId: building.id });
     setBuying(false);
     if (!r.ok) {
@@ -834,13 +865,22 @@ export function Conversation({
         description="Your question wasn’t sent and no credit was used."
       >
         <div className="form-stack">
-          <p className="form-note">
-            Each question uses 1 credit once your free questions are used. Your question is back in the box —
-            buy credits and it’s sent straight away.
-          </p>
-          <p className="form-note">
-            <strong>Demo — no real charge.</strong> No card is asked for or charged.
-          </p>
+          {backend.base === '' ? (
+            <p className="form-note">
+              Each question uses 1 credit once your free questions are used. You will pay on Stripe’s secure
+              page. Your question was not sent, so send it again once your credits are added.
+            </p>
+          ) : (
+            <>
+              <p className="form-note">
+                Each question uses 1 credit once your free questions are used. Your question is back in the
+                box — buy credits and it’s sent straight away.
+              </p>
+              <p className="form-note">
+                <strong>Demo — no real charge.</strong> No card is asked for or charged.
+              </p>
+            </>
+          )}
           {buyError && (
             <p className="form-error" role="alert">
               {buyError}
@@ -851,7 +891,7 @@ export function Conversation({
               See credit options
             </Link>
             <Button busy={buying} onClick={buyAndAsk}>
-              Buy 100 credits · $20 and ask
+              {backend.base === '' ? 'Continue to payment · $20' : 'Buy 100 credits · $20 and ask'}
             </Button>
           </div>
         </div>

@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 import { useState } from 'react';
-import { Trash2, Mail, Copy, Check } from 'lucide-react';
-import { Button, Card, Empty } from '@/components/ui';
-import { removeTeamMemberAction, resendInvitationAction } from '../actions';
+import { Trash2, Mail } from 'lucide-react';
+import { Button, Empty } from '@/components/ui';
+import { removeTeamMemberAction } from '../actions';
 import type { TeamMember } from '../queries';
 
 // Simple toast notification system
@@ -45,7 +45,6 @@ const roleLabels: Record<string, string> = {
 export function TeamMembersTable({ members, onRemove }: TeamMembersTableProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState<string | null>(null);
 
   if (!members.length) {
     return (
@@ -70,28 +69,8 @@ export function TeamMembersTable({ members, onRemove }: TeamMembersTableProps) {
       onRemove?.();
     } else {
       showToast(result.error || 'Failed to remove member', 'error');
-      setError(result.error);
+      setError(result.error ?? 'Something went wrong. Please try again.');
     }
-  };
-
-  const handleResend = async (invitationId: string) => {
-    setBusy(true);
-    setError('');
-    const result = await resendInvitationAction({ invitationId });
-    setBusy(false);
-
-    if (result.ok) {
-      showToast('Invitation resent successfully', 'success');
-    } else {
-      showToast(result.error || 'Failed to resend invitation', 'error');
-      setError(result.error);
-    }
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 2000);
   };
 
   return (
@@ -160,22 +139,9 @@ export function TeamMembersTable({ members, onRemove }: TeamMembersTableProps) {
 
             <div className="col-actions">
               <div className="flex gap-1">
-                {member.status === 'pending_invite' && (
-                  <Button
-                    variant="ghost"
-                    size="small"
-                    title="Resend invitation"
-                    busy={busy}
-                    onClick={() => handleResend(member.id)}
-                  >
-                    <Mail size={14} />
-                  </Button>
-                )}
-
                 <Button
                   variant="ghost"
                   size="small"
-                  tone="error"
                   title="Remove member"
                   busy={busy}
                   onClick={() => handleRemove(member.id, member.email)}

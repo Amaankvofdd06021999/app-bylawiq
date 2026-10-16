@@ -36,7 +36,7 @@ export function parseCitations(text: string): number[] {
  */
 export function validateCitations(
   text: string,
-  sources: Source[]
+  sources: Source[],
 ): {
   valid: boolean;
   invalid: number[];
@@ -75,7 +75,7 @@ export async function trackCitationUsage(
     totalSources: number;
     citationCount: number;
     isValid: boolean;
-  }
+  },
 ): Promise<void> {
   const db = await createClient();
 
@@ -105,10 +105,7 @@ export async function trackCitationUsage(
 /**
  * Get citation metrics for a building
  */
-export async function getCitationMetrics(
-  buildingId: string,
-  days: number = 30
-): Promise<CitationMetrics> {
+export async function getCitationMetrics(buildingId: string, days: number = 30): Promise<CitationMetrics> {
   const db = await createClient();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
@@ -192,17 +189,11 @@ export async function getBuildingChatAnalytics(buildingId: string, days: number 
   const rateLimitCount = rateLimited?.length || 0;
 
   // Calculate average response time (estimate from tokens)
-  const totalTokens = (sessions || []).reduce(
-    (sum, s) => sum + ((s.details?.tokens as number) || 0),
-    0
-  );
+  const totalTokens = (sessions || []).reduce((sum, s) => sum + ((s.details?.tokens as number) || 0), 0);
   const avgTokensPerResponse = totalSessions > 0 ? totalTokens / totalSessions : 0;
 
   // Calculate cost (estimate: $0.01 per 1000 tokens)
-  const totalCost = (sessions || []).reduce(
-    (sum, s) => sum + ((s.details?.cost as number) || 0),
-    0
-  );
+  const totalCost = (sessions || []).reduce((sum, s) => sum + ((s.details?.cost as number) || 0), 0);
 
   return {
     period: `Last ${days} days`,
@@ -268,10 +259,7 @@ export async function getFirmChatAnalytics(orgId: string, days: number = 30) {
   const totalSessions = sessions?.length || 0;
   const failedCount = failed?.length || 0;
 
-  const totalCost = (sessions || []).reduce(
-    (sum, s) => sum + ((s.details?.cost as number) || 0),
-    0
-  );
+  const totalCost = (sessions || []).reduce((sum, s) => sum + ((s.details?.cost as number) || 0), 0);
 
   return {
     buildings: buildingIds.length,
@@ -311,10 +299,7 @@ export async function getPlatformChatAnalytics(days: number = 30) {
   const totalSessions = sessions?.length || 0;
   const failedCount = failed?.length || 0;
 
-  const totalCost = (sessions || []).reduce(
-    (sum, s) => sum + ((s.details?.cost as number) || 0),
-    0
-  );
+  const totalCost = (sessions || []).reduce((sum, s) => sum + ((s.details?.cost as number) || 0), 0);
 
   // Get unique buildings and orgs
   const uniqueBuildings = new Set((sessions || []).map((s) => s.building_id)).size;

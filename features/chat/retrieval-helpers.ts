@@ -9,11 +9,7 @@ import { z } from 'zod';
  */
 
 // Get staff-only documents for a building manager
-export async function retrieveStaffDocuments(
-  user: SessionUser,
-  buildingId: string,
-  query: string,
-) {
+export async function retrieveStaffDocuments(user: SessionUser, buildingId: string, query: string) {
   const documents: Array<{
     id: string;
     kind: 'maintenance' | 'vendor' | 'insurance';
@@ -63,20 +59,17 @@ export async function retrieveStaffDocuments(
         });
       }
     }
-  } catch (err) {
+  } catch {
     // Silently fail on individual document type searches
   }
 
   // Search vendor contracts
   try {
-    const { data: contracts, error: contractsError } = await user.client.rpc(
-      'search_vendor_contracts',
-      {
-        p_building_id: buildingId,
-        p_query: query,
-        p_limit: 5,
-      },
-    );
+    const { data: contracts, error: contractsError } = await user.client.rpc('search_vendor_contracts', {
+      p_building_id: buildingId,
+      p_query: query,
+      p_limit: 5,
+    });
 
     checkDb(contractsError);
 
@@ -111,20 +104,17 @@ export async function retrieveStaffDocuments(
         });
       }
     }
-  } catch (err) {
+  } catch {
     // Silently fail
   }
 
   // Search insurance policies
   try {
-    const { data: policies, error: policiesError } = await user.client.rpc(
-      'search_insurance_policies',
-      {
-        p_building_id: buildingId,
-        p_query: query,
-        p_limit: 5,
-      },
-    );
+    const { data: policies, error: policiesError } = await user.client.rpc('search_insurance_policies', {
+      p_building_id: buildingId,
+      p_query: query,
+      p_limit: 5,
+    });
 
     checkDb(policiesError);
 
@@ -160,7 +150,7 @@ export async function retrieveStaffDocuments(
         });
       }
     }
-  } catch (err) {
+  } catch {
     // Silently fail
   }
 
@@ -178,10 +168,7 @@ export async function getBuildingSpendingSummary(user: SessionUser, buildingId: 
 }
 
 // Compare spending across buildings (for portfolio managers)
-export async function compareMultiBuildingSpending(
-  user: SessionUser,
-  buildingIds: string[],
-) {
+export async function compareMultiBuildingSpending(user: SessionUser, buildingIds: string[]) {
   const { data, error } = await user.client.rpc('compare_building_spending', {
     p_building_ids: buildingIds,
   });

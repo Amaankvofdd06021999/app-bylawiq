@@ -72,6 +72,7 @@ export function AuthForm({
             </p>
           )}
           <form
+            method="post"
             className="form-stack auth-form"
             onSubmit={async (e) => {
               e.preventDefault();
@@ -261,7 +262,8 @@ export function InviteForm({ token }: { token: string }) {
             setBusy(true);
             const r = await acceptInviteAction(token);
             setBusy(false);
-            if (r.ok) router.push('/b/' + r.buildingId + '/ask');
+            // The building home shows each person their own view: a resident's home, or the staff dashboard.
+            if (r.ok) router.push('/b/' + r.buildingId + '/home');
             else setError(r.error || 'This invitation is unavailable.');
           }}
         >

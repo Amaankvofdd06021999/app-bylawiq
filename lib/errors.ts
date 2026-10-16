@@ -56,6 +56,9 @@ export function checkDb(error: { code?: string; message: string } | null) {
       'This building already has a strata management firm. The building must remove that firm first.',
     linked_member: 'Strata management access is managed as a whole. Remove the firm from Settings instead.',
     invalid_input: 'Check the details and try again.',
+    invalid_invitation:
+      'This invitation can’t be used. It may have expired, been used already, been cancelled, or been sent to a different email address. Ask the building for a new one.',
+    unit_mismatch: 'The unit doesn’t match what the resident entered. Check the unit with the resident.',
     invitation_unavailable: 'This invitation is no longer valid. Ask for a new one.',
     invitation_email_mismatch:
       'This invitation was sent to a different email address. Sign in with that address to accept it.',

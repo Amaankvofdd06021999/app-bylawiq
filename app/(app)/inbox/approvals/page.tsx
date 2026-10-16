@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ReviewInbox } from '@/features/documents/components/review-inbox';
 
 export default async function ApprovalsPage() {
-  const user = await requireUser();
+  const user = await requireUser().catch(() => redirect('/login'));
   const db = await createClient();
 
   // Verify firm owner
@@ -26,9 +26,9 @@ export default async function ApprovalsPage() {
         <p className="subtitle">Approve or request changes on submitted documents</p>
       </div>
 
-      <ReviewInbox orgId={firmMember.org_id} userId={user.id} />
+      <ReviewInbox />
 
-      <style jsx>{`
+      <style>{`
         .page-container {
           max-width: 1200px;
           margin: 0 auto;

@@ -1,12 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  getAllOrganizations,
-  getAllBuildings,
-  getAllUsers,
-  getRegionalKBStats,
-} from '../platform-queries';
+import { loadPlatformStatsAction } from '../platform-actions';
 
 interface Stats {
   organizations: number;
@@ -24,31 +19,30 @@ export function PlatformStats() {
   });
   const [loading, setLoading] = useState(true);
 
+  // Load once on mount. State is set only when the request resolves; a late answer after unmount is ignored.
   useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    try {
-      const [orgs, buildings, users, kbs] = await Promise.all([
-        getAllOrganizations(),
-        getAllBuildings(),
-        getAllUsers(),
-        getRegionalKBStats(),
-      ]);
-
-      setStats({
-        organizations: orgs.length,
-        buildings: buildings.length,
-        users: users.length,
-        regionsWithKB: (kbs || []).filter((kb: any) => kb.passage_count > 0).length,
+    let active = true;
+    loadPlatformStatsAction()
+      .then((result) => {
+        if (!active) return;
+        if (!result.ok) throw new Error(result.error);
+        setStats({
+          organizations: result.organizations.length,
+          buildings: result.buildings.length,
+          users: result.users.length,
+          regionsWithKB: result.regionalKbs.filter((kb) => kb.passage_count > 0).length,
+        });
+      })
+      .catch((e: unknown) => {
+        console.error('Failed to load stats:', e);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
-    } catch (e) {
-      console.error('Failed to load stats:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (loading) {
     return <div className="stats-loading">Loading...</div>;
@@ -56,26 +50,10 @@ export function PlatformStats() {
 
   return (
     <div className="stats-grid">
-      <StatCard
-        label="Organizations"
-        value={stats.organizations}
-        icon="🏢"
-      />
-      <StatCard
-        label="Buildings"
-        value={stats.buildings}
-        icon="🏢"
-      />
-      <StatCard
-        label="Users"
-        value={stats.users}
-        icon="👥"
-      />
-      <StatCard
-        label="KB Regions"
-        value={stats.regionsWithKB}
-        icon="📚"
-      />
+      <StatCard label="Organizations" value={stats.organizations} icon="🏢" />
+      <StatCard label="Buildings" value={stats.buildings} icon="🏢" />
+      <StatCard label="Users" value={stats.users} icon="👥" />
+      <StatCard label="KB Regions" value={stats.regionsWithKB} icon="📚" />
 
       <style jsx>{`
         .stats-grid {
@@ -94,15 +72,7 @@ export function PlatformStats() {
   );
 }
 
-function StatCard({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: number;
-  icon: string;
-}) {
+function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
   return (
     <div className="stat-card">
       <div className="stat-icon">{icon}</div>
