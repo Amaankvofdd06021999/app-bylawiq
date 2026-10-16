@@ -73,6 +73,8 @@ const inngestServer = {
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
+  // Local stack capacity: a few workers keep sign-ins and background jobs from starving each other.
+  workers: 3,
   use: { baseURL: `http://127.0.0.1:${port}`, trace: 'retain-on-failure' },
   webServer: local ? [appServer, inngestServer, scannerServer] : [appServer],
   projects: [

@@ -484,7 +484,7 @@ export function buildingManagerDashboard(
   const plan = s.platform.plans.find((p) => p.org_id === b.org_id);
   const members = listResource(s, userId, 'members', buildingId);
   const statusOf = (n: Row) =>
-    (n.sent_at ? 'sent' : String(n.status)) as BuildingManagerData['drafts'][number]['status'];
+    (n.sent_at ? 'sent' : String(n.status)) as NonNullable<BuildingManagerData['drafts']>[number]['status'];
   return {
     firstName: first(s, userId),
     building: {

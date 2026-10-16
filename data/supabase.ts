@@ -1,11 +1,11 @@
 import 'server-only';
 import { configured } from '@/lib/env';
 import { UnauthorizedError } from '@/lib/errors';
+import { requireUser } from '@/lib/auth/guards';
+import { buildingManagerHome } from '@/features/dashboards/building-home';
 import * as workspaceQueries from '@/features/workspace/queries';
 import * as firmQueries from '@/features/firm-links/queries';
-import * as dashboardQueries from '@/features/dashboards/queries';
-import * as residentQueries from '@/features/resident/queries';
-import * as firmKnowledgeQueries from '@/features/firm-knowledge/queries';
+import * as residentQueries from '@/features/residents/queries';
 import type { BylawMessage } from '@/lib/chat-types';
 import { NO_EXTRA_NAV, type DataSource } from './source';
 
@@ -74,9 +74,7 @@ export function supabaseSource(): DataSource {
 
     async landingPath() {
       const { profile, buildings } = await source.workspace();
-      return profile.account_type === 'single_building' && buildings[0]
-        ? `/b/${buildings[0].id}/ask`
-        : '/workspace';
+      return profile.bound_building_id && buildings[0] ? `/b/${buildings[0].id}/ask` : '/workspace';
     },
     async isPlatformAdmin() {
       // TODO: read the `platform_admin` JWT claim (docs/03-RBAC-SECURITY.md) once the admin console exists.
@@ -89,33 +87,19 @@ export function supabaseSource(): DataSource {
     },
     async workspaceDashboard() {
       signedIn();
-      const { profile } = await source.workspace();
-
-      // Determine which dashboard to show based on user's primary role
-      // Try firm owner first, then strata manager
-      if (profile.account_type === 'admin') {
-        // Get primary organization
-        const { organizations } = await source.workspace();
-        if (organizations.length > 0) {
-          const data = await dashboardQueries.firmOwnerDashboard(organizations[0].id);
-          if (data) return { kind: 'firm_owner' as const, data };
-        }
-      }
-
-      // TODO: Determine strata manager dashboard
       return null;
     },
-    async buildingDashboard(buildingId) {
+    async buildingDashboard(buildingId: string) {
       signedIn();
-      return dashboardQueries.buildingManagerDashboard(buildingId);
+      return buildingManagerHome(await requireUser(), buildingId);
     },
     async residentHome(buildingId: string) {
       signedIn();
       return residentQueries.residentHome(buildingId);
     },
-    async firmKnowledge(firmId: string, query: string, buildingId?: string) {
+    async firmKnowledge() {
       signedIn();
-      return firmKnowledgeQueries.searchFirmKnowledge(firmId, query, buildingId);
+      return null;
     },
   };
   return source;

@@ -1,3 +1,4 @@
+import { submitSignIn } from './support/sign-in';
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { assertLocalSupabase, seedMfaAccounts, totpAt, type SeededAccount } from './support/local-mfa';
 
@@ -31,7 +32,7 @@ async function signIn(page: Page, account: SeededAccount) {
   await page.waitForLoadState('networkidle');
   await page.fill('input[name=email]', account.email);
   await page.fill('input[name=password]', account.password);
-  await page.click('button[type=submit]');
+  await submitSignIn(page);
   await expect(page).not.toHaveURL(/\/login/);
 }
 

@@ -148,7 +148,8 @@ export type BuildingManagerData = {
     strataPlan: string | null;
   };
   health: Health & { checks: { label: string; ok: boolean; detail: string }[] };
-  drafts: {
+  /** Absent where no drafts store exists in the launch scope. */
+  drafts?: {
     id: string;
     title: string;
     kind: string;
@@ -169,7 +170,8 @@ export type BuildingManagerData = {
     }[];
   };
   residents: { count: number; code: string };
-  plan: {
+  /** Absent where billing is not part of the launch scope. */
+  plan?: {
     label: string;
     price: number;
     listPrice: number;

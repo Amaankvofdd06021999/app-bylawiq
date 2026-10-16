@@ -39,7 +39,10 @@ async function createUser(url: string, email: string, password: string): Promise
   return body.id;
 }
 
-async function seedManager(label: string): Promise<SliceAccount> {
+async function seedManager(
+  label: string,
+  accountType: 'admin' | 'single_building' = 'admin',
+): Promise<SliceAccount> {
   const url = assertLocalSupabase();
   const stamp = `${Date.now()}-${randomBytes(3).toString('hex')}`;
   const email = `e2e-${label}-${stamp}@example.invalid`;
@@ -49,7 +52,7 @@ async function seedManager(label: string): Promise<SliceAccount> {
   // The bootstrap reads auth.uid() from the session claim, so the call is made as this user.
   const buildingId = psql(`
 set request.jwt.claim.sub = '${id}';
-select public.bootstrap_workspace('E2E firm ${label} ${stamp}', 'admin', '${buildingName}', 'Manager ${label}');
+select public.bootstrap_workspace('E2E ${accountType === 'admin' ? 'firm' : 'solo'} ${label} ${stamp}', '${accountType}', '${buildingName}', 'Manager ${label}');
 select id from public.buildings where name = '${buildingName}';
 `)
     .split('\n')
@@ -84,4 +87,14 @@ export function documentId(documentTitle: string, buildingId: string): string {
   return psql(
     `select id from public.documents where building_id = '${buildingId}' and title = '${documentTitle}' and deleted_at is null order by created_at desc limit 1;`,
   );
+}
+
+/** A single-building manager (account_type single_building): the building home is their landing page. */
+export async function seedSingleBuildingManager(label: string): Promise<SliceAccount> {
+  return seedManager(label, 'single_building');
+}
+
+/** Runs a scalar query against the local database and returns its trimmed text. Local stack only. */
+export function psqlScalar(sql: string): string {
+  return psql(sql);
 }

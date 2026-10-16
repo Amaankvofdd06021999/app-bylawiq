@@ -1,16 +1,7 @@
 'use client';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import {
-  Bell,
-  CircleAlert,
-  CircleCheck,
-  FilePen,
-  KeyRound,
-  MessageSquare,
-  Scale,
-  Upload,
-} from 'lucide-react';
+import { Bell, CircleAlert, CircleCheck, FilePen, MessageSquare, Scale, Upload } from 'lucide-react';
 import { Badge, Empty, PageHeading } from '@/components/ui';
 import { useBackend } from '@/components/backend';
 import { pretty } from '@/lib/constants';
@@ -58,7 +49,7 @@ export function BuildingManagerDashboard({
     ],
   ];
   const shown = actions.filter((a) => a[0]);
-  const seatsFull = p.seatsIncluded > 0 && p.seatsUsed >= p.seatsIncluded;
+  const seatsFull = p ? p.seatsIncluded > 0 && p.seatsUsed >= p.seatsIncluded : false;
   return (
     <>
       <PageHeading
@@ -117,82 +108,86 @@ export function BuildingManagerDashboard({
             )}
           </div>
         </Section>
-        <Section id="plan" title="Plan and seats">
-          <div className="card">
-            <div className="price-line">
-              <strong>{p.billedBy ? p.label : `${p.label} plan`}</strong>
-            </div>
-            {p.billedBy ? (
-              <p className="form-note">Your building’s seats are covered by {p.billedBy}.</p>
-            ) : (
-              <p className="price">
-                {money(p.price)}
-                <small>/month</small>
-              </p>
-            )}
-            {p.seatsIncluded > 0 && (
-              <>
-                <p className="form-note">
-                  {p.seatsUsed} of {plural(p.seatsIncluded, 'seat')} used · residents don’t use a seat
+        {p && (
+          <Section id="plan" title="Plan and seats">
+            <div className="card">
+              <div className="price-line">
+                <strong>{p.billedBy ? p.label : `${p.label} plan`}</strong>
+              </div>
+              {p.billedBy ? (
+                <p className="form-note">Your building’s seats are covered by {p.billedBy}.</p>
+              ) : (
+                <p className="price">
+                  {money(p.price)}
+                  <small>/month</small>
                 </p>
-                <Meter used={p.seatsUsed} total={p.seatsIncluded} label="Seats used" />
-                {seatsFull && (
-                  <p className="inline-callout" style={{ marginTop: 12 }}>
-                    All seats are in use. Adding another council member or staff person needs one more seat.
+              )}
+              {p.seatsIncluded > 0 && (
+                <>
+                  <p className="form-note">
+                    {p.seatsUsed} of {plural(p.seatsIncluded, 'seat')} used · residents don’t use a seat
                   </p>
-                )}
-              </>
-            )}
-          </div>
-        </Section>
-      </div>
-      <Section
-        id="drafts"
-        title="Drafts and reviews"
-        count={data.drafts.length}
-        action={c.draft && <MoreLink href={root + '/notices'}>All notices</MoreLink>}
-      >
-        {data.drafts.length ? (
-          <div className="resource-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Draft</th>
-                  <th>Status</th>
-                  <th className="hide-mobile">Type</th>
-                  <th className="hide-mobile">Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.drafts.map((d) => {
-                  const [label, tone] = statusLabel(d.status, d.reviewBy, data.firmName);
-                  return (
-                    <tr key={d.id}>
-                      <td>
-                        <Link className="cell-link" href={root + '/notices'}>
-                          <strong>{d.title}</strong>
-                        </Link>
-                        {d.note && <small className="cell-sub">“{d.note}”</small>}
-                      </td>
-                      <td>
-                        <Badge tone={tone}>{label}</Badge>
-                      </td>
-                      <td className="hide-mobile">{pretty(d.kind)}</td>
-                      <td className="hide-mobile">{date(d.updatedAt)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <Empty
-            icon={<FilePen />}
-            title="No drafts in progress"
-            description="Notices and letters you draft appear here with where they are in review."
-          />
+                  <Meter used={p.seatsUsed} total={p.seatsIncluded} label="Seats used" />
+                  {seatsFull && (
+                    <p className="inline-callout" style={{ marginTop: 12 }}>
+                      All seats are in use. Adding another council member or staff person needs one more seat.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </Section>
         )}
-      </Section>
+      </div>
+      {data.drafts && (
+        <Section
+          id="drafts"
+          title="Drafts and reviews"
+          count={data.drafts.length}
+          action={c.draft && <MoreLink href={root + '/notices'}>All notices</MoreLink>}
+        >
+          {data.drafts.length ? (
+            <div className="resource-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Draft</th>
+                    <th>Status</th>
+                    <th className="hide-mobile">Type</th>
+                    <th className="hide-mobile">Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.drafts.map((d) => {
+                    const [label, tone] = statusLabel(d.status, d.reviewBy, data.firmName);
+                    return (
+                      <tr key={d.id}>
+                        <td>
+                          <Link className="cell-link" href={root + '/notices'}>
+                            <strong>{d.title}</strong>
+                          </Link>
+                          {d.note && <small className="cell-sub">“{d.note}”</small>}
+                        </td>
+                        <td>
+                          <Badge tone={tone}>{label}</Badge>
+                        </td>
+                        <td className="hide-mobile">{pretty(d.kind)}</td>
+                        <td className="hide-mobile">{date(d.updatedAt)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <Empty
+              icon={<FilePen />}
+              title="No drafts in progress"
+              description="Notices and letters you draft appear here with where they are in review."
+            />
+          )}
+        </Section>
+      )}
       <div className="split-grid dash-split">
         <Section
           id="council"
@@ -252,16 +247,7 @@ export function BuildingManagerDashboard({
                 <dd>{b.units ?? '—'}</dd>
               </div>
             </dl>
-            <p className="form-note" style={{ marginTop: 14 }}>
-              <KeyRound size={13} aria-hidden /> Residents join with this code
-            </p>
-            <p
-              className="join-code"
-              aria-label={'Resident join code ' + data.residents.code.split('').join(' ')}
-            >
-              {data.residents.code}
-            </p>
-            <Badge>Demo code</Badge>
+
             {c.invite && (
               <div style={{ marginTop: 14 }}>
                 <MoreLink href={root + '/members'}>Invite people</MoreLink>

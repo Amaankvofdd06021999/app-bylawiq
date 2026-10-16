@@ -225,13 +225,13 @@ describe('building manager dashboard', () => {
     expect(d.plan).toMatchObject({ label: 'Building', price: 99, seatsIncluded: 3, seatsUsed: 3 });
     expect(d.residents.count).toBe(1);
     expect(d.firmName).toBe('Coastline Strata Management');
-    expect(d.drafts.map((x) => x.status).sort()).toEqual([
+    expect(d.drafts!.map((x) => x.status).sort()).toEqual([
       'approved',
       'changes_requested',
       'draft',
       'pending_review',
     ]);
-    expect(d.drafts.find((x) => x.status === 'changes_requested')?.note).toContain(
+    expect(d.drafts!.find((x) => x.status === 'changes_requested')?.note).toContain(
       'cite the specific bylaw section',
     );
     expect(d.council.updates).toHaveLength(2);
