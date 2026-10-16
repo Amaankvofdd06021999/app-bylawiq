@@ -3,6 +3,7 @@ import { configured } from '@/lib/env';
 import { UnauthorizedError } from '@/lib/errors';
 import { requireUser } from '@/lib/auth/guards';
 import { buildingManagerHome } from '@/features/dashboards/building-home';
+import { strataPortfolio } from '@/features/dashboards/portfolio';
 import * as workspaceQueries from '@/features/workspace/queries';
 import * as firmQueries from '@/features/firm-links/queries';
 import * as residentQueries from '@/features/residents/queries';
@@ -87,7 +88,9 @@ export function supabaseSource(): DataSource {
     },
     async workspaceDashboard() {
       signedIn();
-      return null;
+      const user = await requireUser();
+      const portfolio = await strataPortfolio(user);
+      return portfolio ? { kind: 'strata_manager' as const, data: portfolio } : null;
     },
     async buildingDashboard(buildingId: string) {
       signedIn();

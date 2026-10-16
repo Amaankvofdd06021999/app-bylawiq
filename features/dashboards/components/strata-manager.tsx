@@ -112,10 +112,8 @@ export function StrataManagerDashboard({
                 </p>
                 <div className="agent-card-footer">
                   <span className="form-note">
-                    {plural(b.reviews, 'review')} · {plural(b.disputes, 'dispute')} ·{' '}
-                    {plural(b.drafts, 'draft')}
+                    {plural(b.reviews, 'review')} · {plural(b.disputes, 'dispute')}
                   </span>
-                  {b.updates > 0 && <Badge tone="blue">{b.updates} new</Badge>}
                 </div>
               </Link>
             ))}

@@ -157,8 +157,6 @@ describe('strata manager dashboard', () => {
     expect(d.buildings.find((x) => x.name === 'Seaside Towers')).toMatchObject({
       reviews: 1,
       disputes: 2,
-      drafts: 4,
-      updates: 2,
     });
     expect(d.knowledge?.collections).toHaveLength(4);
     expect(d.askAcross?.count).toBe(3);

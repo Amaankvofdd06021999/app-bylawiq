@@ -126,8 +126,6 @@ export type StrataManagerData = {
     health: Health;
     reviews: number;
     disputes: number;
-    drafts: number;
-    updates: number;
   }[];
   knowledge: {
     collections: CollectionSummary[];

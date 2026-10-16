@@ -444,8 +444,6 @@ export function strataManagerDashboard(s: MockState, userId: string, now = new D
         health: healthOf(s, userId, b.id, now),
         reviews: notices.filter((n) => n.status === 'pending_review').length,
         disputes: disputesFor(s, userId, b.id).length,
-        drafts: notices.filter((n) => !n.sent_at && n.status !== 'sent').length,
-        updates: listResource(s, userId, 'updates', b.id).filter((u) => u.state === 'new').length,
       };
     }),
     askAcross: askFrom && mine.length > 1 ? { buildingId: askFrom.id, count: mine.length } : null,
