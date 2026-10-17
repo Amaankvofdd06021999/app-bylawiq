@@ -109,6 +109,7 @@ export function AskHome({
   initialScope,
   wallet,
   askPaused = false,
+  askUnavailable = false,
 }: {
   building: Building;
   profile: Profile;
@@ -121,6 +122,8 @@ export function AskHome({
   initialScope?: 'portfolio';
   wallet?: { freeLeft: number; credits: number };
   askPaused?: boolean;
+  /** Off for this release (lib/launch-scope.ts). Shown instead of the composer; the server refuses answers too. */
+  askUnavailable?: boolean;
 }) {
   const router = useRouter(),
     backend = useBackend();
@@ -204,7 +207,7 @@ export function AskHome({
     setPaywall(false);
     await send(true);
   }
-  if (askPaused)
+  if (askUnavailable || askPaused)
     return (
       <>
         <PageHeading
@@ -214,8 +217,12 @@ export function AskHome({
         />
         <Empty
           icon={<Sparkles size={22} />}
-          title="Ask is paused"
-          description="BylawIQ has switched off questions for residents for now. No credits are used while it’s off — check back later."
+          title={askUnavailable ? 'Ask is not available in this release' : 'Ask is paused'}
+          description={
+            askUnavailable
+              ? 'Questions to BylawIQ are off for this release. Your documents and bylaws are still available here.'
+              : 'BylawIQ has switched off questions for residents for now. No credits are used while it’s off — check back later.'
+          }
         />
       </>
     );

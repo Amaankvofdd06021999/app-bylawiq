@@ -4,6 +4,7 @@ import { requireUser, requirePermission, type SessionUser } from '@/lib/auth/gua
 import { sameOrigin } from '@/lib/security/origin';
 import { rateLimit } from '@/lib/security/rate-limit';
 import { checkDb, errorResponse, NotFoundError, RateLimitError } from '@/lib/errors';
+import { requireLaunchFeature } from '@/lib/launch-scope';
 import { chatSchema } from '@/lib/schema';
 import { generateAnswer, replayStream } from '@/features/chat/stream';
 import { auditRateLimit } from '@/features/chat/resident-verification-gate';
@@ -14,6 +15,8 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
+    // Off for launch: refuse before the body is read or any data is loaded (lib/launch-scope.ts).
+    requireLaunchFeature('answers');
     sameOrigin(req);
     const v = z
       .object({

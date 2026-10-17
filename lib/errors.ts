@@ -24,6 +24,12 @@ export class NotFoundError extends AppError {
     super('not_found', message, 404);
   }
 }
+export class FeatureUnavailableError extends AppError {
+  constructor(message = 'This feature is not available in this release.') {
+    super('feature_unavailable', message, 403);
+  }
+}
+
 export class RateLimitError extends AppError {
   constructor() {
     super('rate_limited', 'Too many requests. Please try again in a minute.', 429);

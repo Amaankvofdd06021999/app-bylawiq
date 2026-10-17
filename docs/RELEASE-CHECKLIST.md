@@ -22,7 +22,7 @@ keys, the legal corpus load, and the eval gate. The building-manager Ask row is 
 |---|---|---|---|---|
 | Building home from database | `/b/<id>/home` | pgTAP `isolation`, `personas_authorization` | `building-manager-dashboard` (other manager refused by direct id) | Working |
 | Upload and confirm documents | document upload actions | pgTAP `building_documents_slice` | `building-documents-ask` (retry refused to other building) | Working |
-| Ask, scoped to this building | Ask route (`chat.use`, building-scoped) | pgTAP `building_documents_slice` (scoping). Answer quality not tested | `building-documents-ask` (stub model, see requirements below) | **Blocked for launch.** Enabled by permission with no feature flag. Not release-ready until the requirements below are met and the eval gate passes |
+| Ask, scoped to this building | Ask route and screen | Off in code: `lib/launch-scope.ts` (`answers: false`). The server refuses every answer request with 403 (`app/api/chat`, stream, stop; `generateAnswer`). The conversation page returns 404 and the admin analytics page does not exist | `ask-launch-denial` (screen, direct request, stream and stop routes, conversation page, cross-building) and `tests/launch-scope.test.ts` | **Disabled for launch (enforced).** Re-enabling needs the requirements below and an explicit code change |
 | Notices and updates | `/b/<id>/notices` | pgTAP `notices_disputes_authorization` (read, dismiss, reason required, resident and other building refused) | `building-notices-disputes` | Working |
 | Bylaw draft, review, vote, adopt | `transition_bylaw` (`bylaw.adopt`) | pgTAP `notices_disputes_authorization` (resident and other building refused) | `building-notices-disputes` (adoption creates the update; no-majority refusal shows reason) | Working |
 | Disputes: open and log events | `log_dispute_event` (`dispute.create`, `dispute.update`) | pgTAP `notices_disputes_authorization` (unknown stage refused) | `building-notices-disputes` (short summary refused; resolution leaves home) | Working |
@@ -35,9 +35,10 @@ keys, the legal corpus load, and the eval gate. The building-manager Ask row is 
 
 ### Building-manager Ask: what it needs before launch
 
-Enabled state today: **built and enabled by permission (`chat.use`), with no feature flag.** The resident flag `residentAi`
-is off, and that does not affect managers. Launch position: **not enabled for launch** until every requirement below is met
-and the eval gate passes. AGENTS.md §6 applies: legal correctness beats shipping speed.
+Enabled state: **off for launch, enforced in code.** `lib/launch-scope.ts` sets `answers: false`, and every answer path checks
+it before any read or model call. It is not a database or environment toggle, so production cannot enable Ask without a
+reviewed release. Re-enabling needs every requirement below to be verified, and the eval gate must pass. AGENTS.md §6
+applies: legal correctness beats shipping speed.
 
 | Requirement | Where it is used | State |
 |---|---|---|

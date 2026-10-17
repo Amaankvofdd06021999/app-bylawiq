@@ -126,6 +126,8 @@ export type AskHomeData = {
   wallet?: { freeLeft: number; credits: number };
   /** A resident whose Ask is switched off. */
   askPaused: boolean;
+  /** Ask is off for this release (lib/launch-scope.ts). The real data source sets it; the demo leaves it unset. */
+  askUnavailable?: boolean;
 };
 
 export type ReviewInboxItem = {

@@ -1,10 +1,13 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth/guards';
+import { launchFeatureEnabled } from '@/lib/launch-scope';
 import { nextMfaStep } from '@/lib/auth/mfa-flow';
 import { readPlatformAdminStatus } from '@/features/admin/mfa/status';
 import { ChatAnalyticsDashboard } from '@/features/chat/components/chat-analytics-dashboard';
 
 export default async function AdminChatAnalyticsPage() {
+  // AI analytics are off for this release, so the page does not exist for anyone (lib/launch-scope.ts).
+  if (!launchFeatureEnabled('answers')) notFound();
   const user = await requireUser();
   // Platform admins only, and only with MFA passed on this session (decision D15).
   const step = nextMfaStep(await readPlatformAdminStatus(user));

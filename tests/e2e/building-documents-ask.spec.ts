@@ -11,12 +11,11 @@ import {
 
 /**
  * Vertical slice, real app, local stack: a building manager uploads a bylaw, indexing runs through the Inngest dev
- * server, the manager confirms the detected structure, Ask answers from it with its effective date, and the answer is
- * refused where no source exists. Another building's manager cannot see or query the document, by page or by direct
- * building id.
+ * server, and the manager confirms the detected structure. Another building's manager cannot see or query the document,
+ * by page or by direct building id.
  *
- * The model is the local stub (AI_PROVIDER=local-stub): the control flow and citation validation are real, the model
- * output is not. Production model quality is not verified by this test.
+ * Ask is not in this slice. It is off for launch (lib/launch-scope.ts) and its denial is tested in
+ * ask-launch-denial.spec.ts. The answer path (retrieval, citations, refusal) can be run again only once it is enabled.
  */
 
 test.describe.configure({ mode: 'serial' });
@@ -28,7 +27,6 @@ test.use({ extraHTTPHeaders: { 'x-real-ip': testClientIp } });
 const TITLE = 'Pet rules';
 const EFFECTIVE = '2024-01-01';
 const QUOTE = 'Pets are limited to two per unit under the pet rules adopted in 2024.';
-const NO_GROUNDING_START = 'I couldn’t find enough verified source material';
 const QUESTION = 'Are pets limited per unit?';
 
 let managerA: SliceAccount;
@@ -52,15 +50,6 @@ async function signIn(page: Page, account: SliceAccount) {
   await page.fill('input[name=password]', account.password);
   await submitSignIn(page);
   await expect(page).not.toHaveURL(/\/login/);
-}
-
-/** Sends a question once the composer is live: the page must hydrate before a fill is kept, and Send stays disabled while empty. */
-async function ask(page: Page, question: string) {
-  await page.waitForLoadState('networkidle');
-  await page.getByLabel('Ask BylawIQ').fill(question);
-  const send = page.getByRole('button', { name: 'Send question' });
-  await expect(send).toBeEnabled();
-  await send.click();
 }
 
 async function waitForStatus(title: string, buildingId: string, status: string, timeoutMs: number) {
@@ -107,33 +96,6 @@ test('the manager confirms the detected structure and the document becomes ready
   expect(await waitForStatus(TITLE, managerA.buildingId, 'ready', 30_000)).toBe('ready');
 });
 
-test('Ask answers from the in-force bylaw and cites it with its effective date', async ({ page }) => {
-  await signIn(page, managerA);
-  await page.goto(`/b/${managerA.buildingId}/chat`);
-  await ask(page, QUESTION);
-
-  await expect(page.getByText('Pets are limited to two per unit', { exact: false }).first()).toBeVisible({
-    timeout: 90_000,
-  });
-
-  // Each citation is a numbered button whose accessible name carries the source's building.
-  await page
-    .getByRole('button', { name: /^Open source \d+,/ })
-    .first()
-    .click();
-  const drawer = page.getByRole('dialog').last();
-  await expect(drawer.getByRole('heading', { name: TITLE })).toBeVisible();
-  await expect(drawer.getByText('Effective: ' + EFFECTIVE)).toBeVisible();
-  await expect(drawer.locator('blockquote')).toContainText('Pets are limited to two per unit');
-});
-
-test('Ask refuses when no source supports the question', async ({ page }) => {
-  await signIn(page, managerA);
-  await page.goto(`/b/${managerA.buildingId}/chat`);
-  await ask(page, 'Zebra quantum flux capacitor?');
-  await expect(page.getByText(NO_GROUNDING_START).first()).toBeVisible({ timeout: 90_000 });
-});
-
 test('a building manager of another building cannot see or query the document', async ({ browser }) => {
   const context: BrowserContext = await browser.newContext({
     extraHTTPHeaders: { 'x-real-ip': testClientIp },
@@ -157,22 +119,6 @@ test('a building manager of another building cannot see or query the document', 
     }
     await page.waitForTimeout(8_000);
     await expect(page.getByText(QUOTE)).toHaveCount(0);
-    await expect(page.getByText('Pets are limited to two per unit', { exact: false })).toHaveCount(0);
-  } finally {
-    await context.close();
-  }
-});
-
-test('building B’s own Ask does not use building A’s bylaw', async ({ browser }) => {
-  const context: BrowserContext = await browser.newContext({
-    extraHTTPHeaders: { 'x-real-ip': testClientIp },
-  });
-  const page = await context.newPage();
-  try {
-    await signIn(page, managerB);
-    await page.goto(`/b/${managerB.buildingId}/chat`);
-    await ask(page, QUESTION);
-    await expect(page.getByText(NO_GROUNDING_START).first()).toBeVisible({ timeout: 90_000 });
     await expect(page.getByText('Pets are limited to two per unit', { exact: false })).toHaveCount(0);
   } finally {
     await context.close();

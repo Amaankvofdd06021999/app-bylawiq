@@ -9,6 +9,7 @@ import { secret } from '@/lib/env';
 import { checkDb, AppError } from '@/lib/errors';
 import { answerSchema, isCitableSource, validateCitations, NO_GROUNDING } from '@/lib/ai/citations';
 import { answerModelAvailable } from '@/lib/ai/provider-mode';
+import { requireLaunchFeature } from '@/lib/launch-scope';
 import { logger } from '@/lib/logger';
 import { MODELS, MODEL_IDS } from '@/lib/ai/models';
 import { DISCLAIMER } from '@/lib/constants';
@@ -23,6 +24,8 @@ export async function generateAnswer(
   question: string,
   history: { role: 'user' | 'assistant'; text: string }[],
 ) {
+  // Refused before any retrieval or model call. The route refuses first; this keeps the model path closed on its own.
+  requireLaunchFeature('answers');
   const id = crypto.randomUUID();
   const parts: Array<{ type: string; id?: string; text?: string; data?: unknown }> = [];
   const publication: UIMessageChunk[] = [];

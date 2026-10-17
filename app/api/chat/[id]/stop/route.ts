@@ -1,10 +1,12 @@
 import { requireUser } from '@/lib/auth/guards';
 import { sameOrigin } from '@/lib/security/origin';
 import { errorResponse, checkDb } from '@/lib/errors';
+import { requireLaunchFeature } from '@/lib/launch-scope';
 import { z } from 'zod';
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
+    requireLaunchFeature('answers');
     sameOrigin(req);
     const { id } = z.object({ id: z.uuid() }).parse(await params);
     checkDb(

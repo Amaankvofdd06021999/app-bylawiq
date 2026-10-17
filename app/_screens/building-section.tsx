@@ -160,6 +160,7 @@ export async function BuildingSectionScreen({
           initialScope={scope === 'portfolio' ? 'portfolio' : undefined}
           wallet={ask.wallet}
           askPaused={ask.askPaused}
+          askUnavailable={ask.askUnavailable ?? false}
         />
       </Shell>
     );

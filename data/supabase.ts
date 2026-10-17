@@ -1,5 +1,6 @@
 import 'server-only';
 import { configured } from '@/lib/env';
+import { launchFeatureEnabled } from '@/lib/launch-scope';
 import { UnauthorizedError } from '@/lib/errors';
 import { requireUser } from '@/lib/auth/guards';
 import { buildingManagerHome } from '@/features/dashboards/building-home';
@@ -55,7 +56,7 @@ export function supabaseSource(): DataSource {
         workspaceQueries.listResource('chats', buildingId),
       ]);
       // No layer chips: the real chat route answers from building and legal sources with no layer filter yet.
-      return { documents, chats, askPaused: false };
+      return { documents, chats, askPaused: false, askUnavailable: !launchFeatureEnabled('answers') };
     },
     async layers() {
       return undefined;
