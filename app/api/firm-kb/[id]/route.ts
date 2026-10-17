@@ -5,10 +5,7 @@ import { z } from 'zod';
 
 export const runtime = 'nodejs';
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireUser();
     const { id } = z.object({ id: z.string().uuid() }).parse(await params);

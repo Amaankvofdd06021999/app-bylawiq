@@ -59,9 +59,9 @@ test.describe('RAG System - Retrieval & Verification', () => {
     await newPage.click('button:has-text("Send")');
 
     // Should show rate limit message
-    await expect(
-      newPage.locator('text=Too many requests|rate limit|Try again shortly')
-    ).toBeVisible({ timeout: 5000 });
+    await expect(newPage.locator('text=Too many requests|rate limit|Try again shortly')).toBeVisible({
+      timeout: 5000,
+    });
 
     await browserContext.close();
   });
@@ -111,10 +111,7 @@ test.describe('RAG System - Retrieval & Verification', () => {
     await page.goto('/b/test-building/chat');
 
     // Send question
-    await page.fill(
-      '[name="message"]',
-      'Show me all staff-only documents about enforcement'
-    );
+    await page.fill('[name="message"]', 'Show me all staff-only documents about enforcement');
     await page.click('button:has-text("Send")');
 
     // Should get detailed response with staff documents
@@ -135,10 +132,7 @@ test.describe('RAG System - Retrieval & Verification', () => {
     await page.goto('/portfolio/chat');
 
     // Ask cross-building question
-    await page.fill(
-      '[name="message"]',
-      'Which of my buildings have the most restrictive noise bylaws?'
-    );
+    await page.fill('[name="message"]', 'Which of my buildings have the most restrictive noise bylaws?');
     await page.click('button:has-text("Send")');
 
     // Should return comparative analysis
@@ -288,8 +282,6 @@ test.describe('Analytics & Monitoring', () => {
     await page.goto('/admin/platform');
 
     // Should see system analytics
-    await expect(
-      page.locator('text=Total queries|Buildings active|Average cost per query')
-    ).toBeVisible();
+    await expect(page.locator('text=Total queries|Buildings active|Average cost per query')).toBeVisible();
   });
 });

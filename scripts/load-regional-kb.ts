@@ -144,7 +144,7 @@ async function loadRegionalKB() {
     // Generate embeddings for batch
     const embeddings_result = await embeddings(
       batch.map((p) => p.content),
-      'document'
+      'document',
     );
 
     // Insert with embeddings

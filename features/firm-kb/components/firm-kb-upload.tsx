@@ -146,9 +146,7 @@ export function FirmKBUpload({ orgId, onUploadSuccess }: FirmKBUploadProps) {
               rows={8}
               disabled={isUploading}
             />
-            <p className="char-count">
-              {content.length} / 50,000 characters
-            </p>
+            <p className="char-count">{content.length} / 50,000 characters</p>
           </div>
 
           <div className="form-actions">
@@ -180,13 +178,9 @@ export function FirmKBUpload({ orgId, onUploadSuccess }: FirmKBUploadProps) {
 
                 <div className="item-footer">
                   <p className="item-meta">
-                    Added by {item.uploadedBy} on{' '}
-                    {new Date(item.uploadedAt).toLocaleDateString()}
+                    Added by {item.uploadedBy} on {new Date(item.uploadedAt).toLocaleDateString()}
                   </p>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(item.id)}
-                  >
+                  <button className="delete-btn" onClick={() => handleDelete(item.id)}>
                     <Trash2 size={16} />
                     Delete
                   </button>

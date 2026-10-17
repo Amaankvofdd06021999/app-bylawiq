@@ -118,8 +118,7 @@ export function RoleSwitcher({
                     building.id === current.id && currentRole === 'building_manager'
                       ? 'var(--color-text-secondary)'
                       : 'var(--color-text)',
-                  opacity:
-                    building.id === current.id && currentRole === 'building_manager' ? 0.5 : 1,
+                  opacity: building.id === current.id && currentRole === 'building_manager' ? 0.5 : 1,
                 }}
               >
                 {building.id === current.id && currentRole === 'building_manager' && '✓ '}
@@ -154,7 +153,16 @@ export function RoleIndicator({ role, disabled = false }: { role: AppRole; disab
         textTransform: 'capitalize',
       }}
     >
-      <span className="role-badge" style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
+      <span
+        className="role-badge"
+        style={{
+          display: 'inline-block',
+          width: '6px',
+          height: '6px',
+          borderRadius: '50%',
+          background: 'currentColor',
+        }}
+      />
       {role.replace('_', ' ')}
     </div>
   );

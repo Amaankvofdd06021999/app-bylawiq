@@ -31,9 +31,9 @@ export const options = {
     { duration: '2m', target: 0 },
   ],
   thresholds: {
-    'http_req_duration': ['p(95)<500', 'p(99)<1000'], // Read performance
-    'errors': ['rate<0.1'], // Less than 0.1% error rate
-    'failed_requests': ['count<50'], // Less than 50 failed requests total
+    http_req_duration: ['p(95)<500', 'p(99)<1000'], // Read performance
+    errors: ['rate<0.1'], // Less than 0.1% error rate
+    failed_requests: ['count<50'], // Less than 50 failed requests total
   },
 };
 

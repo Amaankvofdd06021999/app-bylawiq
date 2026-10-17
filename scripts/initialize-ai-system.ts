@@ -22,10 +22,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function runMigration() {
   console.log('📊 Running Phase 6 migration...');
 
-  const migrationPath = path.join(
-    process.cwd(),
-    'supabase/migrations/20261007_phase6_ai_completion.sql'
-  );
+  const migrationPath = path.join(process.cwd(), 'supabase/migrations/20261007_phase6_ai_completion.sql');
 
   if (!fs.existsSync(migrationPath)) {
     console.error('❌ Migration file not found:', migrationPath);
@@ -91,7 +88,7 @@ async function loadRegionalKB() {
           embedding: null, // Will be filled by application
           created_at: new Date().toISOString(),
         },
-        { onConflict: 'title,jurisdiction' }
+        { onConflict: 'title,jurisdiction' },
       );
 
       if (error) {

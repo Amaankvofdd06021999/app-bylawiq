@@ -81,18 +81,16 @@ export async function startFirmOnboardingAction(raw: unknown) {
     checkDb(onboardingError);
 
     // Audit
-    await db
-      .from('platform_admin_audit')
-      .insert({
-        admin_id: user.id,
-        action: 'start_firm_onboarding',
-        resource_type: 'organization',
-        resource_id: org.id,
-        details: {
-          firm_name: input.firmName,
-          jurisdiction: input.jurisdiction,
-        },
-      });
+    await db.from('platform_admin_audit').insert({
+      admin_id: user.id,
+      action: 'start_firm_onboarding',
+      resource_type: 'organization',
+      resource_id: org.id,
+      details: {
+        firm_name: input.firmName,
+        jurisdiction: input.jurisdiction,
+      },
+    });
 
     return { ok: true, onboardingId: onboarding.id, orgId: org.id };
   } catch (e) {
@@ -142,13 +140,11 @@ export async function addBuildingToOnboardingAction(raw: unknown) {
     checkDb(buildError);
 
     // Link building to organization
-    await db
-      .from('building_links')
-      .insert({
-        org_id: onboarding.org_id,
-        building_id: building.id,
-        link_status: 'active',
-      });
+    await db.from('building_links').insert({
+      org_id: onboarding.org_id,
+      building_id: building.id,
+      link_status: 'active',
+    });
 
     // Update onboarding record
     const buildingsList = onboarding.buildings || [];
@@ -223,7 +219,7 @@ export async function addTeamMemberToOnboardingAction(raw: unknown) {
         .single();
 
       console.log(
-        `[EMAIL] Firm team member invitation: ${input.email} to ${onboard?.firm_name} with code ${inviteCode}`
+        `[EMAIL] Firm team member invitation: ${input.email} to ${onboard?.firm_name} with code ${inviteCode}`,
       );
     } catch (emailError) {
       console.error('Failed to send team member invitation:', emailError);
@@ -311,17 +307,15 @@ export async function completeFirmOnboardingAction(raw: unknown) {
       .eq('id', input.onboardingId);
 
     // Audit
-    await db
-      .from('platform_admin_audit')
-      .insert({
-        admin_id: user.id,
-        action: 'complete_firm_onboarding',
-        resource_type: 'organization',
-        resource_id: onboarding.org_id,
-        details: {
-          firm_name: onboarding.firm_name,
-        },
-      });
+    await db.from('platform_admin_audit').insert({
+      admin_id: user.id,
+      action: 'complete_firm_onboarding',
+      resource_type: 'organization',
+      resource_id: onboarding.org_id,
+      details: {
+        firm_name: onboarding.firm_name,
+      },
+    });
 
     return { ok: true };
   } catch (e) {

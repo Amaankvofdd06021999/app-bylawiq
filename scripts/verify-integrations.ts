@@ -44,12 +44,17 @@ console.log('🔍 Verifying all integrations...\n');
 
 // Check 1: stream.ts imports exist
 check('stream.ts has query expansion import', () => {
-  if (!fileContains('features/chat/stream.ts', "import { expandQuery, classifyIntent } from './query-expansion'"))
+  if (
+    !fileContains(
+      'features/chat/stream.ts',
+      "import { expandQuery, classifyIntent } from './query-expansion'",
+    )
+  )
     throw new Error('Missing query expansion import');
 });
 
 check('stream.ts has verification gate import', () => {
-  if (!fileContains('features/chat/stream.ts', "import { verifyResidentResponse, auditResidentQA"))
+  if (!fileContains('features/chat/stream.ts', 'import { verifyResidentResponse, auditResidentQA'))
     throw new Error('Missing verification gate import');
 });
 
@@ -75,68 +80,56 @@ check('stream.ts calls auditResidentQA', () => {
 
 // Check 2: API endpoints exist
 check('Firm KB upload endpoint exists', () => {
-  if (!fileExists('app/api/firm-kb/upload/route.ts'))
-    throw new Error('File not found');
+  if (!fileExists('app/api/firm-kb/upload/route.ts')) throw new Error('File not found');
 });
 
 check('Firm KB delete endpoint exists', () => {
-  if (!fileExists('app/api/firm-kb/[id]/route.ts'))
-    throw new Error('File not found');
+  if (!fileExists('app/api/firm-kb/[id]/route.ts')) throw new Error('File not found');
 });
 
 // Check 3: Route pages exist
 check('Building chat route exists', () => {
-  if (!fileExists('app/(app)/b/[buildingId]/chat/page.tsx'))
-    throw new Error('File not found');
+  if (!fileExists('app/(app)/b/[buildingId]/chat/page.tsx')) throw new Error('File not found');
 });
 
 check('Portfolio chat route exists', () => {
-  if (!fileExists('app/(app)/portfolio/chat/page.tsx'))
-    throw new Error('File not found');
+  if (!fileExists('app/(app)/portfolio/chat/page.tsx')) throw new Error('File not found');
 });
 
 check('Firm chat route exists', () => {
-  if (!fileExists('app/(app)/firm/chat/page.tsx'))
-    throw new Error('File not found');
+  if (!fileExists('app/(app)/firm/chat/page.tsx')) throw new Error('File not found');
 });
 
 check('Admin analytics route exists', () => {
-  if (!fileExists('app/(app)/admin/chat-analytics/page.tsx'))
-    throw new Error('File not found');
+  if (!fileExists('app/(app)/admin/chat-analytics/page.tsx')) throw new Error('File not found');
 });
 
 // Check 4: Components exist
 check('MultiRoleChat component exists', () => {
-  if (!fileExists('features/chat/components/multi-role-chat.tsx'))
-    throw new Error('File not found');
+  if (!fileExists('features/chat/components/multi-role-chat.tsx')) throw new Error('File not found');
 });
 
 check('Analytics dashboard component exists', () => {
-  if (!fileExists('features/chat/components/chat-analytics-dashboard.tsx'))
-    throw new Error('File not found');
+  if (!fileExists('features/chat/components/chat-analytics-dashboard.tsx')) throw new Error('File not found');
 });
 
 // Check 5: Scripts exist
 check('Initialize AI script exists', () => {
-  if (!fileExists('scripts/initialize-ai-system.ts'))
-    throw new Error('File not found');
+  if (!fileExists('scripts/initialize-ai-system.ts')) throw new Error('File not found');
 });
 
 check('Regional KB loader script exists', () => {
-  if (!fileExists('scripts/load-regional-kb.ts'))
-    throw new Error('File not found');
+  if (!fileExists('scripts/load-regional-kb.ts')) throw new Error('File not found');
 });
 
 // Check 6: Migration file exists
 check('Phase 6 migration exists', () => {
-  if (!fileExists('supabase/migrations/20261007_phase6_ai_completion.sql'))
-    throw new Error('File not found');
+  if (!fileExists('supabase/migrations/20261007_phase6_ai_completion.sql')) throw new Error('File not found');
 });
 
 // Check 7: E2E tests exist
 check('Chat RAG tests exist', () => {
-  if (!fileExists('e2e/chat-rag.spec.ts'))
-    throw new Error('File not found');
+  if (!fileExists('e2e/chat-rag.spec.ts')) throw new Error('File not found');
 });
 
 // Check 8: Citations analytics exports
@@ -160,8 +153,7 @@ check('Citations analytics exports functions', () => {
 // Check 9: Query expansion exports
 check('Query expansion exports functions', () => {
   const content = fs.readFileSync('features/chat/query-expansion.ts', 'utf-8');
-  if (!content.includes('export async function expandQuery'))
-    throw new Error('Missing expandQuery export');
+  if (!content.includes('export async function expandQuery')) throw new Error('Missing expandQuery export');
   if (!content.includes('export async function classifyIntent'))
     throw new Error('Missing classifyIntent export');
 });
@@ -183,10 +175,12 @@ console.log(`\n✅ Passed: ${passed}/${total}`);
 
 if (passed < total) {
   console.log('\n❌ Failed checks:');
-  results.filter((r) => !r.passed).forEach((r) => {
-    console.log(`  - ${r.name}`);
-    r.errors.forEach((e) => console.log(`    ${e}`));
-  });
+  results
+    .filter((r) => !r.passed)
+    .forEach((r) => {
+      console.log(`  - ${r.name}`);
+      r.errors.forEach((e) => console.log(`    ${e}`));
+    });
   process.exit(1);
 } else {
   console.log('\n🎉 All integrations verified!');

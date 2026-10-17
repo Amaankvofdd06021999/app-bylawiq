@@ -85,7 +85,10 @@ export async function onboard(
   for (let attempt = 1; attempt <= 3; attempt++) {
     if (/\/b\/[0-9a-f-]{36}\//.test(page.url())) break;
     // A timeout on the click: if the workspace already opened, the button is gone and the click must not wait forever.
-    await page.getByRole('button', { name: 'Create workspace' }).click({ timeout: 5_000 }).catch(() => undefined);
+    await page
+      .getByRole('button', { name: 'Create workspace' })
+      .click({ timeout: 5_000 })
+      .catch(() => undefined);
     try {
       await expect(page).toHaveURL(/\/b\/[0-9a-f-]{36}\//, { timeout: 10_000 });
       break;

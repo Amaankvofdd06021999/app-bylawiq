@@ -130,7 +130,7 @@ export async function getDocumentVisibilityStatus(raw: unknown) {
       owner_visible,
       status,
       created_at
-    `
+    `,
       )
       .eq('building_id', input.buildingId)
       .is('deleted_at', null)

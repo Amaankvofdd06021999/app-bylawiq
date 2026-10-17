@@ -22,11 +22,7 @@ export async function POST(req: Request) {
       .parse(body);
 
     // Verify user owns this org
-    const { data: org } = await db
-      .from('organizations')
-      .select('id, owner_id')
-      .eq('id', orgId)
-      .single();
+    const { data: org } = await db.from('organizations').select('id, owner_id').eq('id', orgId).single();
 
     if (!org || org.owner_id !== user.id) {
       throw new ForbiddenError('Not authorized to add to this firm KB');
