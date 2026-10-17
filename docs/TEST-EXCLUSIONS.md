@@ -21,7 +21,7 @@ These skip on one of the two projects by design, so each layout runs exactly onc
 
 ## Demo-only tests
 
-- `demo.spec.ts`: "a sent draft reaches strata management's review inbox and can be approved" is excluded with `test.skip`. It is demo-only and built on seeded demo data. The real review workflow belongs to the firm-review slice, which is not built yet, so this path is not claimed.
+- `demo.spec.ts`: "a sent draft reaches strata management's review inbox and can be approved" is excluded with `test.skip`. It is demo-only and built on seeded demo data, not the real app. The real firm review workflow is built and tested: `tests/e2e/firm-review.spec.ts` (send, request changes, approve, and denials) and `supabase/tests/firm_review.test.sql`. Those are the evidence for firm review; this demo test is not.
 - The drafting tests in `demo.spec.ts` now assert that drafting is blocked (decision D5). They are not evidence that drafting works.
 
 ## Rewritten, not excluded
