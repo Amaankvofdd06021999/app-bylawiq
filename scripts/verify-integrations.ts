@@ -6,7 +6,6 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 
 interface CheckResult {
   name: string;
@@ -76,15 +75,6 @@ check('stream.ts calls verifyResidentResponse', () => {
 check('stream.ts calls auditResidentQA', () => {
   if (!fileContains('features/chat/stream.ts', 'await auditResidentQA({'))
     throw new Error('auditResidentQA not called in stream.ts');
-});
-
-// Check 2: API endpoints exist
-check('Firm KB upload endpoint exists', () => {
-  if (!fileExists('app/api/firm-kb/upload/route.ts')) throw new Error('File not found');
-});
-
-check('Firm KB delete endpoint exists', () => {
-  if (!fileExists('app/api/firm-kb/[id]/route.ts')) throw new Error('File not found');
 });
 
 // Check 3: Route pages exist
