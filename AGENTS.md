@@ -44,9 +44,10 @@ Any PR that adds a code path where building-scoped data is fetched with the `ser
 |---|---|---|
 | Framework | Next.js 16 (App Router) | Server Components by default. `'use client'` only for interactivity. |
 | Language | TypeScript, `strict: true` | No `any`. No `@ts-ignore` without a comment explaining why. |
-| AI | Vercel AI SDK 6 (`ai`, `@ai-sdk/react`, `@ai-sdk/anthropic`) | `streamText` server side, `useChat` client side. |
-| Model (generation) | `claude-sonnet-5` | Legal reasoning + drafting. |
-| Model (classification/routing) | `claude-haiku-4-5-20251001` | Intent routing, title generation, query expansion. |
+| AI | Vercel AI SDK 6 (`ai`, `@ai-sdk/react`, `@ai-sdk/groq`) | `streamText` server side, `useChat` client side. |
+| Model (generation) | `openai/gpt-oss-120b` via Groq | Legal reasoning + drafting. Override with `AI_ANSWER_MODEL`. |
+| Model (classification/routing) | `openai/gpt-oss-20b` via Groq | Intent routing, query expansion, passage ranking. Override with `AI_FAST_MODEL`. |
+
 | DB | Supabase Postgres + `pgvector` + `pg_trgm` | RLS on every table, no exceptions. |
 | Auth | Supabase Auth + Custom Access Token Hook | See doc 03. |
 | Storage | Supabase Storage, private buckets | Signed URLs only, 5 min TTL. |
@@ -55,6 +56,8 @@ Any PR that adds a code path where building-scoped data is fetched with the `ser
 | Testing | Vitest (unit), Playwright (e2e), pgTAP (RLS) | RLS tests are mandatory, see doc 08. |
 | Hosting | Vercel | Node runtime for AI routes, not Edge (see doc 01 §6). |
 | Queue | Inngest | Document ingestion, corpus sync, digest generation. |
+
+**Decision (2026-10-12):** all LLM calls moved from Anthropic to Groq to reduce cost. Anthropic is no longer a dependency. Before any production traffic, the answer model must pass the eval gate in doc 04 against the grounded-answer and no-grounding cases in `kb/dist/evals.jsonl`. Groq retires models on its own schedule, so pin the IDs through env vars and check them against Groq's model list before each release.
 
 If you believe a substitution is warranted, write the argument in the PR description and stop. Do not substitute unilaterally.
 
@@ -113,7 +116,7 @@ A task is not done until all of these are true:
 - **Do not** cache LLM responses across buildings, users, or orgs. Cache keys must include `building_id` and the corpus version. A cached answer served to the wrong building is the same failure as a retrieval leak.
 - **Do not** let the model answer from parametric knowledge when retrieval returns nothing. Return the "no grounding found" state (doc 04 §8). An unsourced legal claim is worse than no answer.
 - **Do not** make the legal disclaimer dismissible, collapsible, or conditional.
-- **Do not** put the Anthropic API key anywhere the client can reach. There is one prototype in this repo's history that called `api.anthropic.com` from the browser. That pattern is dead; do not resurrect it.
+- **Do not** put the Groq API key anywhere the client can reach. All model calls run server-side in route handlers and server modules.
 - **Do not** write `SELECT *` in application queries. Column-level privileges are part of the security model (doc 03 §6).
 - **Do not** generate a migration that drops or alters a column on `document_chunks` without a re-embedding plan. Re-embedding the corpus is a multi-hour job.
 

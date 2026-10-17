@@ -35,7 +35,7 @@ All variable names are documented in `.env.example`. Credentials are intentional
 | Supabase | Project URL, publishable key in `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and server-only service-role key for background ingestion. |
 | Auth and trusted operations | `SERVER_SIGNING_SECRET` must match the database's server-signing secret. Configure this through an authorized secure process; do not commit it. Auth rate limiting uses Upstash when configured, otherwise the signed database limiter. |
 | Auth delivery | Configure the site URL, allowed callback/reset URLs, email delivery and the custom access-token hook defined by the identity migration. |
-| AI answers | `ANTHROPIC_API_KEY`; confirm the configured `AI_ANSWER_MODEL` is available to the account. The default model identifiers follow the supplied product specification. |
+| AI answers | `GROQ_API_KEY`; confirm the configured `AI_ANSWER_MODEL` (default `openai/gpt-oss-120b`) is listed on the account's Groq model list. |
 | Embeddings | `VOYAGE_API_KEY` and the model/dimension configuration in `lib/ai/embeddings.ts`. |
 | Background jobs | Inngest event and signing keys; register the app's `/api/inngest` endpoint. |
 | Upload scanning | `FILE_SCAN_URL` and `FILE_SCAN_TOKEN`. Production file ingestion fails closed without a scanner. The endpoint accepts file bytes and returns a JSON `clean` boolean. |
