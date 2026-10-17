@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
+import { requirePlatformAdmin } from '@/lib/auth/platform-admin';
 import { checkDb, ForbiddenError, errorMessage } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 
@@ -47,10 +48,7 @@ export async function startFirmOnboardingAction(raw: unknown) {
     const db = await createClient();
 
     // Verify platform admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can start firm onboarding');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can start firm onboarding');
 
     // Create organization
     const { data: org, error: orgError } = await db
@@ -109,10 +107,7 @@ export async function addBuildingToOnboardingAction(raw: unknown) {
     const db = await createClient();
 
     // Verify admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can add buildings');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can add buildings');
 
     // Get onboarding record
     const { data: onboarding } = await db
@@ -175,10 +170,7 @@ export async function addTeamMemberToOnboardingAction(raw: unknown) {
     const db = await createClient();
 
     // Verify admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can add team members');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can add team members');
 
     // Get onboarding
     const { data: onboarding } = await db
@@ -248,10 +240,7 @@ export async function configureFirmSettingsAction(raw: unknown) {
     const db = await createClient();
 
     // Verify admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can configure settings');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can configure settings');
 
     // Update onboarding
     await db
@@ -280,10 +269,7 @@ export async function completeFirmOnboardingAction(raw: unknown) {
     const db = await createClient();
 
     // Verify admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can complete onboarding');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can complete onboarding');
 
     // Get onboarding
     const { data: onboarding } = await db
@@ -334,10 +320,7 @@ export async function getOnboardingProgressAction(raw: unknown) {
     const db = await createClient();
 
     // Verify admin
-    const { data: admin } = await db.auth.getUser();
-    if (admin?.user?.user_metadata?.role !== 'platform_admin') {
-      throw new ForbiddenError('Only platform admins can view onboarding');
-    }
+    await requirePlatformAdmin(user, 'Only platform admins can view onboarding');
 
     const { data: onboarding, error } = await db
       .from('firm_onboardings')
