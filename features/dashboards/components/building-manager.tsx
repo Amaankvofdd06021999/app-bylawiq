@@ -220,7 +220,6 @@ export function BuildingManagerDashboard({
                       <h3>{d.title}</h3>
                       <p>
                         {d.reference} · {pretty(d.stage)}
-                        {d.deadline ? ` · ${d.deadlineLabel ?? 'Deadline'} ${date(d.deadline)}` : ''}
                       </p>
                     </div>
                   </div>

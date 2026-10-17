@@ -450,14 +450,6 @@ export function strataManagerDashboard(s: MockState, userId: string, now = new D
   };
 }
 
-// A readable, stable demo code residents would use to join (no real join-by-code flow for residents yet).
-const residentCode = (name: string, plan: string | null) =>
-  name
-    .replace(/[^A-Za-z]/g, '')
-    .slice(0, 4)
-    .toUpperCase() +
-  '-' +
-  ((plan ?? '').replace(/\D/g, '') || '0000');
 export function buildingManagerDashboard(
   s: MockState,
   userId: string,
@@ -538,13 +530,10 @@ export function buildingManagerDashboard(
         title: String(d.title),
         reference: String(d.reference),
         stage: String(d.stage),
-        deadline: d.next_deadline ? String(d.next_deadline) : null,
-        deadlineLabel: d.deadline_label ? String(d.deadline_label) : null,
       })),
     },
     residents: {
       count: members.filter((m) => m.role === 'owner_resident' && m.status === 'active').length,
-      code: residentCode(b.name, b.strata_plan_no ?? null),
     },
     plan: plan
       ? {

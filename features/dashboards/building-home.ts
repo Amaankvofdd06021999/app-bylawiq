@@ -63,6 +63,17 @@ export async function buildingManagerHome(
     .eq('status', 'active');
   checkDb(residentError);
 
+  // Updates are the building's open notifications (for example, an adopted bylaw that still needs its filing record).
+  // Snoozed, dismissed and actioned notifications are not shown. Written by the database, read through RLS.
+  const { data: notes, error: noteError } = await user.client
+    .from('notifications')
+    .select('id,title,severity,created_at')
+    .eq('building_id', buildingId)
+    .in('state', ['new', 'viewed'])
+    .order('created_at', { ascending: false })
+    .limit(10);
+  checkDb(noteError);
+
   const { data: profile, error: profileError } = await user.client
     .from('profiles')
     .select('display_name')
@@ -110,17 +121,20 @@ export async function buildingManagerHome(
       ],
     },
     council: {
-      updates: [],
+      updates: (notes ?? []).map((n) => ({
+        id: n.id,
+        title: n.title,
+        severity: n.severity,
+        at: n.created_at,
+      })),
       disputes: (disputes ?? []).map((d) => ({
         id: d.id,
         title: d.title,
         reference: d.reference,
         stage: d.stage,
-        deadline: null,
-        deadlineLabel: null,
       })),
     },
-    residents: { count: residentCount ?? 0, code: '' },
+    residents: { count: residentCount ?? 0 },
     firmName: null,
     can: { draft: false, ask: canAsk, upload: canUpload, invite: canInvite },
   };

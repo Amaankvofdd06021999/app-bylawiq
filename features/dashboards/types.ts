@@ -170,11 +170,9 @@ export type BuildingManagerData = {
       title: string;
       reference: string;
       stage: string;
-      deadline: string | null;
-      deadlineLabel: string | null;
     }[];
   };
-  residents: { count: number; code: string };
+  residents: { count: number };
   /** Absent where billing is not part of the launch scope. */
   plan?: {
     label: string;
