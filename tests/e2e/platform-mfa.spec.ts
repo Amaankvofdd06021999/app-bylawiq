@@ -1,12 +1,13 @@
 import { openPage, submitSignIn } from './support/sign-in';
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { assertLocalSupabase, seedMfaAccounts, totpAt, type SeededAccount } from './support/local-mfa';
+import { assertLocalSupabase, seedMfaAccounts, totpAt, waitForTotpWindow, type SeededAccount } from './support/local-mfa';
 
 /**
  * Platform admin console with MFA, against the local Supabase stack (see support/local-mfa.ts).
  * Admin pages deny access without an aal2 session, and the admin enrols an authenticator and passes a step-up code.
  */
 
+const expectSlow = expect.configure({ timeout: 20_000 }); // above the UI's 15-second deadline, below the test budget
 test.describe.configure({ mode: 'serial' });
 
 // The app limits sign-ins per client IP (10 per 15 minutes). Each run gets its own address, so repeated local runs
@@ -33,7 +34,7 @@ async function signIn(page: Page, account: SeededAccount) {
   await page.fill('input[name=email]', account.email);
   await page.fill('input[name=password]', account.password);
   await submitSignIn(page);
-  await expect(page).not.toHaveURL(/\/login/);
+  await expectSlow(page).not.toHaveURL(/\/login/);
 }
 
 const consoleHeading = (page: Page) => page.getByRole('heading', { name: 'Platform Admin Console' });
@@ -41,33 +42,38 @@ const consoleHeading = (page: Page) => page.getByRole('heading', { name: 'Platfo
 test('an ordinary user is sent away from the platform console', async ({ page }) => {
   await signIn(page, ordinary);
   await page.goto('/admin/platform');
-  await expect(page).not.toHaveURL(/\/admin\/platform/);
-  await expect(consoleHeading(page)).toHaveCount(0);
+  await expectSlow(page).not.toHaveURL(/\/admin\/platform/);
+  await expectSlow(consoleHeading(page)).toHaveCount(0);
 });
 
 test('an admin without an authenticator is sent to MFA setup, not the console', async ({ page }) => {
   await signIn(page, admin);
   await page.goto('/admin/platform');
-  await expect(page).toHaveURL(/\/admin\/platform\/mfa$/);
-  await expect(page.getByRole('heading', { name: 'Set up your authenticator app' })).toBeVisible();
-  await expect(consoleHeading(page)).toHaveCount(0);
+  await expectSlow(page).toHaveURL(/\/admin\/platform\/mfa$/);
+  await expectSlow(page.getByRole('heading', { name: 'Set up your authenticator app' })).toBeVisible();
+  await expectSlow(consoleHeading(page)).toHaveCount(0);
 });
 
 test('an admin enrols an authenticator and then reaches the console', async ({ page }) => {
+  // Enrolment waits for a fresh TOTP window, which can take up to 30 seconds, so it needs more than the default budget.
+  test.setTimeout(120_000);
   await signIn(page, admin);
   await page.goto('/admin/platform/mfa');
   await page.getByRole('button', { name: 'Start setup' }).click();
 
   const secret = (await page.locator('.mfa-enrollment code').textContent())?.trim() ?? '';
-  expect(secret).toMatch(/^[A-Z2-7]+=*$/);
+  expectSlow(secret).toMatch(/^[A-Z2-7]+=*$/);
   enrolledSecret = secret;
   enrolledCode = totpAt(secret);
 
+  // Type the code early in its 30-second window, so it is still valid when the server checks it.
+  await waitForTotpWindow();
   await page.fill('#mfa-code', totpAt(secret));
   await page.getByRole('button', { name: 'Finish setup' }).click();
 
-  await expect(page).toHaveURL(/\/admin\/platform$/);
-  await expect(consoleHeading(page)).toBeVisible();
+  // The UI gives up after 15 seconds (CHECK_DEADLINE_MS); the server must answer within that bound.
+  await expectSlow(page).toHaveURL(/\/admin\/platform$/, { timeout: 20_000 });
+  await expectSlow(consoleHeading(page)).toBeVisible();
 });
 
 test('a new sign-in needs a step-up code, a wrong code is refused, and the right code opens the console', async ({
@@ -75,20 +81,22 @@ test('a new sign-in needs a step-up code, a wrong code is refused, and the right
 }) => {
   // The step-up waits for the next 30-second TOTP window, which can take longer than the default test timeout.
   test.setTimeout(150_000);
-  expect(enrolledSecret).not.toBe('');
+  expectSlow(enrolledSecret).not.toBe('');
   const context: BrowserContext = await browser.newContext();
   const page = await context.newPage();
   try {
     await signIn(page, admin);
     await page.goto('/admin/platform');
-    await expect(page).toHaveURL(/\/admin\/platform\/mfa$/);
-    await expect(page.getByRole('heading', { name: 'Confirm it is you' })).toBeVisible();
+    await expectSlow(page).toHaveURL(/\/admin\/platform\/mfa$/);
+    await expectSlow(page.getByRole('heading', { name: 'Confirm it is you' })).toBeVisible();
+    // Wait for hydration: typing before the form has React state leaves the button disabled.
+    await page.waitForLoadState('networkidle');
 
     await page.fill('#mfa-code', '000000');
     await page.getByRole('button', { name: 'Confirm' }).click();
     // Scoped by id: Next.js also renders a role="alert" element of its own.
-    await expect(page.locator('#mfa-error')).toHaveText(/not valid/);
-    await expect(consoleHeading(page)).toHaveCount(0);
+    await expectSlow(page.locator('#mfa-error')).toHaveText(/not valid/);
+    await expectSlow(consoleHeading(page)).toHaveCount(0);
 
     // The enrolment test used the code for the current 30-second step. Wait for the next step so the code is fresh.
     // Poll the clock until the authenticator moves to a new window, instead of sleeping a fixed time.
@@ -98,8 +106,8 @@ test('a new sign-in needs a step-up code, a wrong code is refused, and the right
     await page.fill('#mfa-code', totpAt(enrolledSecret));
     await page.getByRole('button', { name: 'Confirm' }).click();
 
-    await expect(page).toHaveURL(/\/admin\/platform$/);
-    await expect(consoleHeading(page)).toBeVisible();
+    await expectSlow(page).toHaveURL(/\/admin\/platform$/);
+    await expectSlow(consoleHeading(page)).toBeVisible();
   } finally {
     await context.close();
   }
@@ -108,12 +116,14 @@ test('a new sign-in needs a step-up code, a wrong code is refused, and the right
 test('a verification that does not answer is released after a deadline, and the code can be entered again', async ({
   browser,
 }) => {
+  // The held request is released after 30 seconds, so the test needs more than the default budget.
+  test.setTimeout(90_000);
   const context = await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': testClientIp } });
   const page = await context.newPage();
   try {
     await signIn(page, admin);
     await openPage(page, '/admin/platform');
-    await expect(page).toHaveURL(/\/admin\/platform\/mfa$/);
+    await expectSlow(page).toHaveURL(/\/admin\/platform\/mfa$/);
 
     // Hold the first verification request open. Server actions are POSTs that carry the Next-Action header.
     let held = false;
@@ -126,9 +136,9 @@ test('a verification that does not answer is released after a deadline, and the 
 
     await page.fill('#mfa-code', '000000');
     await page.getByRole('button', { name: 'Confirm' }).click();
-    await expect(page.locator('#mfa-error')).toContainText('did not finish', { timeout: 25_000 });
-    await expect(page.getByRole('button', { name: 'Confirm' })).toBeEnabled();
-    await expect(page.locator('#mfa-code')).toBeEnabled();
+    await expectSlow(page.locator('#mfa-error')).toContainText('did not finish', { timeout: 25_000 });
+    await expectSlow(page.getByRole('button', { name: 'Confirm' })).toBeEnabled();
+    await expectSlow(page.locator('#mfa-code')).toBeEnabled();
   } finally {
     await context.close();
   }

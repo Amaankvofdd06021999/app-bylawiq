@@ -106,3 +106,12 @@ export function totpAt(secretBase32: string, atMs: number = Date.now()): string 
 export function msUntilNextTotpStep(atMs: number = Date.now()): number {
   return 30_000 - (atMs % 30_000) + 500;
 }
+
+/**
+ * Waits until the current 30-second TOTP window has at least `minMs` left, so a code typed now is still valid when the
+ * server checks it. A code typed in the last seconds of a window can expire while the request is in flight.
+ */
+export async function waitForTotpWindow(minMs: number = 10_000): Promise<void> {
+  const remaining = 30_000 - (Date.now() % 30_000);
+  if (remaining < minMs) await new Promise((resolve) => setTimeout(resolve, remaining + 200));
+}

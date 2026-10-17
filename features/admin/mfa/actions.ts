@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
 import { nextMfaStep, TOTP_CODE_PATTERN } from '@/lib/auth/mfa-flow';
 import { checkDb, ForbiddenError } from '@/lib/errors';
-import { readPlatformAdminStatus } from './status';
+import { readAdminFlags, readPlatformAdminStatus } from './status';
 import { logger } from '@/lib/logger';
 
 /**
@@ -52,25 +52,41 @@ export async function startTotpEnrollmentAction(): Promise<EnrollTotpResult> {
  * Verifies a code. On an enrollment, the code completes setup. On a step-up, it upgrades this session to aal2.
  * Wrong codes return a generic message and nothing else.
  */
+const BUSY = 'A check for this account is already running. Wait a few seconds, then enter the current code.';
+
+/**
+ * Verifies a code. On an enrolment, the code completes setup. On a step-up, it upgrades this session to aal2.
+ * One verification runs at a time for an admin, across every server instance: the lease is a row in the database
+ * (acquire_mfa_verification). A second request while the lease is held returns BUSY at once. The lease is released
+ * when the request ends, and expires on its own if the request dies.
+ * Wrong codes return a generic message and nothing else.
+ */
 export async function verifyTotpAction(raw: unknown): Promise<VerifyTotpResult> {
   const user = await requireUser();
   const input = VerifySchema.parse(raw);
-  const status = await readPlatformAdminStatus(user);
-  const step = nextMfaStep(status);
-  if (step === 'forbidden') throw new ForbiddenError('Only platform admins can verify MFA');
-  if (step === 'done') return { ok: true };
+  const flags = await readAdminFlags(user);
+  if (!flags.isPlatformAdmin) throw new ForbiddenError('Only platform admins can verify MFA');
+  if (flags.mfaVerified) return { ok: true };
 
-  const expected = step === 'enroll' ? status.unverifiedFactorId : status.verifiedFactorId;
-  if (!expected || expected !== input.factorId)
-    throw new ForbiddenError('This authenticator is not the one being set up');
-
-  const { error } = await user.client.auth.mfa.challengeAndVerify({
-    factorId: input.factorId,
-    code: input.code,
+  // The token is the only way to release this lease. Another request from the same account cannot clear it.
+  const { data: leaseToken, error: leaseError } = await user.client.rpc('acquire_mfa_verification', {
+    p_ttl_seconds: 20,
   });
-  if (error) {
-    logger.warn({ context: 'mfa.verify', userId: user.id, step });
-    return { ok: false, error: INVALID_CODE };
+  checkDb(leaseError);
+  if (typeof leaseToken !== 'string') return { ok: false, error: BUSY };
+  try {
+    // The auth service checks that the factor belongs to this user, so the code cannot be checked against another account.
+    const { error } = await user.client.auth.mfa.challengeAndVerify({
+      factorId: input.factorId,
+      code: input.code,
+    });
+    if (error) {
+      logger.warn({ context: 'mfa.verify', userId: user.id });
+      return { ok: false, error: INVALID_CODE };
+    }
+    return { ok: true };
+  } finally {
+    const { error: releaseError } = await user.client.rpc('release_mfa_verification', { p_token: leaseToken });
+    if (releaseError) logger.warn({ context: 'mfa.release', userId: user.id });
   }
-  return { ok: true };
 }
