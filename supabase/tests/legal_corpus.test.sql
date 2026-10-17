@@ -31,7 +31,7 @@ insert into public.legal_chunks(source_id,content,section_ref,heading,embedding)
 select throws_ok(
  $$insert into public.legal_sources(jurisdiction_id,type,title,citation,kb_id)
    values (current_setting('test.j')::uuid,'statute','Duplicate','pgTAP dup','pgtap.spa.s132')$$,
- '23505','a kb id cannot be loaded twice');
+ '23505','duplicate key value violates unique constraint "legal_sources_kb_id_idx"','a kb id cannot be loaded twice');
 
 set local role authenticated;
 
