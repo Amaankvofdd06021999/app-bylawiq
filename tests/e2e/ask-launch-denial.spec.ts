@@ -89,8 +89,12 @@ test('the stream and stop routes refuse too', async ({ browser }) => {
 
 test('the conversation page does not open', async ({ page }) => {
   await signedInContext(page, managerA);
-  const response = await page.goto(`/b/${managerA.buildingId}/chat/${CHAT_ID}`);
-  expect(response?.status()).toBe(404);
+  // The page calls notFound() after the layout has started streaming, so the status can stay 200. The check is that no
+  // conversation renders: no question box, no send button, and the not-found page is shown instead.
+  await page.goto(`/b/${managerA.buildingId}/chat/${CHAT_ID}`);
+  await expect(page.getByLabel('Ask BylawIQ')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Send question' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'This page is unavailable.' })).toBeVisible();
 });
 
 test("another building's manager is refused the same way, by direct id", async ({ browser }) => {
