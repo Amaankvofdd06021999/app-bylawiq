@@ -11,21 +11,48 @@ proof (pgTAP in `supabase/tests`), the end-to-end proof (`tests/e2e`), and one s
 A role is not complete while its deferred or blocked rows remain. Nothing in the Disabled or Deferred rows is evidence
 for launch.
 
+**Release status: not release-ready.** Verified so far: the committed candidate passes CI on GitHub (see the final report)
+and the local launch-configuration E2E suite passes. Not verified: staging acceptance (no staging environment was available),
+hosted migration history and Vercel configuration (no authorized operator), email delivery, the scanner, the Groq and Voyage
+keys, the legal corpus load, and the eval gate. The building-manager Ask row is blocked for launch (see its requirements).
+
 ## 1. Building manager
 
 | Flow | Route or action | Authorization and RLS proof | E2E proof | Status |
 |---|---|---|---|---|
 | Building home from database | `/b/<id>/home` | pgTAP `isolation`, `personas_authorization` | `building-manager-dashboard` (other manager refused by direct id) | Working |
 | Upload and confirm documents | document upload actions | pgTAP `building_documents_slice` | `building-documents-ask` (retry refused to other building) | Working |
-| Ask, scoped to this building | Ask route | pgTAP `building_documents_slice` | `building-documents-ask` | Working |
+| Ask, scoped to this building | Ask route (`chat.use`, building-scoped) | pgTAP `building_documents_slice` (scoping). Answer quality not tested | `building-documents-ask` (stub model, see requirements below) | **Blocked for launch.** Enabled by permission with no feature flag. Not release-ready until the requirements below are met and the eval gate passes |
 | Notices and updates | `/b/<id>/notices` | pgTAP `notices_disputes_authorization` (read, dismiss, reason required, resident and other building refused) | `building-notices-disputes` | Working |
 | Bylaw draft, review, vote, adopt | `transition_bylaw` (`bylaw.adopt`) | pgTAP `notices_disputes_authorization` (resident and other building refused) | `building-notices-disputes` (adoption creates the update; no-majority refusal shows reason) | Working |
 | Disputes: open and log events | `log_dispute_event` (`dispute.create`, `dispute.update`) | pgTAP `notices_disputes_authorization` (unknown stage refused) | `building-notices-disputes` (short summary refused; resolution leaves home) | Working |
 | Send notice to firm for review | `request_firm_review` | pgTAP `firm_review` | `firm-review` (send, request changes, approve) | Working |
-| Invite residents | `create_resident_invitation` (`member.invite`) | pgTAP `resident_join` (18) | `resident-join` (invite with unit, verify, denials) | Working in the app. Invitation email is **Blocked** (see production) |
+| Create resident invitation | `create_resident_invitation` (`member.invite`) | pgTAP `resident_join` (18) | `resident-join` (invite with unit, verify, denials) | **Working: creation is tested.** |
+| Deliver invitation email | invitation email sender (Resend) | `tests/email/invitations.test.ts` covers outcomes with a mocked provider only | none | **Blocked: delivery is not verified.** No provider, sender or staging allowlist is confirmed |
 | Verify resident units | `verify_resident_unit` | pgTAP `resident_join` | `resident-join` | Working |
 | Drafting help | drafting actions | Demo tests assert the blocked state (D5) | Not an E2E test | Disabled |
 | Resident-facing AI answers | resident Ask | Not claimed | Not claimed | Disabled |
+
+### Building-manager Ask: what it needs before launch
+
+Enabled state today: **built and enabled by permission (`chat.use`), with no feature flag.** The resident flag `residentAi`
+is off, and that does not affect managers. Launch position: **not enabled for launch** until every requirement below is met
+and the eval gate passes. AGENTS.md §6 applies: legal correctness beats shipping speed.
+
+| Requirement | Where it is used | State |
+|---|---|---|
+| Groq answer model: `GROQ_API_KEY`, `AI_ANSWER_MODEL` (default `openai/gpt-oss-120b`), `AI_FAST_MODEL` | answer and query expansion (`lib/ai/models.ts`, `features/chat/*`) | Blocked: no production key confirmed. Without the key, Ask returns "answer service not connected" (503) |
+| Voyage embeddings: `VOYAGE_API_KEY` | retrieval embeddings (`lib/ai/embeddings.ts`) | Blocked: not confirmed |
+| Legal corpus loaded into `legal_sources` from `kb/dist` | `hybrid_search_legal` | Blocked: `kb/dist` is not in this checkout. The knowledge-base CI job builds it, but nothing loads it into the hosted database |
+| Eval gate (AGENTS.md §1, doc 04) against `kb/dist/evals.jsonl` | release gate for the answer model | **Not run.** The evals file is absent |
+| Signing secret: `SERVER_SIGNING_SECRET` matches the database | verified messages (`features/chat/stream.ts` signs each verified answer) | Blocked: operator check required |
+| Document scanner: `FILE_SCAN_URL`, `FILE_SCAN_TOKEN` | upload and ingestion fail closed without it (`features/documents/file-scan.ts`) | Blocked: no real scanner confirmed |
+| Ingestion queue: Inngest event and signing keys | indexing of uploaded bylaws | Blocked: not confirmed |
+| Stub model is refused on Vercel | `AI_PROVIDER=local-stub` throws on Vercel (`lib/ai/provider-mode.ts`) | Working in code |
+
+The E2E test `building-documents-ask` proves the control flow: retrieval scoping, citation checks, the effective date, and
+refusal with no source. It runs on the **local stub model**, so it does not prove answer quality. The stub is never
+production output.
 
 ## 2. Portfolio manager
 
