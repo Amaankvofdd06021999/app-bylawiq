@@ -86,7 +86,9 @@ export async function verifyTotpAction(raw: unknown): Promise<VerifyTotpResult> 
     }
     return { ok: true };
   } finally {
-    const { error: releaseError } = await user.client.rpc('release_mfa_verification', { p_token: leaseToken });
+    const { error: releaseError } = await user.client.rpc('release_mfa_verification', {
+      p_token: leaseToken,
+    });
     if (releaseError) logger.warn({ context: 'mfa.release', userId: user.id });
   }
 }

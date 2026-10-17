@@ -2,7 +2,13 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
-import { assertLocalSupabase, seedMfaAccounts, totpAt, waitForTotpWindow, type SeededAccount } from './support/local-mfa';
+import {
+  assertLocalSupabase,
+  seedMfaAccounts,
+  totpAt,
+  waitForTotpWindow,
+  type SeededAccount,
+} from './support/local-mfa';
 import { openPage, submitSignIn } from './support/sign-in';
 import { freshClientIp } from './support/accounts';
 
@@ -28,7 +34,19 @@ const enrolTimings: number[] = [];
 function localDb(sql: string): string {
   return execFileSync(
     'docker',
-    ['exec', '-i', 'supabase_db_bylawiq', 'psql', '-U', 'postgres', '-d', 'postgres', '-At', '-v', 'ON_ERROR_STOP=1'],
+    [
+      'exec',
+      '-i',
+      'supabase_db_bylawiq',
+      'psql',
+      '-U',
+      'postgres',
+      '-d',
+      'postgres',
+      '-At',
+      '-v',
+      'ON_ERROR_STOP=1',
+    ],
     { input: sql, encoding: 'utf8' },
   ).trim();
 }
@@ -123,7 +141,9 @@ test('several admins enrol an authenticator at once and every enrolment complete
   expectSlow(Math.max(...enrolTimings)).toBeLessThan(15_000);
 });
 
-test('concurrent wrong codes through the form each get a prompt refusal, and nothing hangs', async ({ browser }) => {
+test('concurrent wrong codes through the form each get a prompt refusal, and nothing hangs', async ({
+  browser,
+}) => {
   const timings: number[] = [];
   const contexts: BrowserContext[] = [];
   try {
@@ -145,7 +165,9 @@ test('concurrent wrong codes through the form each get a prompt refusal, and not
         await page.fill('#mfa-code', '000000');
         const start = Date.now();
         await page.getByRole('button', { name: 'Confirm' }).click();
-        await expectSlow(page.locator('#mfa-error')).toHaveText(/not valid/, { timeout: MAX_VERIFY_MS + 10_000 });
+        await expectSlow(page.locator('#mfa-error')).toHaveText(/not valid/, {
+          timeout: MAX_VERIFY_MS + 10_000,
+        });
         timings.push(Date.now() - start);
       }),
     );

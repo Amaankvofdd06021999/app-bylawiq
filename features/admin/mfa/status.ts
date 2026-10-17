@@ -8,7 +8,9 @@ import { checkDb } from '@/lib/errors';
  * the factor list costs two auth-service round trips, and the auth service already checks that the factor belongs to the
  * caller when the code is verified.
  */
-export async function readAdminFlags(user: SessionUser): Promise<{ isPlatformAdmin: boolean; mfaVerified: boolean }> {
+export async function readAdminFlags(
+  user: SessionUser,
+): Promise<{ isPlatformAdmin: boolean; mfaVerified: boolean }> {
   const { data, error } = await user.client.rpc('platform_admin_status');
   checkDb(error);
   const row = Array.isArray(data) ? data[0] : undefined;

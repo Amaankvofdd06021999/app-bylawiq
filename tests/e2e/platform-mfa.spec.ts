@@ -1,6 +1,12 @@
 import { openPage, submitSignIn } from './support/sign-in';
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
-import { assertLocalSupabase, seedMfaAccounts, totpAt, waitForTotpWindow, type SeededAccount } from './support/local-mfa';
+import {
+  assertLocalSupabase,
+  seedMfaAccounts,
+  totpAt,
+  waitForTotpWindow,
+  type SeededAccount,
+} from './support/local-mfa';
 
 /**
  * Platform admin console with MFA, against the local Supabase stack (see support/local-mfa.ts).

@@ -3,7 +3,13 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { expect, test, type Browser, type Page } from '@playwright/test';
-import { assertLocalSupabase, seedMfaAccounts, totpAt, waitForTotpWindow, type SeededAccount } from './support/local-mfa';
+import {
+  assertLocalSupabase,
+  seedMfaAccounts,
+  totpAt,
+  waitForTotpWindow,
+  type SeededAccount,
+} from './support/local-mfa';
 import { freshClientIp, signInAs } from './support/accounts';
 import { openPage } from './support/sign-in';
 
@@ -23,7 +29,19 @@ let adminSecret = '';
 function localDb(sql: string): string {
   return execFileSync(
     'docker',
-    ['exec', '-i', 'supabase_db_bylawiq', 'psql', '-U', 'postgres', '-d', 'postgres', '-At', '-v', 'ON_ERROR_STOP=1'],
+    [
+      'exec',
+      '-i',
+      'supabase_db_bylawiq',
+      'psql',
+      '-U',
+      'postgres',
+      '-d',
+      'postgres',
+      '-At',
+      '-v',
+      'ON_ERROR_STOP=1',
+    ],
     { input: sql, encoding: 'utf8' },
   ).trim();
 }
@@ -117,7 +135,9 @@ test('while a lease is held the form says busy; a stranger cannot release it; th
   await page.context().close();
 });
 
-test('concurrent verification attempts are serialized: one runs, the others are refused at once', async ({ browser }) => {
+test('concurrent verification attempts are serialized: one runs, the others are refused at once', async ({
+  browser,
+}) => {
   const page = await stepUpPage(browser);
   const actionId = serverActionId();
   const factorId = await factorIdOf();
@@ -126,7 +146,11 @@ test('concurrent verification attempts are serialized: one runs, the others are 
     Array.from({ length: 6 }, async () => {
       const start = Date.now();
       const res = await page.context().request.post('/admin/platform', {
-        headers: { 'Next-Action': actionId, 'Content-Type': 'text/plain;charset=UTF-8', Accept: 'text/x-component' },
+        headers: {
+          'Next-Action': actionId,
+          'Content-Type': 'text/plain;charset=UTF-8',
+          Accept: 'text/x-component',
+        },
         data: JSON.stringify([{ factorId, code: '000000' }]),
         timeout: 30_000,
       });
