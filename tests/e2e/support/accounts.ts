@@ -59,6 +59,8 @@ export async function onboard(
   },
 ): Promise<string> {
   await openPage(page, '/workspace');
+  // Wait for hydration: filling the form before React is ready leaves the submit disabled.
+  await page.waitForLoadState('networkidle');
   await page.getByRole('button', { name: new RegExp('^' + options.accountType) }).click();
   await page.getByLabel('Your name').fill(options.name);
   await page.getByLabel('Organization or strata name').fill(options.organization);
