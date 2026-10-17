@@ -62,12 +62,37 @@ export async function onboard(
   // Wait for hydration: filling the form before React is ready leaves the submit disabled.
   await page.waitForLoadState('networkidle');
   await page.getByRole('button', { name: new RegExp('^' + options.accountType) }).click();
-  await page.getByLabel('Your name').fill(options.name);
-  await page.getByLabel('Organization or strata name').fill(options.organization);
-  await page.getByLabel('Your first building').fill(options.building);
+  // Fill each field until its value sticks. Before hydration finishes, React can reset a field that was typed into.
+  const fields: [string, string][] = [
+    ['Your name', options.name],
+    ['Organization or strata name', options.organization],
+    ['Your first building', options.building],
+  ];
+  for (const [label, value] of fields) {
+    await expect
+      .poll(
+        async () => {
+          await page.getByLabel(label).fill(value);
+          return page.getByLabel(label).inputValue();
+        },
+        { timeout: 20_000, intervals: [500] },
+      )
+      .toBe(value);
+  }
   await page.getByLabel(/I am authorized to create this workspace/).check();
-  await page.getByRole('button', { name: 'Create workspace' }).click();
-  await expect(page).toHaveURL(/\/b\/[0-9a-f-]{36}\//);
+  // Submit, and if the workspace has not opened in 10 seconds, submit again (a click made before the form's handlers
+  // are attached does nothing). A second submit for an existing workspace is refused, so it cannot create a duplicate.
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    if (/\/b\/[0-9a-f-]{36}\//.test(page.url())) break;
+    // A timeout on the click: if the workspace already opened, the button is gone and the click must not wait forever.
+    await page.getByRole('button', { name: 'Create workspace' }).click({ timeout: 5_000 }).catch(() => undefined);
+    try {
+      await expect(page).toHaveURL(/\/b\/[0-9a-f-]{36}\//, { timeout: 10_000 });
+      break;
+    } catch (e) {
+      if (attempt === 3) throw e;
+    }
+  }
   const match = page.url().match(/\/b\/([0-9a-f-]{36})\//);
   if (!match) throw new Error('Onboarding did not reach a building');
   return match[1];
