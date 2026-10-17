@@ -15,11 +15,18 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.102.0
+      # The E2E suite runs against the local Supabase stack. scripts/e2e-local.mjs reads that stack's keys and builds the
+      # app with them, so plain `playwright test` (no stack) is not the CI command.
+      - run: supabase start
+      - run: supabase db reset
       - run: npx playwright install --with-deps chromium
       # github reporter turns each failed test into a readable annotation; the HTML report is kept for failures.
       # DEMO_MODE gates every /demo route (AGENTS.md); the build step doesn't need it since app/demo/layout.tsx
       # is force-dynamic, so nothing under it is prerendered at build time.
-      - run: npm run test:e2e -- --reporter=github,list,html
+      - run: npm run test:e2e:local -- --reporter=github,list,html
         env:
           DEMO_MODE: 'on'
       - uses: actions/upload-artifact@v4
@@ -38,6 +45,9 @@ jobs:
         with:
           version: 2.102.0
       - run: supabase start
+      # Applies every migration, in order, to a fresh Postgres with the Supabase roles, then runs the pgTAP suites in
+      # supabase/tests: row-level security and persona authorization (supabase/tests/personas_authorization.test.sql).
+      - run: supabase db reset
       - run: supabase test db
   knowledge-base:
     runs-on: ubuntu-latest
