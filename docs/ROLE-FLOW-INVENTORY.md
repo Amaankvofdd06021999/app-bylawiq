@@ -167,7 +167,11 @@ Notes on the counts:
 
 ## Tracker
 
-**CI gate status:** CI green at `8f9dce7` (run `39136095531`: app, database and knowledge-base). That run includes the sign-in
+**CI gate status (latest):** `7dc2e36` (counsel-access database slice): knowledge-base and database green; **app job red at the
+E2E step**. The E2E test name is not visible with this token (the job log returns 403). The full local suite on the same database
+passes: 173 passed, 0 failed, 19 skipped. Treat CI as not green until a run on a later commit passes.
+
+Earlier: CI green at `8f9dce7` (run `39136095531`: app, database and knowledge-base). That run includes the sign-in
 fix, the MFA-load changes and the LTO migration (applied by the CI database job to a fresh database, with the full pgTAP suite).
 Earlier: green at `c437cd8` (run `39128713240`). Details:
 
