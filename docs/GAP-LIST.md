@@ -112,7 +112,7 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 
 | Flow | Status | Owner | Depends on | Local evidence | Staging evidence |
 |---|---|---|---|---|---|
-| Time-limited counsel access (grant, read, expiry, revoke) | Tested locally (database only; no UI, no E2E) | Eng | Migration 20261047000063 apply (Op approval); counsel review of who may be granted | `counsel_access` pgTAP 19 (success, denial, expiry, revoke, cross-building, period limits, unique active grant) | None (item 7) |
+| Time-limited counsel access (grant, read, expiry, revoke) | Tested locally: database (counsel_access 19, counsel_packet 13), UI, and E2E (counsel-access, 5 tests, desktop and mobile, 2 runs). Not on staging | Eng | Migration 20261047000063 apply (Op approval); counsel review of who may be granted | `counsel_access` pgTAP 19 (success, denial, expiry, revoke, cross-building, period limits, unique active grant) | None (item 7) |
 | Counsel review packet and comment thread | Missing | Eng, Counsel | Item 7 | none | None (item 7) |
 | CBA-BC referral, counsel invitation UI | Missing | Eng, Counsel | Item 7; referral rules (counsel) | none | None (item 7) |
 

@@ -51,6 +51,13 @@ export function checkDb(error: { code?: string; message: string } | null) {
     invalid_filing_reference:
       'Enter the LTO filing reference: 3 to 30 letters, digits, hyphens or slashes, with at least one digit.',
     effective_date_required: 'Enter the date the amendment takes effect.',
+    counsel_account_required:
+      'This person needs a BylawIQ account before counsel access can be granted. Ask them to sign up, then try again.',
+    invalid_period: 'Counsel access can run for 1 to 30 days.',
+    counsel_required: 'Enter the counsel’s email address.',
+    counsel_grants_active_idx:
+      'Counsel already has active access to this amendment. Revoke it first to change the period.',
+    already_revoked: 'This access has already been ended.',
     already_configured: 'This account is already configured.',
     already_member:
       'This person is already a member of this building. Change their role from Members instead.',

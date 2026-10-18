@@ -1456,6 +1456,11 @@ function Editor({
             </label>
           </div>
           {isBylaw && <BylawLintPanel body={body} isAmendment={history.length > 0} />}
+          {isBylaw && permissions.includes('bylaw.adopt') && (
+            <p>
+              <Link href={`/b/${building.id}/counsel`}>External counsel access</Link>
+            </p>
+          )}
           {isBylaw && (
             <label>
               Reason for change
