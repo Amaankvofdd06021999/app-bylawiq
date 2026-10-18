@@ -1,5 +1,8 @@
 # Post-launch backlog
 
+The full role-by-role status of every PRD flow (built, tested locally, tested on staging, missing) is in
+`docs/ROLE-FLOW-INVENTORY.md`. This list covers what is deliberately off for launch.
+
 Launch scope and the complete platform are different things. This file tracks everything that is deliberately out of the
 launch release, so "launch-ready" is not read as "complete". Each item stays out of the release candidate until it is
 reviewed, tested against the real app, and approved.
