@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/auth/guards';
 import { AppError, ForbiddenError, checkDb, errorMessage } from '@/lib/errors';
 import { appUrl, secret } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { requireLaunchFeature } from '@/lib/launch-scope';
 import { CREDIT_PACK } from './pricing';
 
 const CheckoutInput = z.object({ buildingId: z.uuid() });
@@ -13,6 +14,8 @@ export type CheckoutResult = { ok: true; url: string } | { ok: false; error: str
 
 export async function createCreditCheckoutAction(raw: unknown): Promise<CheckoutResult> {
   try {
+    // Payments are off for this release. Refused before the caller is read and before any Stripe call (lib/launch-scope.ts).
+    requireLaunchFeature('payments');
     const user = await requireUser();
     const input = CheckoutInput.parse(raw);
 

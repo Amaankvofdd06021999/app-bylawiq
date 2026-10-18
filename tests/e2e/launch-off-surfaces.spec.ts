@@ -59,6 +59,14 @@ test('the billing page is unavailable', async ({ browser }) => {
   });
 });
 
+test('the AI analytics page is unavailable', async ({ browser }) => {
+  await withManager(browser, async (page) => {
+    await page.goto('/admin/chat-analytics');
+    await expect(page.getByRole('heading', { name: 'This page is unavailable.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Chat & AI Analytics' })).toHaveCount(0);
+  });
+});
+
 test('the Stripe webhook refuses every request with 404', async ({ browser }) => {
   await withManager(browser, async (page) => {
     const res = await page.request.post('/api/webhooks/stripe', { data: '{}' });

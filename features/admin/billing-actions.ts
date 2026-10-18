@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
 import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
+import { requireLaunchFeature } from '@/lib/launch-scope';
 
 const UpdateSeatsSchema = z.object({
   seats: z.number().int().min(3, 'Minimum 3 seats required'),
@@ -13,6 +14,8 @@ const UpdateSeatsSchema = z.object({
  */
 export async function updateSeatsAction(raw: unknown) {
   try {
+    // Payments are off for this release. Refused before the caller is read, so no seat count is written (lib/launch-scope.ts).
+    requireLaunchFeature('payments');
     const user = await requireUser();
     const input = UpdateSeatsSchema.parse(raw);
 
