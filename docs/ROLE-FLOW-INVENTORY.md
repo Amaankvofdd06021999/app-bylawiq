@@ -166,7 +166,9 @@ Notes on the counts:
 
 ## Tracker
 
-**CI gate status:** CI green at `c437cd8` (run `39128713240`). Since then:
+**CI gate status:** CI green at `8f9dce7` (run `39136095531`: app, database and knowledge-base). That run includes the sign-in
+fix, the MFA-load changes and the LTO migration (applied by the CI database job to a fresh database, with the full pgTAP suite).
+Earlier: green at `c437cd8` (run `39128713240`). Details:
 
 - **Sign-in hang: fixed in the product** (`c649882`). Each step of the sign-in action is bounded (rate limit 8 s, sign-in 12 s),
   the form gives up at 25 s, and the button recovers with a message. Evidence: unit 7/7, local E2E `sign-in-recovery` 2/2.
