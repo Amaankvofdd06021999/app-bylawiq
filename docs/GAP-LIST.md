@@ -32,7 +32,9 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 | Digest delivery | Missing | Eng, Op | Email service (Op); item 9 | none | None (item 9) |
 | Legal review trigger, review panel | Missing | Eng, Counsel | Item 7 spec | none | None (item 7) |
 | Risk scoring, review packet | Missing | Eng, Counsel | Item 7 spec | none | None (item 7) |
-| CBA-BC referral, counsel invitation | Missing | Eng, Counsel | Item 7 | none | None (item 7) |
+| Time-limited counsel access (grant, read, expiry, revoke) | Tested locally (database only; no UI, no E2E) | Eng | Migration 20261047000063 apply (Op approval); counsel review of who may be granted | `counsel_access` pgTAP 19 (success, denial, expiry, revoke, cross-building, period limits, unique active grant) | None (item 7) |
+| Counsel review packet and comment thread | Missing | Eng, Counsel | Item 7 | none | None (item 7) |
+| CBA-BC referral, counsel invitation UI | Missing | Eng, Counsel | Item 7; referral rules (counsel) | none | None (item 7) |
 | Notice templates from bylaw tree | Missing | Eng | Item 8 | none | None (item 8) |
 | Fine validation before send | Missing | Eng, Counsel | Item 8; linter rules | none | None (item 8) |
 | Notice draft, send to firm review, approve | Tested locally | Eng | Op | firm-review | None |
