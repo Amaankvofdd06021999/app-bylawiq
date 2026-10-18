@@ -167,7 +167,8 @@ Notes on the counts:
 
 ## Tracker
 
-**CI gate status (latest):** 79b1071 and 7dc2e36: app job red at the E2E step. The failing test was identified from the check run's annotations (readable without a token): lto-filing.spec.ts, 'a valid filing removes the update', mobile. Cause: the test read the home screen before the filing was written. Fixed by waiting for the database state, as the other specs do. Local: 4/4 on two runs. CI on the fix (`f43ffcb`, run `39157696010`): green, all jobs.
+**CI gate status (latest):** green at `da46925` (run `39158642846`: app, database, knowledge-base). History: `79b1071` and `7dc2e36` were red at the E2E step; fixed in `f43ffcb` (green, run `39157696010`). The earlier red text follows for the record.
+Earlier red: The failing test was identified from the check run's annotations (readable without a token): lto-filing.spec.ts, 'a valid filing removes the update', mobile. Cause: the test read the home screen before the filing was written. Fixed by waiting for the database state, as the other specs do. Local: 4/4 on two runs. CI on the fix (`f43ffcb`, run `39157696010`): green, all jobs.
 Earlier: CI green at `8f9dce7` (run `39136095531`: app, database and knowledge-base). That run includes the sign-in
 fix, the MFA-load changes and the LTO migration (applied by the CI database job to a fresh database, with the full pgTAP suite).
 Earlier: green at `c437cd8` (run `39128713240`). Details:
