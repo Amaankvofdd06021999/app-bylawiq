@@ -162,6 +162,17 @@ test('a valid filing removes the update, and another building never sees it', as
       await d.getByLabel('Verified LTO filing reference').fill('LTO-2026/1234');
       await d.getByLabel('Effective date').fill('2026-10-01');
     });
+    // Wait for the filing to be written before reading the home screen. Saving the dialog returns before the write
+    // commits on a slower browser (this failed on mobile in CI at 79b1071).
+    await expect
+      .poll(
+        () =>
+          psql(
+            `select count(*) from public.notifications n join public.bylaw_versions v on v.id = n.target_id where v.building_id = '${managerA.buildingId}' and n.type = 'unfiled_adoption' and n.state = 'actioned'`,
+          ),
+        { timeout: 20_000, intervals: [1_000] },
+      )
+      .toBe('1');
     await a.page.goto(`/b/${managerA.buildingId}/home`);
     await expect(a.page.getByText('Filing record needed')).toHaveCount(0);
   } finally {
