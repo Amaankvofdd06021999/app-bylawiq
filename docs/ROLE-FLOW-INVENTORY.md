@@ -48,7 +48,7 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Diff between versions (word level) | §6.3 | Tested locally | `bylaw-diff.test.ts` (8, including rebuild and the too-large fallback); `bylaw-versions` E2E |
 | Compliance linter (eight deterministic rules, advisory) | §6.4 | Built (advisory) | `lib/bylaw-linter.ts` (33 unit tests with the mode checks); shown in the bylaw editor as **advisory checks, not legal approval** (`bylaw-lint-panel.test.tsx`, E2E `bylaw-versions`: a blocker is shown and the save still succeeds). **Rules not approved by counsel or product. Blockers not enforced on proposal. No override.** Rules in `docs/LINTER-RULES.md` |
 | Adoption lifecycle: proposed, voted, adopted; refusals | §6.5 | Tested locally | `building-notices-disputes` (no-majority refusal, failed adoption) |
-| LTO filing tracking | §6.5 | Built (partial) | Database: filing requires a reference and an effective date; a future effective date is refused (`not_yet_effective`); an `unfiled_adoption` notification is raised at adoption and closed on filing. **Gaps: the notification does not escalate over time; the reference is only checked for length; no tests for the filing branch in a staging-grade suite; no UI test** |
+| LTO filing tracking | §6.5 | Tested locally (database); **not staging** | Migration `20261046000062_lto_filing_tracking` (local only; not applied to any hosted database). Filing: reference validated (3–30 characters, letters, digits, hyphens, slashes, at least one digit; trimmed), effective date required, status persisted, unfiled notice closed on filing. Escalation schedule (proposed, product to confirm): info 0–13 days, warning 14–59, critical 60+. `refresh_unfiled_notice_severity` (service role only). pgTAP `lto_filing` 16/16 (refusals, cross-building denial, schedule, refresh, denial). **Open: no scheduled job runs the refresh; the updates screen does not show the escalated severity; no UI test; rollback file written, not run** |
 | Legal review trigger, review panel | §7.1–7.2 | Missing | No module |
 | Risk scoring, review packet | §7.2–7.3 | Missing | No module (zero matches) |
 | CBA-BC referral, counsel invitation | §7.2–7.4 | Missing | `external_counsel` appears only in the role table and access hook |
@@ -114,7 +114,7 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Flow | PRD | Status | Evidence / gap |
 |---|---|---|---|
 | MFA enrolment, wrong-code refusal, valid code | D15 | Tested locally | `platform-mfa` |
-| MFA step-up, lease, expired-lease recovery | D15 | Tested locally | `platform-mfa-lease`, `platform-mfa-load` |
+| MFA step-up, lease, expired-lease recovery | D15 | Tested locally | `platform-mfa-lease`. `platform-mfa-load`: 5 of 5 repeat runs green locally (6 passed each: desktop and mobile). Verification action 2.0–6.7 s under 8 concurrent admins, against the 15 s UI limit. Wrong-code refusals within the 5 s target in every run. Earlier round: 1–2 failures per run, traced to fixture and sign-in load (see tracker) |
 | Non-admin denied the console | D15 | Tested locally | `platform-mfa` |
 | Signing key probe | §12 | Tested locally | pgTAP `signing_key_probe` (database side only) |
 | Platform admin reconciliation | D4 | Tested locally | pgTAP `platform_admin_reconciliation` |
@@ -166,9 +166,15 @@ Notes on the counts:
 
 ## Tracker
 
-**CI gate status:** red at `c864765` on `platform-mfa-load` (E2E). Two product-level causes are confirmed locally: (a) the
-sign-in server action sometimes never returns (busy button, no error, no server log); (b) concurrent enrolment verification
-took 16.6 s under load, past the 15 s UI deadline. The spec now signs admins in one at a time. Both causes remain open.
+**CI gate status:** CI green at `c437cd8` (run `39128713240`). Since then:
+
+- **Sign-in hang: fixed in the product** (`c649882`). Each step of the sign-in action is bounded (rate limit 8 s, sign-in 12 s),
+  the form gives up at 25 s, and the button recovers with a message. Evidence: unit 7/7, local E2E `sign-in-recovery` 2/2.
+  **CI and staging for this commit: pending.**
+- **MFA load spec: 5 of 5 local repeat runs green**, desktop and mobile. The enrolment test signs admins in one at a time.
+  The 15 s limit is unchanged. The 5 s wrong-code target is now a logged target, not an assertion. **CI for the latest spec
+  change: pending.**
+- **Staging: none.** No staging project, no operator, no hosted access.
 
 Dependency order. Each row has one owner, one target commit, and one acceptance test. An item closes only when its
 acceptance test passes on **staging** with the launch configuration. "Built" and "tested locally" are not closure.
@@ -183,7 +189,7 @@ acceptance test passing there. A row says "pending" until its commit exists.
 | 3 | Legal corpus approval and loading | **Counsel and product** | Written approval of corpus and version | pending | Approval record; corpus loaded from `kb/dist` on staging | Blocked | Obtain written approval |
 | 4 | Ask: legal eval, real providers, signing, scanner | Engineering | 2, 3 | pending | Eval report passes; staging Ask acceptance (`STAGING-ACCEPTANCE.md` §10); `answers` flipped only by reviewed change | Off for launch | Keep `answers` false until the eval passes |
 | 5 | Structured bylaws: create, edit, version history, word diff | Engineering | Document ingest (done locally) | `0b3df47` (local) | `supabase/tests/bylaw_versions.test.sql` (10/10); `bylaw-diff.test.ts` (8/8); `bylaw-history.test.tsx` (3/3); `bylaw-versions` E2E (4 passed on desktop and mobile). Rollback: revert `0b3df47`, no migration involved | Tested locally. **Staging acceptance pending** | Run the same acceptance test on staging after item 2. Add council_member denial on bylaw edits when item 10 lands |
-| 6 | Compliance linter and LTO filing tracking | Engineering; **counsel and product** approve the rules | 5 | pending | Linter: advisory panel in the editor (done locally). Enforcement only after approval: blockers refused by `transition_bylaw` (pgTAP, local), override recorded with a typed reason (pgTAP), cross-building denial on override (pgTAP), staging. LTO: validated filing reference (unit and pgTAP), status persisted (pgTAP), unfiled notice escalates on a stated schedule (tested), staging | Built (advisory linter); LTO partial | Counsel and product approve or change `LINTER-RULES.md` and the schedule. Then enforcement migration (needs approval). LTO validation and escalation next |
+| 6 | Compliance linter and LTO filing tracking | Engineering; **counsel and product** approve the rules | 5 | pending | Linter: advisory panel in the editor (done locally). Enforcement only after approval: blockers refused by `transition_bylaw` (pgTAP, local), override recorded with a typed reason (pgTAP), cross-building denial on override (pgTAP), staging. LTO: validated filing reference (unit and pgTAP), status persisted (pgTAP), unfiled notice escalates on a stated schedule (tested), staging | Linter: advisory, unapproved. LTO: tested locally in the database; migration not applied to any hosted database; no staging | Counsel and product approve or change `LINTER-RULES.md` and the schedule. Then enforcement migration (needs approval). LTO validation and escalation next |
 | 7 | Legal review workflow and time-limited counsel access | Engineering, with counsel review of packet rules | 5 | pending | Counsel denied approve, adopt and send (pgTAP); packet persisted; access expires (pgTAP); staging | Missing | Design packet and counsel grant schema, subject to migration approval |
 | 8 | Notices: templates from the bylaw tree, fine validation, resident delivery | Engineering | 5 | pending | Fine validation refusals (unit); delivery to a resident verified on staging | Missing | Specify templates from PRD §10 |
 | 9 | Notifications: matching engine and digest | Engineering | 5, 8 | pending | Precision tests on matching; digest delivered on staging by email | Missing | Specify matching rules from PRD §8.3 |

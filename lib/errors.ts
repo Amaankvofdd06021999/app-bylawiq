@@ -48,6 +48,9 @@ export function checkDb(error: { code?: string; message: string } | null) {
     not_yet_effective:
       'This bylaw takes effect on its effective date. Move it in force on or after that date.',
     review_required: 'Choose a legal review option first.',
+    invalid_filing_reference:
+      'Enter the LTO filing reference: 3 to 30 letters, digits, hyphens or slashes, with at least one digit.',
+    effective_date_required: 'Enter the date the amendment takes effect.',
     already_configured: 'This account is already configured.',
     already_member:
       'This person is already a member of this building. Change their role from Members instead.',
