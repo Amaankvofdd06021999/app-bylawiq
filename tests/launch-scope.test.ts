@@ -5,6 +5,13 @@ vi.mock('server-only', () => ({}));
 import { FeatureUnavailableError } from '@/lib/errors';
 import { launchFeatureEnabled, requireLaunchFeature } from '@/lib/launch-scope';
 
+describe('launch scope: bulletin and payments are off for this release', () => {
+  it('the bulletin and payments features are off in code', () => {
+    expect(launchFeatureEnabled('bulletin')).toBe(false);
+    expect(launchFeatureEnabled('payments')).toBe(false);
+  });
+});
+
 describe('launch scope: AI answers are off for this release', () => {
   it('the answers feature is off in code', () => {
     expect(launchFeatureEnabled('answers')).toBe(false);

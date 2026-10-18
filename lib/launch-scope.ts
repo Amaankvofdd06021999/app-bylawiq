@@ -10,8 +10,12 @@ import { FeatureUnavailableError } from '@/lib/errors';
  * corpus is approved and loaded, the eval gate (AGENTS.md §1, doc 04) passes, and the answer and embedding providers and
  * the signing secret are verified. docs/RELEASE-CHECKLIST.md lists those requirements.
  */
-const flags: Record<'answers', boolean> = {
+const flags: Record<'answers' | 'bulletin' | 'payments', boolean> = {
   answers: false,
+  /** The building bulletin: posts, pinning and length rules have no real-app tests yet (docs/POST-LAUNCH-BACKLOG.md). */
+  bulletin: false,
+  /** Billing pages and the Stripe webhook. Payments are not in launch scope. */
+  payments: false,
 };
 
 export type LaunchFeature = keyof typeof flags;

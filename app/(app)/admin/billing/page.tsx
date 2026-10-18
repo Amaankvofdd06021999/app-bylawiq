@@ -1,11 +1,14 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { PageHeading } from '@/components/ui';
 import { requireUser } from '@/lib/auth/guards';
+import { launchFeatureEnabled } from '@/lib/launch-scope';
 import { getBillingAccount, getSeatUtilization } from '@/features/admin/billing-queries';
 import { PlanCard } from '@/features/admin/components/plan-card';
 import { SeatsStepper } from '@/features/admin/components/seats-stepper';
 
 export default async function AdminBillingPage() {
+  // Payments are off for this release. The page does not exist for anyone (lib/launch-scope.ts).
+  if (!launchFeatureEnabled('payments')) notFound();
   await requireUser();
 
   // Only the data load is guarded: rendering happens outside try, so errors in the JSX are not swallowed here.

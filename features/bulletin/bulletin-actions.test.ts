@@ -12,6 +12,13 @@ vi.mock('@/lib/auth/guards', () => ({
   requireUser: vi.fn(),
 }));
 
+// The bulletin is off for launch, and its gate is tested in tests/launch-scope.test.ts. These tests check the feature's
+// own rules, so they run with the feature switched on.
+vi.mock('@/lib/launch-scope', () => ({
+  requireLaunchFeature: () => undefined,
+  launchFeatureEnabled: () => true,
+}));
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));

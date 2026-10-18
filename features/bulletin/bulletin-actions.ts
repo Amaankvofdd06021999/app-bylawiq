@@ -1,6 +1,7 @@
 'use server';
 import { requireUser } from '@/lib/auth/guards';
 import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
+import { requireLaunchFeature } from '@/lib/launch-scope';
 import { createClient } from '@/lib/supabase/server';
 import {
   CreateBulletinPostSchema,
@@ -15,6 +16,7 @@ import {
  */
 export async function createBulletinPostAction(raw: unknown) {
   try {
+    requireLaunchFeature('bulletin');
     const user = await requireUser();
     const input = CreateBulletinPostSchema.parse(raw);
 
@@ -65,6 +67,7 @@ export async function createBulletinPostAction(raw: unknown) {
  */
 export async function updateBulletinPostAction(raw: unknown) {
   try {
+    requireLaunchFeature('bulletin');
     const user = await requireUser();
     const input = UpdateBulletinPostSchema.parse(raw);
 
@@ -120,6 +123,7 @@ export async function updateBulletinPostAction(raw: unknown) {
  */
 export async function pinBulletinPostAction(raw: unknown) {
   try {
+    requireLaunchFeature('bulletin');
     const user = await requireUser();
     const input = PinBulletinPostSchema.parse(raw);
 
@@ -159,6 +163,7 @@ export async function pinBulletinPostAction(raw: unknown) {
  */
 export async function deleteBulletinPostAction(raw: unknown) {
   try {
+    requireLaunchFeature('bulletin');
     const user = await requireUser();
     const input = DeleteBulletinPostSchema.parse(raw);
 

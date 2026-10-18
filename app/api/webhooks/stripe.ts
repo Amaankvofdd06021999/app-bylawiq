@@ -5,8 +5,11 @@ import Stripe from 'stripe';
 import { logger } from '@/lib/logger';
 import { secret } from '@/lib/env';
 import { errorMessage } from '@/lib/errors';
+import { launchFeatureEnabled } from '@/lib/launch-scope';
 
 export async function POST(request: NextRequest) {
+  // Payments are off for this release. Refuse before any secret is read or event is processed (lib/launch-scope.ts).
+  if (!launchFeatureEnabled('payments')) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const webhookSecret = secret('STRIPE_WEBHOOK_SECRET');
   const stripe = new Stripe(secret('STRIPE_SECRET_KEY'));
   const body = await request.text();

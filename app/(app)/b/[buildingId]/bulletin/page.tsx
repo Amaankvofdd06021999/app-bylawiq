@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
+import { launchFeatureEnabled } from '@/lib/launch-scope';
 import { BulletinFeed } from '@/features/bulletin/components/bulletin-feed';
 import { CreatePostForm } from '@/features/bulletin/components/create-post-form';
 import { getBulletinFeed } from '@/features/bulletin/bulletin-queries';
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default async function BulletinPage({ params }: Props) {
+  // The bulletin is off for this release (lib/launch-scope.ts). The page does not load posts.
+  if (!launchFeatureEnabled('bulletin')) notFound();
   const { buildingId } = await params;
   const user = await requireUser();
 
