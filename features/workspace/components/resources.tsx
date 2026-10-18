@@ -29,6 +29,7 @@ import { str } from '@/lib/rows';
 import { errorFrom } from '@/lib/http';
 import { ReviewThread } from './review-thread';
 import { BylawVersionHistory } from './bylaw-history';
+import { BylawLintPanel } from './bylaw-lint-panel';
 import { useBackend } from '@/components/backend';
 import type { Building, Row, Profile } from '@/lib/schema';
 import { pretty, DOCUMENT_TYPES, ROLE_LABELS, DISCLAIMER } from '@/lib/constants';
@@ -1437,6 +1438,7 @@ function Editor({
               />
             </label>
           </div>
+          {isBylaw && <BylawLintPanel body={body} isAmendment={history.length > 0} />}
           {isBylaw && (
             <label>
               Reason for change

@@ -66,6 +66,23 @@ test('a manager creates a bylaw, edits it, and compares the two versions', async
   await expect(page.locator('.bylaw-history del', { hasText: 'Two' })).toHaveCount(0);
 });
 
+test('advisory checks show a blocker, and the save still succeeds while the rules are unreviewed', async ({
+  page,
+}) => {
+  await signIn(page, managerA);
+  await page.goto(`/b/${managerA.buildingId}/bylaws`);
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('button', { name: 'New bylaw' }).first().click();
+  await page.getByLabel('Title', { exact: true }).fill(`Rentals ${Date.now()}`);
+  await page.locator('input[name=section]').fill('6.1');
+  await page.getByLabel('Your amendment').fill('Owners must not rent their units to tenants.');
+  await expect(page.getByRole('heading', { name: 'Advisory checks' })).toBeVisible();
+  await expect(page.getByText('Blocker:')).toBeVisible();
+  await expect(page.getByText('not legal approval', { exact: false })).toBeVisible();
+  await page.getByRole('button', { name: 'Save new version' }).click();
+  await expect(page.getByRole('button', { name: /^Edit Rentals/ })).toBeVisible();
+});
+
 test("another building's manager does not see the bylaw or its history", async ({ page }) => {
   await signIn(page, managerB);
   await page.goto(`/b/${managerA.buildingId}/bylaws`);

@@ -1,6 +1,7 @@
 # Compliance linter rules: draft for product and counsel review
 
-**Status: draft. Not reviewed. Not legal advice. Not legal approval.** The linter's findings are checks for a person to
+**Status: draft. Not reviewed. Not legal advice. Not legal approval.** Approval state in code: `LINTER_APPROVAL.status` is
+`unreviewed`. Until it is `approved`, every finding is advisory, and no blocker stops a proposal. The linter's findings are checks for a person to
 read. A lawyer confirms every legal basis and every number in `LINTER_CONFIG` before the rules are relied on, and a
 reviewed change bumps `LINTER_RULES_VERSION`.
 

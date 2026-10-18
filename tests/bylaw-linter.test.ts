@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { LINTER_CONFIG, LINTER_RULES_VERSION, lintBylaw, type LintRuleId } from '@/lib/bylaw-linter';
+import {
+  LINTER_APPROVAL,
+  LINTER_CONFIG,
+  LINTER_RULES_VERSION,
+  lintBylaw,
+  type LintRuleId,
+} from '@/lib/bylaw-linter';
 
 const rules = (body: string, isAmendment = false) =>
   lintBylaw(body, { isAmendment }).findings.map((f) => f.rule as LintRuleId);
@@ -31,7 +37,7 @@ describe('R1 fine cap (blocker)', () => {
         matched: 'A contravention carries a $500 fine.',
       }),
     );
-    expect(result.canPropose).toBe(false);
+    expect(result.mode).toBe('advisory');
   });
 
   it('allows a fine exactly at the cap', () => {
@@ -146,16 +152,41 @@ describe('R8 filing step (info, amendments only)', () => {
   });
 });
 
-describe('gating', () => {
-  it('cannot propose while any blocker is present, even with other findings', () => {
+describe('advisory mode: rules not yet approved', () => {
+  it('labels every result advisory and enforces nothing while the rules are unreviewed', () => {
+    expect(LINTER_APPROVAL.status).toBe('unreviewed');
     const result = lintBylaw('Pets are prohibited. A $500 fine applies.', { isAmendment: true });
+    expect(result.mode).toBe('advisory');
     expect(result.findings.some((f) => f.severity === 'blocker')).toBe(true);
-    expect(result.canPropose).toBe(false);
+    expect(result.canPropose).toBe(true);
+  });
+});
+
+describe('enforced mode: only after counsel and product approval', () => {
+  it('refuses a proposal while a blocker is present', () => {
+    const previous = { ...LINTER_APPROVAL };
+    LINTER_APPROVAL.status = 'approved';
+    LINTER_APPROVAL.approvedBy = 'test-only';
+    try {
+      const result = lintBylaw('Pets are prohibited. A $500 fine applies.', { isAmendment: true });
+      expect(result.mode).toBe('enforced');
+      expect(result.canPropose).toBe(false);
+    } finally {
+      LINTER_APPROVAL.status = previous.status;
+      LINTER_APPROVAL.approvedBy = previous.approvedBy;
+    }
   });
 
-  it('can propose with warnings and info only', () => {
-    const result = lintBylaw('Excessive noise is not permitted under section 135.', { isAmendment: false });
-    expect(result.findings.every((f) => f.severity !== 'blocker')).toBe(true);
-    expect(result.canPropose).toBe(true);
+  it('allows a proposal with warnings and info only', () => {
+    const previous = { ...LINTER_APPROVAL };
+    LINTER_APPROVAL.status = 'approved';
+    try {
+      const result = lintBylaw('Excessive noise is not permitted under section 135.', { isAmendment: false });
+      expect(result.findings.every((f) => f.severity !== 'blocker')).toBe(true);
+      expect(result.canPropose).toBe(true);
+    } finally {
+      LINTER_APPROVAL.status = previous.status;
+      LINTER_APPROVAL.approvedBy = previous.approvedBy;
+    }
   });
 });
