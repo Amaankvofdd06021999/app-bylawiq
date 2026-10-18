@@ -46,9 +46,9 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Create and edit a structured bylaw (new section, new version per edit) | §6.2–6.3 | Tested locally | `save_bylaw` (existing); `supabase/tests/bylaw_versions.test.sql` (10 checks: cross-building and resident denial, direct write refused); `bylaw-versions` E2E (create, edit, compare). Editor UI reuses the existing bylaw form |
 | Version history, newest first, per bylaw | §6.6 | Tested locally | `bylaw-history.test.tsx` (3); `bylaw-versions` E2E. Empty and too-large states |
 | Diff between versions (word level) | §6.3 | Tested locally | `bylaw-diff.test.ts` (8, including rebuild and the too-large fallback); `bylaw-versions` E2E |
-| Compliance linter | §6.4 | Missing | No linter module (zero matches) |
+| Compliance linter (eight deterministic rules, draft) | §6.4 | Built | `lib/bylaw-linter.ts`, 29 unit tests; rules for counsel review in `docs/LINTER-RULES.md`. **Not wired into the editor. Blockers are not enforced on proposal. No override.** Not legal approval |
 | Adoption lifecycle: proposed, voted, adopted; refusals | §6.5 | Tested locally | `building-notices-disputes` (no-majority refusal, failed adoption) |
-| LTO filing tracking | §6.5 | Missing | No dedicated module found. `lto_filing_ref` exists on documents only |
+| LTO filing tracking | §6.5 | Built (partial) | Database: filing requires a reference and an effective date; a future effective date is refused (`not_yet_effective`); an `unfiled_adoption` notification is raised at adoption and closed on filing. **Gaps: the notification does not escalate over time; the reference is only checked for length; no tests for the filing branch in a staging-grade suite; no UI test** |
 | Legal review trigger, review panel | §7.1–7.2 | Missing | No module |
 | Risk scoring, review packet | §7.2–7.3 | Missing | No module (zero matches) |
 | CBA-BC referral, counsel invitation | §7.2–7.4 | Missing | `external_counsel` appears only in the role table and access hook |
@@ -148,10 +148,10 @@ Counted from the tables above, 76 rows (the role-mapping table is not counted):
 |---|---|
 | Tested on staging | **0** |
 | Tested locally | 30 |
-| Built, not tested | 10 |
+| Built, not tested | 12 |
 | Off for launch | 10 |
 | Blocked | 6 |
-| Missing | 19 |
+| Missing | 17 |
 | Deferred by PRD | 1 |
 
 Notes on the counts:
@@ -178,7 +178,7 @@ acceptance test passing there. A row says "pending" until its commit exists.
 | 3 | Legal corpus approval and loading | **Counsel and product** | Written approval of corpus and version | pending | Approval record; corpus loaded from `kb/dist` on staging | Blocked | Obtain written approval |
 | 4 | Ask: legal eval, real providers, signing, scanner | Engineering | 2, 3 | pending | Eval report passes; staging Ask acceptance (`STAGING-ACCEPTANCE.md` §10); `answers` flipped only by reviewed change | Off for launch | Keep `answers` false until the eval passes |
 | 5 | Structured bylaws: create, edit, version history, word diff | Engineering | Document ingest (done locally) | `0b3df47` (local) | `supabase/tests/bylaw_versions.test.sql` (10/10); `bylaw-diff.test.ts` (8/8); `bylaw-history.test.tsx` (3/3); `bylaw-versions` E2E (4 passed on desktop and mobile). Rollback: revert `0b3df47`, no migration involved | Tested locally. **Staging acceptance pending** | Run the same acceptance test on staging after item 2. Add council_member denial on bylaw edits when item 10 lands |
-| 6 | Compliance linter and LTO filing tracking | Engineering | 5 | pending | Linter rules from PRD §6.4 with deterministic tests; filing record persisted; cross-building denial; staging | Missing | Write linter rule set from PRD §6.4 with product review |
+| 6 | Compliance linter and LTO filing tracking | Engineering; **counsel** confirms rules and filing rules | 5 | pending | Linter: `bylaw-linter.test.ts` (29/29, local); wired into the editor; blockers refused by `transition_bylaw` on staging. LTO: unfiled notice escalates over time (tested); filing reference validated (tested); cross-building denial on filing (pgTAP); staging | Built (partial): linter library; LTO filing capture | Counsel reviews `docs/LINTER-RULES.md`. Then wire the linter into the editor and enforce blockers in `transition_bylaw` (migration, needs approval). Then build LTO escalation |
 | 7 | Legal review workflow and time-limited counsel access | Engineering, with counsel review of packet rules | 5 | pending | Counsel denied approve, adopt and send (pgTAP); packet persisted; access expires (pgTAP); staging | Missing | Design packet and counsel grant schema, subject to migration approval |
 | 8 | Notices: templates from the bylaw tree, fine validation, resident delivery | Engineering | 5 | pending | Fine validation refusals (unit); delivery to a resident verified on staging | Missing | Specify templates from PRD §10 |
 | 9 | Notifications: matching engine and digest | Engineering | 5, 8 | pending | Precision tests on matching; digest delivered on staging by email | Missing | Specify matching rules from PRD §8.3 |
