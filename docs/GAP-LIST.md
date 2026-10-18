@@ -35,7 +35,7 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 | Notice templates from bylaw tree | Missing | Eng | Item 8 | none | None (item 8) |
 | Fine validation before send | Missing | Eng, Counsel | Item 8; linter rules | none | None (item 8) |
 | Notice draft, send to firm review, approve | Tested locally | Eng | Op | firm-review | None |
-| Notice send to residents | Built (not tested) | Eng, Op | Email service (Op); item 8 | none | None (item 8) |
+| Notice delivery to residents: persisted record, retry to 3 attempts, manager-visible status | Tested locally: database (`notice_deliveries` 23), server layer (`notice-delivery` unit 14). UI and E2E not built yet. Not on staging | Eng, Op | Email provider and sender domain (Op) for live delivery | pgTAP and unit only | None (item 8) |
 | Dispute log | Tested locally | Eng | Op | building-notices-disputes | None |
 | Invite resident with unit | Tested locally | Eng | Op (email delivery) | resident-join | None |
 | Invitation email delivery | Blocked | Op | Provider verified; staging | invitations unit (mocked) | None |

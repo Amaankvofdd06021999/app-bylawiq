@@ -54,6 +54,8 @@ export function checkDb(error: { code?: string; message: string } | null) {
     counsel_account_required:
       'This person needs a BylawIQ account before counsel access can be granted. Ask them to sign up, then try again.',
     invalid_period: 'Counsel access can run for 1 to 30 days.',
+    notice_not_approved: 'Only an approved notice can be sent to residents.',
+    invalid_batch: 'Choose a smaller batch.',
     counsel_required: 'Enter the counsel’s email address.',
     counsel_grants_active_idx:
       'Counsel already has active access to this amendment. Revoke it first to change the period.',
