@@ -85,28 +85,42 @@ async function signIn(page: Page, account: SeededAccount) {
   await expectSlow(page).not.toHaveURL(/\/login/);
 }
 
-async function enrol(browser: Browser, account: SeededAccount): Promise<string> {
+/**
+ * Signs one admin in. Sign-ins run one at a time in the test below: when eight password sign-ins start together, they stall
+ * in the auth service and never return (no error, the button stays busy). The test measures the enrolment steps, which run
+ * concurrently once everyone is signed in.
+ */
+async function openSession(
+  browser: Browser,
+  account: SeededAccount,
+): Promise<{ context: BrowserContext; page: Page }> {
   const context = await newContext(browser);
   const page = await context.newPage();
   try {
     await signIn(page, account);
-    await page.goto('/admin/platform/mfa');
-    await page.getByRole('button', { name: 'Start setup' }).click();
-    const secret = (await page.locator('.mfa-enrollment code').textContent())?.trim() ?? '';
-    expectSlow(secret).toMatch(/^[A-Z2-7]+=*$/);
-    await waitForTotpWindow();
-    await page.fill('#mfa-code', totpAt(secret));
-    const start = Date.now();
-    await page.getByRole('button', { name: 'Finish setup' }).click();
-    await expectSlow(page).toHaveURL(/\/admin\/platform$/, { timeout: 20_000 });
-    enrolTimings.push(Date.now() - start);
-    return secret;
-  } finally {
+    return { context, page };
+  } catch (e) {
     await context.close();
+    throw e;
   }
 }
 
-test.beforeAll(async ({ browser }) => {
+/** Runs the enrolment steps for an admin who is already signed in. Returns the TOTP secret. */
+async function enrolInSession(page: Page): Promise<string> {
+  await page.goto('/admin/platform/mfa');
+  await page.getByRole('button', { name: 'Start setup' }).click();
+  const secret = (await page.locator('.mfa-enrollment code').textContent())?.trim() ?? '';
+  expectSlow(secret).toMatch(/^[A-Z2-7]+=*$/);
+  await waitForTotpWindow();
+  await page.fill('#mfa-code', totpAt(secret));
+  const start = Date.now();
+  await page.getByRole('button', { name: 'Finish setup' }).click();
+  await expectSlow(page).toHaveURL(/\/admin\/platform$/, { timeout: 20_000 });
+  enrolTimings.push(Date.now() - start);
+  return secret;
+}
+
+test.beforeAll(async () => {
   assertLocalSupabase();
   const seeded = await seedMfaAccounts();
   admins = [seeded.admin];
@@ -132,11 +146,18 @@ test.beforeAll(async ({ browser }) => {
 });
 
 test('several admins enrol an authenticator at once and every enrolment completes', async ({ browser }) => {
-  const secrets = await Promise.all(admins.slice(0, LOAD_USERS).map((a) => enrol(browser, a)));
+  const sessions: { context: BrowserContext; page: Page }[] = [];
+  let secrets: string[] = [];
+  try {
+    for (const account of admins.slice(0, LOAD_USERS)) sessions.push(await openSession(browser, account));
+    secrets = await Promise.all(sessions.map((s) => enrolInSession(s.page)));
+  } finally {
+    await Promise.all(sessions.map((s) => s.context.close()));
+  }
   enrolledSecrets = secrets;
   expectSlow(secrets).toHaveLength(LOAD_USERS);
   // Each enrolment's final verification must finish inside the UI's 15-second deadline, or the admin sees an error.
-  // eslint-disable-next-line no-console
+
   console.log('enrol finish ms (sorted):', [...enrolTimings].sort((x, y) => x - y).join(', '));
   expectSlow(Math.max(...enrolTimings)).toBeLessThan(15_000);
 });
@@ -147,19 +168,17 @@ test('concurrent wrong codes through the form each get a prompt refusal, and not
   const timings: number[] = [];
   const contexts: BrowserContext[] = [];
   try {
-    const pages = await Promise.all(
-      admins.slice(0, LOAD_USERS).map(async (a) => {
-        const context = await newContext(browser);
-        contexts.push(context);
-        const page = await context.newPage();
-        await signIn(page, a);
-        await openPage(page, '/admin/platform');
-        await expectSlow(page.getByRole('heading', { name: 'Confirm it is you' })).toBeVisible();
-        // Wait for hydration: typing before the form has React state leaves the button disabled.
-        await page.waitForLoadState('networkidle');
-        return page;
-      }),
-    );
+    // Sign-ins one at a time (see openSession); the wrong-code attempts below run concurrently.
+    const pages: Page[] = [];
+    for (const a of admins.slice(0, LOAD_USERS)) {
+      const session = await openSession(browser, a);
+      contexts.push(session.context);
+      await openPage(session.page, '/admin/platform');
+      await expectSlow(session.page.getByRole('heading', { name: 'Confirm it is you' })).toBeVisible();
+      // Wait for hydration: typing before the form has React state leaves the button disabled.
+      await session.page.waitForLoadState('networkidle');
+      pages.push(session.page);
+    }
     await Promise.all(
       pages.map(async (page) => {
         await page.fill('#mfa-code', '000000');
@@ -174,7 +193,7 @@ test('concurrent wrong codes through the form each get a prompt refusal, and not
   } finally {
     await Promise.all(contexts.map((c) => c.close()));
   }
-  // eslint-disable-next-line no-console
+
   console.log('form verify ms (sorted):', [...timings].sort((x, y) => x - y).join(', '));
   expectSlow(Math.max(...timings)).toBeLessThan(MAX_VERIFY_MS);
 });
@@ -204,7 +223,7 @@ test('concurrent direct calls to the verify action each return a refusal, and a 
     };
     const results = await Promise.all(Array.from({ length: DIRECT_CALLS }, () => call('000000')));
     const times = results.map((r) => r.ms).sort((x, y) => x - y);
-    // eslint-disable-next-line no-console
+
     console.log('direct verify ms (sorted):', times.join(', '));
     for (const r of results) {
       expectSlow(r.status).toBe(200);

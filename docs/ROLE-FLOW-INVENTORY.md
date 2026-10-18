@@ -165,6 +165,10 @@ Notes on the counts:
 
 ## Tracker
 
+**CI gate status:** red at `c864765` on `platform-mfa-load` (E2E). Two product-level causes are confirmed locally: (a) the
+sign-in server action sometimes never returns (busy button, no error, no server log); (b) concurrent enrolment verification
+took 16.6 s under load, past the 15 s UI deadline. The spec now signs admins in one at a time. Both causes remain open.
+
 Dependency order. Each row has one owner, one target commit, and one acceptance test. An item closes only when its
 acceptance test passes on **staging** with the launch configuration. "Built" and "tested locally" are not closure.
 
