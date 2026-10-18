@@ -15,6 +15,8 @@ for launch.
 and the local launch-configuration E2E suite passes. Not verified: staging acceptance (no staging environment was available),
 hosted migration history and Vercel configuration (no authorized operator), email delivery, the scanner, the Groq and Voyage
 keys, the legal corpus load, and the eval gate. The building-manager Ask row is blocked for launch (see its requirements).
+Staging and operator evidence is recorded in `docs/STAGING-ACCEPTANCE.md`. Every check there is still blocked. Ask is
+decided as unavailable for launch (that document, §10).
 
 ## 1. Building manager
 
