@@ -1,5 +1,6 @@
 import 'server-only';
 import type { SessionUser } from '@/lib/auth/guards';
+import { unfiledSeverity } from '@/lib/lto-filing';
 import { checkDb } from '@/lib/errors';
 import type { BuildingManagerData } from './types';
 
@@ -67,7 +68,7 @@ export async function buildingManagerHome(
   // Snoozed, dismissed and actioned notifications are not shown. Written by the database, read through RLS.
   const { data: notes, error: noteError } = await user.client
     .from('notifications')
-    .select('id,title,severity,created_at')
+    .select('id,type,title,severity,created_at')
     .eq('building_id', buildingId)
     .in('state', ['new', 'viewed'])
     .order('created_at', { ascending: false })
@@ -124,7 +125,8 @@ export async function buildingManagerHome(
       updates: (notes ?? []).map((n) => ({
         id: n.id,
         title: n.title,
-        severity: n.severity,
+        // An unfiled-filing notice escalates on the schedule in lib/lto-filing.ts, shown now and not only after the nightly refresh.
+        severity: n.type === 'unfiled_adoption' ? unfiledSeverity(n.created_at) : n.severity,
         at: n.created_at,
       })),
       disputes: (disputes ?? []).map((d) => ({

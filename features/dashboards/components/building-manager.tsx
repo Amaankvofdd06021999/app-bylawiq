@@ -206,7 +206,14 @@ export function BuildingManagerDashboard({
                     </span>
                     <div>
                       <h3>{u.title}</h3>
-                      <p>Unread update{u.severity === 'warning' ? ' · needs action' : ''}</p>
+                      <p>
+                        Unread update
+                        {u.severity === 'critical'
+                          ? ' · overdue: record the LTO filing'
+                          : u.severity === 'warning'
+                            ? ' · needs action'
+                            : ''}
+                      </p>
                     </div>
                     <time dateTime={u.at}>{date(u.at)}</time>
                   </div>
