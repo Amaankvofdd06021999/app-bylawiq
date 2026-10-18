@@ -32,9 +32,6 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 | Digest delivery | Missing | Eng, Op | Email service (Op); item 9 | none | None (item 9) |
 | Legal review trigger, review panel | Missing | Eng, Counsel | Item 7 spec | none | None (item 7) |
 | Risk scoring, review packet | Missing | Eng, Counsel | Item 7 spec | none | None (item 7) |
-| Time-limited counsel access (grant, read, expiry, revoke) | Tested locally (database only; no UI, no E2E) | Eng | Migration 20261047000063 apply (Op approval); counsel review of who may be granted | `counsel_access` pgTAP 19 (success, denial, expiry, revoke, cross-building, period limits, unique active grant) | None (item 7) |
-| Counsel review packet and comment thread | Missing | Eng, Counsel | Item 7 | none | None (item 7) |
-| CBA-BC referral, counsel invitation UI | Missing | Eng, Counsel | Item 7; referral rules (counsel) | none | None (item 7) |
 | Notice templates from bylaw tree | Missing | Eng | Item 8 | none | None (item 8) |
 | Fine validation before send | Missing | Eng, Counsel | Item 8; linter rules | none | None (item 8) |
 | Notice draft, send to firm review, approve | Tested locally | Eng | Op | firm-review | None |
@@ -43,7 +40,6 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 | Invite resident with unit | Tested locally | Eng | Op (email delivery) | resident-join | None |
 | Invitation email delivery | Blocked | Op | Provider verified; staging | invitations unit (mocked) | None |
 | Verify resident unit | Tested locally | Eng | Op | resident-join | None |
-| Council member invitation (reduced role) | Built (not tested) | Eng | Item 10 | matrix unit only | None (item 10) |
 | Single-building binding | Tested locally | Eng | Op | account-type-retirement unit | None |
 | Plus-addressing at signup | Missing | Eng | Item 11 | none | None (item 11) |
 | Linked accounts and fast switch | Built (not tested) | Eng | Item 11 | none | None (item 11) |
@@ -105,6 +101,20 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 | Audit log viewer | Built (not tested) | Eng | Item 14 | none | None (item 14) |
 | AI analytics | Off (gated) | Counsel | Item 4 | launch-off-surfaces | None; stays off |
 | Billing | Off (gated) | Eng, Op | Payments provider | launch-off-surfaces | None; stays off |
+
+## Council (PRD §3.4; decided in scope)
+
+| Flow | Status | Owner | Depends on | Local evidence | Staging evidence |
+|---|---|---|---|---|---|
+| Council member invitation (reduced role) | Built (not tested) | Eng | Item 10 | matrix unit only | None (item 10) |
+
+## External counsel (PRD §7.4; decided in scope, with legal review)
+
+| Flow | Status | Owner | Depends on | Local evidence | Staging evidence |
+|---|---|---|---|---|---|
+| Time-limited counsel access (grant, read, expiry, revoke) | Tested locally (database only; no UI, no E2E) | Eng | Migration 20261047000063 apply (Op approval); counsel review of who may be granted | `counsel_access` pgTAP 19 (success, denial, expiry, revoke, cross-building, period limits, unique active grant) | None (item 7) |
+| Counsel review packet and comment thread | Missing | Eng, Counsel | Item 7 | none | None (item 7) |
+| CBA-BC referral, counsel invitation UI | Missing | Eng, Counsel | Item 7; referral rules (counsel) | none | None (item 7) |
 
 ## Cross-cutting and operations
 

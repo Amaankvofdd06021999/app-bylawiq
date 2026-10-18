@@ -16,14 +16,14 @@ checklist, and the code and tests.
 | **Off for launch** | Built or partly built, switched off in code (`lib/launch-scope.ts`) or by reviewed decision. Not complete. |
 | **Blocked** | Built or designed, but depends on an approval, a provider or a hosted service that is not verified. |
 | **Missing** | No code found for the capability. |
-| **Deferred by PRD** | The PRD itself defers it (Ã‚Â§14). Not a gap in this release, but not complete platform either. |
+| **Deferred by PRD** | The PRD itself defers it (§14). Not a gap in this release, but not complete platform either. |
 
 **Nothing below is complete.** A flow is complete only when it has persisted data, correct role permissions, cross-building
 denial tests, failure handling, accessible UI states, and a passing real-app staging test. No row meets all of these.
 
 ## Role mapping
 
-The release checklist names five roles. The PRD (Ã‚Â§3.5) defines eight. The mapping, with the decisions of 2026-10-17:
+The release checklist names five roles. The PRD (§3.5) defines eight. The mapping, with the decisions of 2026-10-17:
 
 | Release role | PRD roles | Note |
 |---|---|---|
@@ -38,113 +38,113 @@ The release checklist names five roles. The PRD (Ã‚Â§3.5) defines eight. Th
 
 | Flow | PRD | Status | Evidence / gap |
 |---|---|---|---|
-| Sign in, workspace onboarding | Ã‚Â§3 | Tested locally | `onboard` helper, `workspace.spec` |
-| Building home dashboard | Ã‚Â§4 | Tested locally | `building-manager-dashboard` |
-| Upload bylaw to vault: scan, size limit, consent | Ã‚Â§11 | Tested locally | `building-documents-ask`: malware reject, no-text PDF, 4 MB limit, retry. Real scanner: Blocked |
-| Confirm detected structure, document ready | Ã‚Â§6.1Ã¢â‚¬â€œ6.2 | Tested locally | `building-documents-ask` |
-| Parse bylaw to tree | Ã‚Â§6.1 | Tested locally (ingest to review) | Parser quality not verified against real bylaws |
-| Create and edit a structured bylaw (new section, new version per edit) | Ã‚Â§6.2Ã¢â‚¬â€œ6.3 | Tested locally | `save_bylaw` (existing); `supabase/tests/bylaw_versions.test.sql` (10 checks: cross-building and resident denial, direct write refused); `bylaw-versions` E2E (create, edit, compare). Editor UI reuses the existing bylaw form |
-| Version history, newest first, per bylaw | Ã‚Â§6.6 | Tested locally | `bylaw-history.test.tsx` (3); `bylaw-versions` E2E. Empty and too-large states |
-| Diff between versions (word level) | Ã‚Â§6.3 | Tested locally | `bylaw-diff.test.ts` (8, including rebuild and the too-large fallback); `bylaw-versions` E2E |
-| Compliance linter (eight deterministic rules, advisory) | Ã‚Â§6.4 | Built (advisory) | `lib/bylaw-linter.ts` (33 unit tests with the mode checks); shown in the bylaw editor as **advisory checks, not legal approval** (`bylaw-lint-panel.test.tsx`, E2E `bylaw-versions`: a blocker is shown and the save still succeeds). **Rules not approved by counsel or product. Blockers not enforced on proposal. No override.** Rules in `docs/LINTER-RULES.md` |
-| Adoption lifecycle: proposed, voted, adopted; refusals | Ã‚Â§6.5 | Tested locally | `building-notices-disputes` (no-majority refusal, failed adoption) |
-| LTO filing tracking | Ã‚Â§6.5 | Tested locally (database); **not staging** | Migration `20261046000062_lto_filing_tracking` (local only; not applied to any hosted database). Filing: reference validated (3Ã¢â‚¬â€œ30 characters, letters, digits, hyphens, slashes, at least one digit; trimmed), effective date required, status persisted, unfiled notice closed on filing. Escalation schedule (proposed, product to confirm): info 0Ã¢â‚¬â€œ13 days, warning 14Ã¢â‚¬â€œ59, critical 60+. `refresh_unfiled_notice_severity` (service role only). pgTAP `lto_filing` 16/16 (refusals, cross-building denial, schedule, refresh, denial). The building home shows the escalated severity: "needs action" from 14 days, "overdue" from 60 (`lto-filing.spec` E2E 4/4, desktop and mobile; `tests/lto-filing.test.ts` 23/23 with the same boundaries as the database). Rollback run locally: helpers removed, old validation restored, migration reapplied, pgTAP passes. **Open: the scheduled refresh is written but not registered. It needs a security exception, because it uses the service-role client, which the lint policy allows only for listed files. Owner: security reviewer. Not hosted: migration not applied anywhere but local.** |
-| Legal review trigger, review panel | Ã‚Â§7.1Ã¢â‚¬â€œ7.2 | Missing | No module |
-| Risk scoring, review packet | Ã‚Â§7.2Ã¢â‚¬â€œ7.3 | Missing | No module (zero matches) |
-| Time-limited counsel access (grant, read, expiry, revoke) | Ã‚Â§7.4 | Tested locally (database only) | Migration `20261047000063_counsel_access`. Manager grants one amendment to counsel for 1 to 30 days; counsel reads that amendment and its section while active; counsel cannot write, adopt or grant; another building cannot grant, read or revoke; expiry and revocation end access; one active grant per counsel and amendment. pgTAP `counsel_access` 19/19. **Open: no UI, no E2E, no review packet, not on staging** |
-| CBA-BC referral, counsel invitation UI | Ã‚Â§7.2Ã¢â‚¬â€œ7.4 | Missing | Counsel referral rules; packet |
-| Notification feed (updates) | Ã‚Â§8.1Ã¢â‚¬â€œ8.2 | Tested locally | `building-notices-disputes`: adoption creates the update. Feed for other types not tested |
-| Notification matching engine | Ã‚Â§8.3 | Missing | No module |
-| Digest delivery | Ã‚Â§8.4 | Missing | No digest module (matches are unrelated) |
-| Notice from bylaw tree (templates) | Ã‚Â§10 | Missing | No template generator found |
-| Fine validation before send | Ã‚Â§10 | Missing | No fine validation (zero matches) |
-| Notice draft, send to firm review, approve | Ã‚Â§10 | Tested locally | `firm-review` |
-| Notice send to residents | Ã‚Â§10 | Built | Not tested |
-| Dispute log | Ã‚Â§10 | Tested locally | `building-notices-disputes`: events logged, resolution leaves home |
-| Invite resident with unit | Ã‚Â§3.4 | Tested locally | `resident-join`. Email delivery: Blocked |
-| Verify resident unit | Ã‚Â§3.4 | Tested locally | `resident-join` |
-| Council member invitation (reduced role) | Ã‚Â§3.4 | Built | Permission matrix only; no E2E |
-| Single-building binding, one account one building | Ã‚Â§3.3 | Tested locally | `tests/roles/account-type-retirement` (unit), pgTAP `personas_authorization` |
-| Plus-addressing at signup | Ã‚Â§3.3 | Missing | Help text only; no normalisation found |
-| Linked accounts and fast switch | Ã‚Â§3.3 | Built | Linked-account migrations exist; no E2E |
-| Convert single to multi-building account | Ã‚Â§3.3 | Missing | No conversion code |
-| Invitation-time conversion prompt | Ã‚Â§3.3 | Missing | No code |
-| Ask BylawIQ, scoped to building | Ã‚Â§9 | **Off for launch** | `answers` flag. Server boundary tested locally: `ask-launch-denial` (routes, screen, conversation page), `launch-scope.test.ts` |
-| Building bulletin (staff posts, pinning, deletes) | not in PRD Ã‚Â§3Ã¢â‚¬â€œÃ‚Â§14 | **Off for launch** | `bulletin` flag. Page and four actions refuse; tested locally in `launch-off-surfaces` and `launch-off-actions` |
-| Document download from vault | Ã‚Â§11 | Built | `documents/[id]/download` route; not tested |
-| Municipal address resolution and coverage | Ã‚Â§5.2Ã¢â‚¬â€œ5.3 | Missing | No address resolution (zero matches) |
+| Sign in, workspace onboarding | §3 | Tested locally | `onboard` helper, `workspace.spec` |
+| Building home dashboard | §4 | Tested locally | `building-manager-dashboard` |
+| Upload bylaw to vault: scan, size limit, consent | §11 | Tested locally | `building-documents-ask`: malware reject, no-text PDF, 4 MB limit, retry. Real scanner: Blocked |
+| Confirm detected structure, document ready | §6.1–6.2 | Tested locally | `building-documents-ask` |
+| Parse bylaw to tree | §6.1 | Tested locally (ingest to review) | Parser quality not verified against real bylaws |
+| Create and edit a structured bylaw (new section, new version per edit) | §6.2–6.3 | Tested locally | `save_bylaw` (existing); `supabase/tests/bylaw_versions.test.sql` (10 checks: cross-building and resident denial, direct write refused); `bylaw-versions` E2E (create, edit, compare). Editor UI reuses the existing bylaw form |
+| Version history, newest first, per bylaw | §6.6 | Tested locally | `bylaw-history.test.tsx` (3); `bylaw-versions` E2E. Empty and too-large states |
+| Diff between versions (word level) | §6.3 | Tested locally | `bylaw-diff.test.ts` (8, including rebuild and the too-large fallback); `bylaw-versions` E2E |
+| Compliance linter (eight deterministic rules, advisory) | §6.4 | Built (advisory) | `lib/bylaw-linter.ts` (33 unit tests with the mode checks); shown in the bylaw editor as **advisory checks, not legal approval** (`bylaw-lint-panel.test.tsx`, E2E `bylaw-versions`: a blocker is shown and the save still succeeds). **Rules not approved by counsel or product. Blockers not enforced on proposal. No override.** Rules in `docs/LINTER-RULES.md` |
+| Adoption lifecycle: proposed, voted, adopted; refusals | §6.5 | Tested locally | `building-notices-disputes` (no-majority refusal, failed adoption) |
+| LTO filing tracking | §6.5 | Tested locally (database); **not staging** | Migration `20261046000062_lto_filing_tracking` (local only; not applied to any hosted database). Filing: reference validated (3–30 characters, letters, digits, hyphens, slashes, at least one digit; trimmed), effective date required, status persisted, unfiled notice closed on filing. Escalation schedule (proposed, product to confirm): info 0–13 days, warning 14–59, critical 60+. `refresh_unfiled_notice_severity` (service role only). pgTAP `lto_filing` 16/16 (refusals, cross-building denial, schedule, refresh, denial). The building home shows the escalated severity: "needs action" from 14 days, "overdue" from 60 (`lto-filing.spec` E2E 4/4, desktop and mobile; `tests/lto-filing.test.ts` 23/23 with the same boundaries as the database). Rollback run locally: helpers removed, old validation restored, migration reapplied, pgTAP passes. **Open: the scheduled refresh is written but not registered. It needs a security exception, because it uses the service-role client, which the lint policy allows only for listed files. Owner: security reviewer. Not hosted: migration not applied anywhere but local.** |
+| Legal review trigger, review panel | §7.1–7.2 | Missing | No module |
+| Risk scoring, review packet | §7.2–7.3 | Missing | No module (zero matches) |
+| Time-limited counsel access (grant, read, expiry, revoke) | §7.4 | Tested locally (database only) | Migration `20261047000063_counsel_access`. Manager grants one amendment to counsel for 1 to 30 days; counsel reads that amendment and its section while active; counsel cannot write, adopt or grant; another building cannot grant, read or revoke; expiry and revocation end access; one active grant per counsel and amendment. pgTAP `counsel_access` 19/19. **Open: no UI, no E2E, no review packet, not on staging** |
+| CBA-BC referral, counsel invitation UI | §7.2–7.4 | Missing | Counsel referral rules; packet |
+| Notification feed (updates) | §8.1–8.2 | Tested locally | `building-notices-disputes`: adoption creates the update. Feed for other types not tested |
+| Notification matching engine | §8.3 | Missing | No module |
+| Digest delivery | §8.4 | Missing | No digest module (matches are unrelated) |
+| Notice from bylaw tree (templates) | §10 | Missing | No template generator found |
+| Fine validation before send | §10 | Missing | No fine validation (zero matches) |
+| Notice draft, send to firm review, approve | §10 | Tested locally | `firm-review` |
+| Notice send to residents | §10 | Built | Not tested |
+| Dispute log | §10 | Tested locally | `building-notices-disputes`: events logged, resolution leaves home |
+| Invite resident with unit | §3.4 | Tested locally | `resident-join`. Email delivery: Blocked |
+| Verify resident unit | §3.4 | Tested locally | `resident-join` |
+| Council member invitation (reduced role) | §3.4 | Built | Permission matrix only; no E2E |
+| Single-building binding, one account one building | §3.3 | Tested locally | `tests/roles/account-type-retirement` (unit), pgTAP `personas_authorization` |
+| Plus-addressing at signup | §3.3 | Missing | Help text only; no normalisation found |
+| Linked accounts and fast switch | §3.3 | Built | Linked-account migrations exist; no E2E |
+| Convert single to multi-building account | §3.3 | Missing | No conversion code |
+| Invitation-time conversion prompt | §3.3 | Missing | No code |
+| Ask BylawIQ, scoped to building | §9 | **Off for launch** | `answers` flag. Server boundary tested locally: `ask-launch-denial` (routes, screen, conversation page), `launch-scope.test.ts` |
+| Building bulletin (staff posts, pinning, deletes) | not in PRD §3–§14 | **Off for launch** | `bulletin` flag. Page and four actions refuse; tested locally in `launch-off-surfaces` and `launch-off-actions` |
+| Document download from vault | §11 | Built | `documents/[id]/download` route; not tested |
+| Municipal address resolution and coverage | §5.2–5.3 | Missing | No address resolution (zero matches) |
 
 ## Portfolio manager
 
 | Flow | PRD | Status | Evidence / gap |
 |---|---|---|---|
-| Portfolio view, switching between linked buildings, counts | Ã‚Â§3.1 | Tested locally | `strata-portfolio` |
-| Outsider sees no buildings; other firm's building refused by direct id | Ã‚Â§3.1 | Tested locally | `strata-portfolio` |
-| Assistant role: drafts only, cannot adopt, file or send | Ã‚Â§3.5 | Built | Role matrix unit test (`tests/characterization/roles`); no UI test |
-| Portfolio analytics | Ã‚Â§13 | Missing | No analytics module. The only analytics code is AI analytics, which is off |
-| Portfolio Ask | Ã‚Â§9 | **Off for launch** | `answers` flag; same server boundary as building Ask (`ask-launch-denial`) |
-| Manage buildings across the portfolio (create, link) | Ã‚Â§3.1 | Built | Not tested |
+| Portfolio view, switching between linked buildings, counts | §3.1 | Tested locally | `strata-portfolio` |
+| Outsider sees no buildings; other firm's building refused by direct id | §3.1 | Tested locally | `strata-portfolio` |
+| Assistant role: drafts only, cannot adopt, file or send | §3.5 | Built | Role matrix unit test (`tests/characterization/roles`); no UI test |
+| Portfolio analytics | §13 | Missing | No analytics module. The only analytics code is AI analytics, which is off |
+| Portfolio Ask | §9 | **Off for launch** | `answers` flag; same server boundary as building Ask (`ask-launch-denial`) |
+| Manage buildings across the portfolio (create, link) | §3.1 | Built | Not tested |
 
 ## Firm owner
 
 | Flow | PRD | Status | Evidence / gap |
 |---|---|---|---|
-| Firm onboarding, link buildings by code, roster | Ã‚Â§3.1 | Tested locally | `firm-owner-links` |
-| Team invitations and membership | Ã‚Â§3.5 | Tested locally | `firm-team` |
-| Review inbox: request changes, approve | Ã‚Â§10 | Tested locally | `firm-review` |
-| Firm knowledge library: publish, duplicate refused, text search | Ã‚Â§9.3 | Tested locally | `firm-knowledge`. Semantic search: Deferred by PRD scope of firm search |
-| Org admin: all buildings, team, org settings | Ã‚Â§3.1 | Built | Admin pages exist (`admin/buildings`, `admin/team`); not tested |
-| Billing, plans, seats (org owner) | Ã‚Â§3.1 | **Off for launch** | `payments` flag. Page not-found and seat action refuses; tested locally in `launch-off-surfaces` and `launch-off-actions` (no seat change, no read) |
-| Org-wide audit log | Ã‚Â§3.1 | Missing | Audit viewer is deferred (see platform admin) |
+| Firm onboarding, link buildings by code, roster | §3.1 | Tested locally | `firm-owner-links` |
+| Team invitations and membership | §3.5 | Tested locally | `firm-team` |
+| Review inbox: request changes, approve | §10 | Tested locally | `firm-review` |
+| Firm knowledge library: publish, duplicate refused, text search | §9.3 | Tested locally | `firm-knowledge`. Semantic search: Deferred by PRD scope of firm search |
+| Org admin: all buildings, team, org settings | §3.1 | Built | Admin pages exist (`admin/buildings`, `admin/team`); not tested |
+| Billing, plans, seats (org owner) | §3.1 | **Off for launch** | `payments` flag. Page not-found and seat action refuses; tested locally in `launch-off-surfaces` and `launch-off-actions` (no seat change, no read) |
+| Org-wide audit log | §3.1 | Missing | Audit viewer is deferred (see platform admin) |
 
 ## Resident
 
 | Flow | PRD | Status | Evidence / gap |
 |---|---|---|---|
-| Join with invitation: wrong email, reuse, expiry, revocation, other building | Ã‚Â§3.4 | Tested locally | `resident-join` (5 tests) |
-| Home: in-force bylaws as alerts, unit status | Ã‚Â§8 | Tested locally | `resident-join`. Alerts for other notification types not tested |
-| Explainers | Ã‚Â§9 | Built | `explainers.tsx` exists; not tested |
-| Ask (AI answers) | Ã‚Â§9 | **Off for launch** | `answers` flag; tested locally as for building Ask |
-| Credits, paywall, purchases | Ã‚Â§9 | **Off for launch** | `payments` and `answers` flags. Checkout action refuses with no Stripe call (`launch-off-actions`, tested locally) |
-| Drafting (notices, letters) | Ã‚Â§10 | **Off for launch** | Code constant (decision D5). Action refuses before any read (`launch-off-actions`, tested locally) |
+| Join with invitation: wrong email, reuse, expiry, revocation, other building | §3.4 | Tested locally | `resident-join` (5 tests) |
+| Home: in-force bylaws as alerts, unit status | §8 | Tested locally | `resident-join`. Alerts for other notification types not tested |
+| Explainers | §9 | Built | `explainers.tsx` exists; not tested |
+| Ask (AI answers) | §9 | **Off for launch** | `answers` flag; tested locally as for building Ask |
+| Credits, paywall, purchases | §9 | **Off for launch** | `payments` and `answers` flags. Checkout action refuses with no Stripe call (`launch-off-actions`, tested locally) |
+| Drafting (notices, letters) | §10 | **Off for launch** | Code constant (decision D5). Action refuses before any read (`launch-off-actions`, tested locally) |
 | Resident verification gate for AI output | doc 11 | **Off for launch** | Behind `answers` |
-| Owner and resident read-only portal | Ã‚Â§14 | Deferred by PRD | Phase 4 |
+| Owner and resident read-only portal | §14 | Deferred by PRD | Phase 4 |
 
 ## Platform admin
 
 | Flow | PRD | Status | Evidence / gap |
 |---|---|---|---|
 | MFA enrolment, wrong-code refusal, valid code | D15 | Tested locally | `platform-mfa` |
-| MFA step-up, lease, expired-lease recovery | D15 | Tested locally | `platform-mfa-lease`. `platform-mfa-load`: 5 of 5 repeat runs green locally (6 passed each: desktop and mobile). Verification action 2.0Ã¢â‚¬â€œ6.7 s under 8 concurrent admins, against the 15 s UI limit. Wrong-code refusals within the 5 s target in every run. Earlier round: 1Ã¢â‚¬â€œ2 failures per run, traced to fixture and sign-in load (see tracker) |
+| MFA step-up, lease, expired-lease recovery | D15 | Tested locally | `platform-mfa-lease`. `platform-mfa-load`: 5 of 5 repeat runs green locally (6 passed each: desktop and mobile). Verification action 2.0–6.7 s under 8 concurrent admins, against the 15 s UI limit. Wrong-code refusals within the 5 s target in every run. Earlier round: 1–2 failures per run, traced to fixture and sign-in load (see tracker) |
 | Non-admin denied the console | D15 | Tested locally | `platform-mfa` |
-| Signing key probe | Ã‚Â§12 | Tested locally | pgTAP `signing_key_probe` (database side only) |
+| Signing key probe | §12 | Tested locally | pgTAP `signing_key_probe` (database side only) |
 | Platform admin reconciliation | D4 | Tested locally | pgTAP `platform_admin_reconciliation` |
-| Grant platform admin | D4 | **Missing** | Database function and test are uncommitted (`supabase/migrations/20261044Ã¢â‚¬Â¦`). No UI |
+| Grant platform admin | D4 | **Missing** | Database function and test are uncommitted (`supabase/migrations/20261044…`). No UI |
 | Revoke platform admin | D4 | **Missing** | Same as grant |
 | Feature flags | D4 | Built | `set_flag` and admin action exist; no UI test |
-| Audit log viewer | Ã‚Â§12 | Built | `platform-audit-log.tsx` and `get_audit_logs` exist; no UI test |
-| Chat and AI analytics | Ã‚Â§13 | **Off for launch** | Admin page not-found (tested locally, `launch-off-surfaces`) |
-| Billing | Ã‚Â§3.1 | **Off for launch** | Page not-found and webhook 404 (tested locally, `launch-off-surfaces`) |
+| Audit log viewer | §12 | Built | `platform-audit-log.tsx` and `get_audit_logs` exist; no UI test |
+| Chat and AI analytics | §13 | **Off for launch** | Admin page not-found (tested locally, `launch-off-surfaces`) |
+| Billing | §3.1 | **Off for launch** | Page not-found and webhook 404 (tested locally, `launch-off-surfaces`) |
 
 ## Cross-cutting and operations
 
 | Capability | PRD | Status | Evidence / gap |
 |---|---|---|---|
-| Sign-in: bounded server steps, visible failure, form recovers | Ã‚Â§3 | Tested locally (unit 7; E2E `sign-in-recovery` 2 passed: a held sign-in shows a message and the button comes back). **CI: pending for this commit. Staging: none** | Rate-limit step bounded 8 s, sign-in 12 s, client deadline 25 s (`lib/security/with-timeout.ts`, `features/auth/components/auth-form.tsx`). A timeout is logged with its step name only |
-| Invitation email: creation | Ã‚Â§8 | Tested locally | `invitation_email_status` migration, `invitations.test.ts` (mocked provider) |
-| Invitation email: delivery | Ã‚Â§8 | **Blocked** | No staging provider configured or verified |
-| Malware scanner | Ã‚Â§11 | Built, Blocked | Fails closed; local stub tested; real endpoint Blocked |
-| Document ingestion (background jobs) | Ã‚Â§9 | Tested locally | Inngest dev server; staging Blocked |
-| Legal corpus ingestion | Ã‚Â§5 | **Blocked** | Requires written approval; `LEGAL_CORPUS_INGEST_ENABLED=false`; `kb/dist` absent |
+| Sign-in: bounded server steps, visible failure, form recovers | §3 | Tested locally (unit 7; E2E `sign-in-recovery` 2 passed: a held sign-in shows a message and the button comes back). **CI: pending for this commit. Staging: none** | Rate-limit step bounded 8 s, sign-in 12 s, client deadline 25 s (`lib/security/with-timeout.ts`, `features/auth/components/auth-form.tsx`). A timeout is logged with its step name only |
+| Invitation email: creation | §8 | Tested locally | `invitation_email_status` migration, `invitations.test.ts` (mocked provider) |
+| Invitation email: delivery | §8 | **Blocked** | No staging provider configured or verified |
+| Malware scanner | §11 | Built, Blocked | Fails closed; local stub tested; real endpoint Blocked |
+| Document ingestion (background jobs) | §9 | Tested locally | Inngest dev server; staging Blocked |
+| Legal corpus ingestion | §5 | **Blocked** | Requires written approval; `LEGAL_CORPUS_INGEST_ENABLED=false`; `kb/dist` absent |
 | Eval gate for the answer model | doc 04 | **Missing** | `kb/dist/evals.jsonl` absent |
-| Operational monitoring and alerts | Ã‚Â§12 | **Missing** | Only `/api/health` is tested locally |
-| Upload size limit | Ã‚Â§11 | Tested locally (4 MB, app); Blocked (deployed) | |
+| Operational monitoring and alerts | §12 | **Missing** | Only `/api/health` is tested locally |
+| Upload size limit | §11 | Tested locally (4 MB, app); Blocked (deployed) | |
 | Staging environment | D-release | **Blocked** | No staging project or operator |
 | Production environment | D-release | **Blocked** | No operator; no migration approval |
 
 ## Counts
 
-Counted from the tables above, 76 rows (the role-mapping table is not counted):
+**Superseded.** The single authoritative flow list is docs/GAP-LIST.md (84 rows, recounted 2026-10-19; counsel and council are their own sections). The table below predates the list and is kept as history only:
 
 | Status | Rows |
 |---|---|
@@ -189,19 +189,19 @@ acceptance test passing there. A row says "pending" until its commit exists.
 
 | # | Work item | Owner | Depends on | Target commit | Acceptance test | Status | Next action |
 |---|---|---|---|---|---|---|---|
-| 1 | Staging environment and operator; migration-history reconciliation | **Operator** (human) | Staging project ref and operator access | pending | `docs/STAGING-ACCEPTANCE.md` Ã‚Â§1: hosted history matches `supabase/migrations`; any apply has written approval | Blocked | Provide the staging project ref and operator access |
-| 2 | Release operations: env names, signing, scanner, invitation email, background services, upload limit, monitoring | Operator, then Engineering | 1 | pending | `docs/STAGING-ACCEPTANCE.md` Ã‚Â§2Ã¢â‚¬â€œÃ‚Â§7, each check recorded pass or fail on staging | Blocked | Run the runbook once item 1 is done |
+| 1 | Staging environment and operator; migration-history reconciliation | **Operator** (human) | Staging project ref and operator access | pending | `docs/STAGING-ACCEPTANCE.md` §1: hosted history matches `supabase/migrations`; any apply has written approval | Blocked | Provide the staging project ref and operator access |
+| 2 | Release operations: env names, signing, scanner, invitation email, background services, upload limit, monitoring | Operator, then Engineering | 1 | pending | `docs/STAGING-ACCEPTANCE.md` §2–§7, each check recorded pass or fail on staging | Blocked | Run the runbook once item 1 is done |
 | 3 | Legal corpus approval and loading | **Counsel and product** | Written approval of corpus and version | pending | Approval record; corpus loaded from `kb/dist` on staging | Blocked | Obtain written approval |
-| 4 | Ask: legal eval, real providers, signing, scanner | Engineering | 2, 3 | pending | Eval report passes; staging Ask acceptance (`STAGING-ACCEPTANCE.md` Ã‚Â§10); `answers` flipped only by reviewed change | Off for launch | Keep `answers` false until the eval passes |
+| 4 | Ask: legal eval, real providers, signing, scanner | Engineering | 2, 3 | pending | Eval report passes; staging Ask acceptance (`STAGING-ACCEPTANCE.md` §10); `answers` flipped only by reviewed change | Off for launch | Keep `answers` false until the eval passes |
 | 5 | Structured bylaws: create, edit, version history, word diff | Engineering | Document ingest (done locally) | `0b3df47` (local) | `supabase/tests/bylaw_versions.test.sql` (10/10); `bylaw-diff.test.ts` (8/8); `bylaw-history.test.tsx` (3/3); `bylaw-versions` E2E (4 passed on desktop and mobile). Rollback: revert `0b3df47`, no migration involved | Tested locally. **Staging acceptance pending** | Run the same acceptance test on staging after item 2. Add council_member denial on bylaw edits when item 10 lands |
 | 6 | Compliance linter and LTO filing tracking | Engineering; **counsel and product** approve the rules | 5 | pending | Linter: advisory panel in the editor (done locally). Enforcement only after approval: blockers refused by `transition_bylaw` (pgTAP, local), override recorded with a typed reason (pgTAP), cross-building denial on override (pgTAP), staging. LTO: validated filing reference (unit and pgTAP), status persisted (pgTAP), unfiled notice escalates on a stated schedule (tested), staging | Linter: advisory, unapproved. LTO: tested locally in the database; migration not applied to any hosted database; no staging | Counsel and product approve or change `LINTER-RULES.md` and the schedule. Then enforcement migration (needs approval). LTO validation and escalation next |
 | 7 | Legal review workflow and time-limited counsel access | Engineering, with counsel review of packet rules | 5 | pending | Counsel denied approve, adopt and send (pgTAP); packet persisted; access expires (pgTAP); staging | Missing | Design packet and counsel grant schema, subject to migration approval |
-| 8 | Notices: templates from the bylaw tree, fine validation, resident delivery | Engineering | 5 | pending | Fine validation refusals (unit); delivery to a resident verified on staging | Missing | Specify templates from PRD Ã‚Â§10 |
-| 9 | Notifications: matching engine and digest | Engineering | 5, 8 | pending | Precision tests on matching; digest delivered on staging by email | Missing | Specify matching rules from PRD Ã‚Â§8.3 |
+| 8 | Notices: templates from the bylaw tree, fine validation, resident delivery | Engineering | 5 | pending | Fine validation refusals (unit); delivery to a resident verified on staging | Missing | Specify templates from PRD §10 |
+| 9 | Notifications: matching engine and digest | Engineering | 5, 8 | pending | Precision tests on matching; digest delivered on staging by email | Missing | Specify matching rules from PRD §8.3 |
 | 10 | Council roles: screens and permissions | Engineering | Decided (in scope) | pending | council_president invites council; council_member denied edits and notices (pgTAP and E2E); staging | Built (matrix only) | Add council screens and denial tests |
-| 11 | Account conversion and plus-addressing | Engineering; product confirms PRD Ã‚Â§3.3 flow | Re-authentication design | pending | Plus-address normalisation (unit); conversion writes an audit row (pgTAP); denial tests; staging | Missing | Specify conversion flow with product |
+| 11 | Account conversion and plus-addressing | Engineering; product confirms PRD §3.3 flow | Re-authentication design | pending | Plus-address normalisation (unit); conversion writes an audit row (pgTAP); denial tests; staging | Missing | Specify conversion flow with product |
 | 12 | Municipal address resolution and coverage | Engineering; product on coverage text | 3 (corpus) | pending | Coverage shown wherever municipal law applies; staging | Missing | Specify resolution with product |
-| 13 | Portfolio analytics | Engineering; product defines metrics | 5 | pending | Metric definitions approved; denial tests; staging | Missing | Product defines metrics (PRD Ã‚Â§13) |
+| 13 | Portfolio analytics | Engineering; product defines metrics | 5 | pending | Metric definitions approved; denial tests; staging | Missing | Product defines metrics (PRD §13) |
 | 14 | Platform admin: grant, revoke, flags, audit viewer | Engineering; operator for grants | 1 | pending | Two-operator approval test; audit row per change; UI E2E; staging | Missing (grant, revoke); Built (flags, audit) | Review the uncommitted grant migration; add UI tests |
 | 15 | Resident explainers and verification | Engineering | 3 | pending | Real-app test of explainers; verification tests | Built | Add tests |
 | 16 | Monitoring and alerts | Operator and Engineering | 2 | pending | Alert fired and received on staging | Missing | Choose service with operator |
@@ -215,5 +215,5 @@ acceptance test passing there. A row says "pending" until its commit exists.
 | Ask enablement at launch, or after the full build | Decides whether row 4 gates the first release | Row 4 timing |
 | Monitoring service | No service exists in the repository | Row 16 |
 
-Launch readiness for the five-role subset does not make the platform complete. The PRD's Phases 0Ã¢â‚¬â€œ10 are the complete
+Launch readiness for the five-role subset does not make the platform complete. The PRD's Phases 0–10 are the complete
 scope. Phase 6 (linter and LTO), Phase 7 (legal review) and Phase 9 (updates) are largely Missing above.
