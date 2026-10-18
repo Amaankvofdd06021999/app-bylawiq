@@ -64,7 +64,8 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Linked accounts and fast switch | §3.3 | Built | Linked-account migrations exist; no E2E |
 | Convert single to multi-building account | §3.3 | Missing | No conversion code |
 | Invitation-time conversion prompt | §3.3 | Missing | No code |
-| Ask BylawIQ, scoped to building | §9 | **Off for launch** | `answers` flag; denial tests in `ask-launch-denial` |
+| Ask BylawIQ, scoped to building | §9 | **Off for launch** | `answers` flag. Server boundary tested locally: `ask-launch-denial` (routes, screen, conversation page), `launch-scope.test.ts` |
+| Building bulletin (staff posts, pinning, deletes) | not in PRD §3–§14 | **Off for launch** | `bulletin` flag. Page and four actions refuse; tested locally in `launch-off-surfaces` and `launch-off-actions` |
 | Document download from vault | §11 | Built | `documents/[id]/download` route; not tested |
 | Municipal address resolution and coverage | §5.2–5.3 | Missing | No address resolution (zero matches) |
 
@@ -76,7 +77,7 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Outsider sees no buildings; other firm's building refused by direct id | §3.1 | Tested locally | `strata-portfolio` |
 | Assistant role: drafts only, cannot adopt, file or send | §3.5 | Built | Role matrix unit test (`tests/characterization/roles`); no UI test |
 | Portfolio analytics | §13 | Missing | No analytics module. The only analytics code is AI analytics, which is off |
-| Portfolio Ask | §9 | **Off for launch** | `answers` flag |
+| Portfolio Ask | §9 | **Off for launch** | `answers` flag; same server boundary as building Ask (`ask-launch-denial`) |
 | Manage buildings across the portfolio (create, link) | §3.1 | Built | Not tested |
 
 ## Firm owner
@@ -88,7 +89,7 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Review inbox: request changes, approve | §10 | Tested locally | `firm-review` |
 | Firm knowledge library: publish, duplicate refused, text search | §9.3 | Tested locally | `firm-knowledge`. Semantic search: Deferred by PRD scope of firm search |
 | Org admin: all buildings, team, org settings | §3.1 | Built | Admin pages exist (`admin/buildings`, `admin/team`); not tested |
-| Billing, plans, seats (org owner) | §3.1 | **Off for launch** | `payments` flag; billing page returns not-found |
+| Billing, plans, seats (org owner) | §3.1 | **Off for launch** | `payments` flag. Page not-found and seat action refuses; tested locally in `launch-off-surfaces` and `launch-off-actions` (no seat change, no read) |
 | Org-wide audit log | §3.1 | Missing | Audit viewer is deferred (see platform admin) |
 
 ## Resident
@@ -98,9 +99,9 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Join with invitation: wrong email, reuse, expiry, revocation, other building | §3.4 | Tested locally | `resident-join` (5 tests) |
 | Home: in-force bylaws as alerts, unit status | §8 | Tested locally | `resident-join`. Alerts for other notification types not tested |
 | Explainers | §9 | Built | `explainers.tsx` exists; not tested |
-| Ask (AI answers) | §9 | **Off for launch** | `answers` flag |
-| Credits, paywall, purchases | §9 | **Off for launch** | `payments` and `answers` flags |
-| Drafting (notices, letters) | §10 | **Off for launch** | Code constant (decision D5) |
+| Ask (AI answers) | §9 | **Off for launch** | `answers` flag; tested locally as for building Ask |
+| Credits, paywall, purchases | §9 | **Off for launch** | `payments` and `answers` flags. Checkout action refuses with no Stripe call (`launch-off-actions`, tested locally) |
+| Drafting (notices, letters) | §10 | **Off for launch** | Code constant (decision D5). Action refuses before any read (`launch-off-actions`, tested locally) |
 | Resident verification gate for AI output | doc 11 | **Off for launch** | Behind `answers` |
 | Owner and resident read-only portal | §14 | Deferred by PRD | Phase 4 |
 
@@ -117,8 +118,8 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Revoke platform admin | D4 | **Missing** | Same as grant |
 | Feature flags | D4 | Built | `set_flag` and admin action exist; no UI test |
 | Audit log viewer | §12 | Built | `platform-audit-log.tsx` and `get_audit_logs` exist; no UI test |
-| Chat and AI analytics | §13 | **Off for launch** | Admin page not-found |
-| Billing | §3.1 | **Off for launch** | Page not-found |
+| Chat and AI analytics | §13 | **Off for launch** | Admin page not-found (tested locally, `launch-off-surfaces`) |
+| Billing | §3.1 | **Off for launch** | Page not-found and webhook 404 (tested locally, `launch-off-surfaces`) |
 
 ## Cross-cutting and operations
 
@@ -137,14 +138,14 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 
 ## Counts
 
-Counted from the tables above, 75 rows (the role-mapping table is not counted):
+Counted from the tables above, 76 rows (the role-mapping table is not counted):
 
 | Status | Rows |
 |---|---|
 | Tested on staging | **0** |
 | Tested locally | 27 |
 | Built, not tested | 11 |
-| Off for launch | 9 |
+| Off for launch | 10 |
 | Blocked | 6 |
 | Missing | 21 |
 | Deferred by PRD | 1 |
