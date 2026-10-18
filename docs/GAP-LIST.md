@@ -112,9 +112,10 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 
 | Flow | Status | Owner | Depends on | Local evidence | Staging evidence |
 |---|---|---|---|---|---|
-| Time-limited counsel access (grant, read, expiry, revoke) | Tested locally: database (counsel_access 19, counsel_packet 13), UI, and E2E (counsel-access, 5 tests, desktop and mobile, 2 runs). Not on staging | Eng | Migration 20261047000063 apply (Op approval); counsel review of who may be granted | `counsel_access` pgTAP 19 (success, denial, expiry, revoke, cross-building, period limits, unique active grant) | None (item 7) |
-| Counsel review packet and comment thread | Missing | Eng, Counsel | Item 7 | none | None (item 7) |
-| CBA-BC referral, counsel invitation UI | Missing | Eng, Counsel | Item 7; referral rules (counsel) | none | None (item 7) |
+| Time-limited counsel access: manager grant and revoke by email, counsel sign-in, read, comment, expiry, revocation | Tested locally (database, UI, E2E); CI green at `04f0ee0`. Account must already exist (disclosure in `docs/SECURITY-REVIEW-COUNSEL-ACCESS.md`). Not on staging | Eng, Sec | Security review of the disclosure; staging (Op) | `counsel_access` 19; `counsel_packet` 13; `counsel-access` E2E 10 passed in two runs | None (item 7) |
+| Counsel review packet, comments, expiry and denial (UI) | Tested locally: UI, server actions, database (`counsel_packet` 13, `counsel_access` 19), E2E `counsel-access` 5 journeys (desktop and mobile). CI green at `04f0ee0`. Not on staging | Eng | Staging project and operator (Op) | `counsel_packet` pgTAP; `counsel-access` E2E 10 passed in two runs | None (item 7) |
+| Counsel invitation by email (pending grant, accept after sign-in) | Missing. Blocked on the email provider and sender domain (Op); removes the account-discovery disclosure, see `docs/SECURITY-REVIEW-COUNSEL-ACCESS.md` | Eng, Op, Sec | Email provider (Op); security review | none | None |
+| CBA-BC referral (lawyer referral to counsel) | Missing. Separate flow; needs the referral rules from counsel | Eng, Counsel | Counsel referral rules | none | None |
 
 ## Cross-cutting and operations
 

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireUser, requirePermission } from '@/lib/auth/guards';
 import { checkDb, errorMessage, NotFoundError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/security/rate-limit';
 
 /**
  * External counsel access (PRD §7.4). The database enforces every rule: who may grant, the period, the active grant, expiry,
@@ -34,6 +35,9 @@ export async function grantCounselAccessAction(raw: unknown): Promise<CounselRes
     const user = await requireUser();
     const input = GrantSchema.parse(raw);
     await requirePermission(user, 'bylaw.adopt', input.buildingId);
+    // Each grant attempt tells the manager whether an email has an account (see docs/SECURITY-REVIEW-COUNSEL-ACCESS.md),
+    // so attempts are limited per manager. The key is separate from sign-in's.
+    await rateLimit('counsel-grant:' + user.id, 'auth');
     const { data, error } = await user.client.rpc('grant_counsel_access_by_email', {
       p_version: input.versionId,
       p_email: input.email,

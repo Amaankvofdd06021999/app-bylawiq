@@ -94,8 +94,19 @@ export function CounselAccessPanel({
           </label>
           <label>
             Counsel’s email address
-            <input name="email" type="email" required maxLength={254} autoComplete="off" />
+            <input
+              name="email"
+              type="email"
+              required
+              maxLength={254}
+              autoComplete="off"
+              aria-describedby="counsel-email-hint"
+            />
           </label>
+          <p id="counsel-email-hint" className="muted">
+            Counsel must already have a BylawIQ account with this email address. BylawIQ cannot send an
+            invitation yet, so ask counsel to sign up first.
+          </p>
           <label>
             Access period
             <select name="days" defaultValue="7">

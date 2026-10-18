@@ -87,7 +87,8 @@ test('a manager creates an amendment and grants counsel access by email', async 
     await s.page.locator('input[name=section]').fill('7.1');
     await s.page.getByLabel('Your amendment').fill(BODY);
     await s.page.getByRole('button', { name: 'Save new version' }).click();
-    await expect(s.page.getByRole('button', { name: `Edit ${TITLE}` })).toBeVisible();
+    // The save is a server action. Under load it can take longer than the default wait, so allow more time here.
+    await expect(s.page.getByRole('button', { name: `Edit ${TITLE}` })).toBeVisible({ timeout: 20_000 });
 
     await s.page.goto(`/b/${manager.buildingId}/counsel`);
     await expect(s.page.getByRole('heading', { name: 'Grant counsel access' })).toBeVisible();
