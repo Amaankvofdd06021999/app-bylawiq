@@ -23,8 +23,9 @@ Status key: Missing · Built (not tested) · Tested locally · Off (gated) · Bl
 | Word diff between versions | Tested locally | Eng | Op | bylaw-diff unit 8; E2E | None (item 5) |
 | Compliance linter (advisory) | Built | Counsel, Eng | Counsel approval (item 6) | bylaw-linter unit 29; panel unit 3; E2E | None |
 | Linter enforcement on proposal | Missing | Counsel, Eng | Counsel approval; migration approval | none | None (item 6) |
-| LTO filing: validated reference, status, escalation on home | Tested locally (database and UI) | Eng, Sec | Op (apply); Sec (scheduled refresh) | lto_filing pgTAP 16; lto-filing E2E 4; lto-filing unit 23 | None (item 6) |
-| LTO scheduled refresh | Built (held back) | Sec, Eng | Sec exception to lint policy | refresh unit (held) | None |
+| LTO filing: validated reference, status, escalation on home and Updates | Tested locally (database and UI) | Eng | Op (apply to hosted, with approval) | lto_filing pgTAP 16; lto-filing E2E 4 (home and Updates); lto-filing unit 23; rollback run locally | None (item 6) |
+| LTO escalation schedule (14 and 60 days) | Decided; product to confirm in writing | Product, Counsel | Written confirmation; counsel review | `docs/LTO-ESCALATION.md` | None |
+| LTO scheduled refresh (stored severity) | Built (held); awaiting security review | Sec, Eng | `docs/SECURITY-REVIEW-LTO-REFRESH.md` signed; operator confirms keys and `pg_cron` | refresh unit (held, not in repo) | None |
 | Adoption lifecycle | Tested locally | Eng | Op | building-notices-disputes | None |
 | Notification feed (updates) | Tested locally | Eng | Op | building-notices-disputes | None |
 | Notification matching engine | Missing | Eng | Item 9 spec (PRD §8.3) | none | None (item 9) |

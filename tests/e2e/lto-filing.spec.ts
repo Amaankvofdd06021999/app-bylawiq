@@ -130,11 +130,16 @@ test('an adopted amendment leaves an update that escalates, and a refused refere
     ageFilingNotice(20);
     await s.page.reload();
     await expect(s.page.getByText('needs action')).toBeVisible();
+    // The Updates screen shows the same escalation as the home screen.
+    await s.page.goto(`/b/${managerA.buildingId}/updates`);
+    await expect(s.page.getByText('Needs action', { exact: true })).toBeVisible();
 
     // After 70 days it is overdue.
     ageFilingNotice(70);
-    await s.page.reload();
+    await s.page.goto(`/b/${managerA.buildingId}/home`);
     await expect(s.page.getByText('overdue: record the LTO filing')).toBeVisible();
+    await s.page.goto(`/b/${managerA.buildingId}/updates`);
+    await expect(s.page.getByText('Overdue', { exact: true })).toBeVisible();
 
     // A reference that fails the rule is refused, with the reason shown in the dialog. The bylaw stays adopted.
     await s.page.goto(`/b/${managerA.buildingId}/bylaws`);

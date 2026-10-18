@@ -30,6 +30,7 @@ import { errorFrom } from '@/lib/http';
 import { ReviewThread } from './review-thread';
 import { BylawVersionHistory } from './bylaw-history';
 import { BylawLintPanel } from './bylaw-lint-panel';
+import { unfiledSeverity } from '@/lib/lto-filing';
 import { useBackend } from '@/components/backend';
 import type { Building, Row, Profile } from '@/lib/schema';
 import { pretty, DOCUMENT_TYPES, ROLE_LABELS, DISCLAIMER } from '@/lib/constants';
@@ -501,9 +502,25 @@ export function Resources({
                   </span>
                   <div>
                     <div className="action-line" style={{ marginBottom: 9 }}>
-                      <Badge tone={str(row, 'severity') === 'warning' ? 'warning' : 'blue'}>
-                        {pretty(str(row, 'type'))}
-                      </Badge>
+                      {/* A filing notice's severity is calculated from its date, as on the home screen (lib/lto-filing.ts). */}
+                      {(() => {
+                        const isFiling = str(row, 'type') === 'unfiled_adoption';
+                        const level = isFiling
+                          ? unfiledSeverity(str(row, 'created_at'))
+                          : str(row, 'severity');
+                        return (
+                          <>
+                            <Badge tone={level === 'info' ? 'blue' : 'warning'}>
+                              {pretty(str(row, 'type'))}
+                            </Badge>
+                            {isFiling && level !== 'info' && (
+                              <Badge tone="warning">
+                                {level === 'critical' ? 'Overdue' : 'Needs action'}
+                              </Badge>
+                            )}
+                          </>
+                        );
+                      })()}
                       <small>{str(row, 'created_at').slice(0, 10)}</small>
                     </div>
                     <h3>{str(row, 'title')}</h3>
