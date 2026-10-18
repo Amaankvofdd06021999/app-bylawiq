@@ -1,11 +1,11 @@
 import 'server-only';
 import { checkDb } from '@/lib/errors';
-import type { NoticeSender } from '@/lib/email/notices';
+import type { NoticeSendResult } from '@/lib/email/notices';
 
 /**
- * Sends an approved notice to every active resident, through the database record. Each step is a database call that checks
- * the caller's permission: queue (one row per resident, idempotent), claim (the attempts to make now), and record (the outcome).
- * A retry is the same call: nothing is queued twice, and failed deliveries with attempts left are claimed again.
+ * Runs one batch of notice deliveries through the database record: queue (one row per resident, idempotent), claim (the attempts
+ * due now, counted), send one attempt (by delivery id only; the address is resolved by the sender, never returned here), and
+ * record the outcome. A retry is the same call. The database checks the caller's permission at every step.
  */
 
 type Rpc = (
@@ -14,6 +14,12 @@ type Rpc = (
 ) => PromiseLike<{ data: unknown; error: { code?: string; message: string } | null }>;
 
 export type DeliverySummary = { queued: number; sent: number; failed: number };
+
+/**
+ * Sending is off. The sender design is waiting for a security decision (docs/NOTICE-DELIVERY-DECISION.md). Changing this flag is
+ * a reviewed commit, made together with the server-only sender.
+ */
+export const NOTICE_SENDING_ENABLED = false;
 
 export type DeliveryRow = {
   id: string;
@@ -24,19 +30,15 @@ export type DeliveryRow = {
   sentAt: string | null;
 };
 
-/** Masks an address for the status list: the first letter and the domain. */
-export function maskEmail(address: string): string {
-  const at = address.indexOf('@');
-  if (at <= 0) return '***';
-  return address[0] + '***' + address.slice(at);
-}
+/** Sends one attempt, by delivery id. The sender resolves the address on the server; nothing here sees it. */
+export type AttemptSender = (deliveryId: string, subject: string, text: string) => Promise<NoticeSendResult>;
 
 export async function deliverNotice(
   rpc: Rpc,
   noticeId: string,
   subject: string,
   text: string,
-  sender: NoticeSender,
+  send: AttemptSender,
 ): Promise<DeliverySummary> {
   const queued = await rpc('queue_notice_delivery', { p_notice: noticeId });
   checkDb(queued.error);
@@ -46,8 +48,8 @@ export async function deliverNotice(
 
   let sent = 0;
   let failed = 0;
-  for (const row of (batch.data ?? []) as { delivery_id: string; email_address: string }[]) {
-    const result = await sender(row.email_address, subject, text);
+  for (const row of (batch.data ?? []) as { delivery_id: string }[]) {
+    const result = await send(row.delivery_id, subject, text);
     const recorded = await rpc('record_notice_delivery_result', {
       p_delivery: row.delivery_id,
       p_ok: result.ok,
@@ -58,4 +60,11 @@ export async function deliverNotice(
     else failed += 1;
   }
   return { queued: Number(queued.data ?? 0), sent, failed };
+}
+
+/** Masks an address for display: the first letter and the domain. The database stores this form only. */
+export function maskEmail(address: string): string {
+  const at = address.indexOf('@');
+  if (at <= 0) return '***';
+  return address[0] + '***' + address.slice(at);
 }

@@ -13,8 +13,7 @@ vi.mock('resend', () => ({
   },
 }));
 
-import { deliverNotice } from '@/features/notices/delivery';
-import { maskEmail } from '@/features/notices/delivery';
+import { deliverNotice, maskEmail, NOTICE_SENDING_ENABLED } from '@/features/notices/delivery';
 import { sendNoticeEmail } from '@/lib/email/notices';
 
 type Call = { fn: string; args: Record<string, unknown> };
@@ -28,54 +27,74 @@ function fakeRpc(responses: Record<string, { data?: unknown; error?: { message: 
   return { rpc, calls };
 }
 
-const TWO_ROWS = [
-  { delivery_id: 'd1', email_address: 'alice@example.org' },
-  { delivery_id: 'd2', email_address: 'bob@example.org' },
-];
+const TWO = [{ delivery_id: 'd1' }, { delivery_id: 'd2' }];
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
+describe('sending is off until the sender is approved', () => {
+  it('the flag is off', () => {
+    expect(NOTICE_SENDING_ENABLED).toBe(false);
+  });
+});
+
 describe('deliverNotice', () => {
-  it('queues, claims, sends to each resident, and records each success', async () => {
+  it('sends by delivery id, and records each outcome for the attempt it sent', async () => {
     const { rpc, calls } = fakeRpc({
       queue_notice_delivery: { data: 2 },
-      claim_notice_deliveries: { data: TWO_ROWS },
+      claim_notice_deliveries: { data: TWO },
     });
-    const sender = vi.fn().mockResolvedValue({ ok: true });
-    const summary = await deliverNotice(rpc, 'n1', 'Quiet hours', 'Please observe.', sender);
-    expect(summary).toEqual({ queued: 2, sent: 2, failed: 0 });
-    expect(sender).toHaveBeenCalledWith('alice@example.org', 'Quiet hours', 'Please observe.');
-    const recorded = calls.filter((c) => c.fn === 'record_notice_delivery_result');
-    expect(recorded.map((c) => c.args)).toEqual([
+    const send = vi.fn().mockResolvedValue({ ok: true });
+    await expect(deliverNotice(rpc, 'n1', 'Quiet hours', 'Please observe.', send)).resolves.toEqual({
+      queued: 2,
+      sent: 2,
+      failed: 0,
+    });
+    expect(send.mock.calls.map((c) => c[0])).toEqual(['d1', 'd2']);
+    const recorded = calls.filter((c) => c.fn === 'record_notice_delivery_result').map((c) => c.args);
+    expect(recorded).toEqual([
       { p_delivery: 'd1', p_ok: true, p_error: null },
       { p_delivery: 'd2', p_ok: true, p_error: null },
     ]);
   });
 
-  it('records a failure with its error and keeps going for the other residents', async () => {
+  it('never passes an address to the sender or the record: only delivery ids move through this path', async () => {
+    const { rpc, calls } = fakeRpc({
+      queue_notice_delivery: { data: 1 },
+      claim_notice_deliveries: { data: TWO.slice(0, 1) },
+    });
+    const send = vi.fn().mockResolvedValue({ ok: true });
+    await deliverNotice(rpc, 'n1', 's', 'b', send);
+    expect(JSON.stringify(send.mock.calls)).not.toMatch(/@/);
+    expect(JSON.stringify(calls)).not.toMatch(/@/);
+  });
+
+  it('a partial failure records the failed attempt and keeps going for the others', async () => {
     const { rpc, calls } = fakeRpc({
       queue_notice_delivery: { data: 2 },
-      claim_notice_deliveries: { data: TWO_ROWS },
+      claim_notice_deliveries: { data: TWO },
     });
-    const sender = vi
+    const send = vi
       .fn()
       .mockResolvedValueOnce({ ok: false, error: 'The email could not be sent.' })
       .mockResolvedValueOnce({ ok: true });
-    const summary = await deliverNotice(rpc, 'n1', 's', 'b', sender);
-    expect(summary).toEqual({ queued: 2, sent: 1, failed: 1 });
+    await expect(deliverNotice(rpc, 'n1', 's', 'b', send)).resolves.toEqual({
+      queued: 2,
+      sent: 1,
+      failed: 1,
+    });
     const failed = calls.find((c) => c.fn === 'record_notice_delivery_result' && c.args.p_delivery === 'd1');
     expect(failed?.args).toEqual({ p_delivery: 'd1', p_ok: false, p_error: 'The email could not be sent.' });
   });
 
-  it('is a retry when nobody is newly queued and failed deliveries are claimed again', async () => {
+  it('a retry claims failed deliveries again and queues nobody new', async () => {
     const { rpc } = fakeRpc({
       queue_notice_delivery: { data: 0 },
-      claim_notice_deliveries: { data: [TWO_ROWS[0]] },
+      claim_notice_deliveries: { data: [TWO[0]] },
     });
-    const sender = vi.fn().mockResolvedValue({ ok: true });
-    await expect(deliverNotice(rpc, 'n1', 's', 'b', sender)).resolves.toEqual({
+    const send = vi.fn().mockResolvedValue({ ok: true });
+    await expect(deliverNotice(rpc, 'n1', 's', 'b', send)).resolves.toEqual({
       queued: 0,
       sent: 1,
       failed: 0,
@@ -84,13 +103,13 @@ describe('deliverNotice', () => {
 
   it('sends nothing when no delivery is due', async () => {
     const { rpc } = fakeRpc({ queue_notice_delivery: { data: 0 }, claim_notice_deliveries: { data: [] } });
-    const sender = vi.fn();
-    await expect(deliverNotice(rpc, 'n1', 's', 'b', sender)).resolves.toEqual({
+    const send = vi.fn();
+    await expect(deliverNotice(rpc, 'n1', 's', 'b', send)).resolves.toEqual({
       queued: 0,
       sent: 0,
       failed: 0,
     });
-    expect(sender).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('refuses a notice that is not approved, with a plain message', async () => {
@@ -102,19 +121,19 @@ describe('deliverNotice', () => {
 
   it('refuses when the caller is not allowed, and sends nothing', async () => {
     const { rpc } = fakeRpc({ queue_notice_delivery: { error: { message: 'forbidden' } } });
-    const sender = vi.fn();
-    await expect(deliverNotice(rpc, 'n1', 's', 'b', sender)).rejects.toBeInstanceOf(Error);
-    expect(sender).not.toHaveBeenCalled();
+    const send = vi.fn();
+    await expect(deliverNotice(rpc, 'n1', 's', 'b', send)).rejects.toBeInstanceOf(Error);
+    expect(send).not.toHaveBeenCalled();
   });
 
-  it('a failure to record the outcome stops the run with a database error, not a silent success', async () => {
+  it('a failure to record an outcome stops the run with an error, not a silent success', async () => {
     const { rpc } = fakeRpc({
       queue_notice_delivery: { data: 1 },
-      claim_notice_deliveries: { data: [TWO_ROWS[0]] },
+      claim_notice_deliveries: { data: [TWO[0]] },
       record_notice_delivery_result: { error: { message: 'connection reset by peer' } },
     });
-    const sender = vi.fn().mockResolvedValue({ ok: true });
-    await expect(deliverNotice(rpc, 'n1', 's', 'b', sender)).rejects.toBeInstanceOf(Error);
+    const send = vi.fn().mockResolvedValue({ ok: true });
+    await expect(deliverNotice(rpc, 'n1', 's', 'b', send)).rejects.toBeInstanceOf(Error);
   });
 });
 
@@ -129,10 +148,12 @@ describe('maskEmail', () => {
   });
 });
 
-describe('sendNoticeEmail', () => {
+describe('sendNoticeEmail (the provider wrapper, used only by the future sender)', () => {
   it('reports a missing key or sender as a failure, without calling the provider', async () => {
-    const result = await sendNoticeEmail('a@example.org', 's', 'b', {});
-    expect(result).toEqual({ ok: false, error: 'Email is not configured for this environment.' });
+    await expect(sendNoticeEmail('a@example.org', 's', 'b', {})).resolves.toEqual({
+      ok: false,
+      error: 'Email is not configured for this environment.',
+    });
     expect(mocks.constructed).not.toHaveBeenCalled();
   });
 
@@ -143,27 +164,20 @@ describe('sendNoticeEmail', () => {
       EMAIL_MODE: 'staging',
       EMAIL_STAGING_ALLOWLIST: 'x@y.z',
     };
-    const result = await sendNoticeEmail('a@example.org', 's', 'b', env);
-    expect(result).toEqual({ ok: false, error: 'Staging only sends to approved test addresses.' });
+    await expect(sendNoticeEmail('a@example.org', 's', 'b', env)).resolves.toEqual({
+      ok: false,
+      error: 'Staging only sends to approved test addresses.',
+    });
     expect(mocks.constructed).not.toHaveBeenCalled();
-  });
-
-  it('in staging, sends to an allowlisted address', async () => {
-    mocks.send.mockResolvedValue({ error: null });
-    const env = {
-      RESEND_API_KEY: 'k',
-      EMAIL_FROM: 'a@b.c',
-      EMAIL_MODE: 'staging',
-      EMAIL_STAGING_ALLOWLIST: 'a@example.org',
-    };
-    await expect(sendNoticeEmail('a@example.org', 's', 'b', env)).resolves.toEqual({ ok: true });
   });
 
   it('turns a provider error into a fixed message, not the provider text', async () => {
     mocks.send.mockResolvedValue({ error: { message: 'rate limit: 429 for key re_abc' } });
     const env = { RESEND_API_KEY: 'k', EMAIL_FROM: 'a@b.c' };
-    const result = await sendNoticeEmail('a@example.org', 's', 'b', env);
-    expect(result).toEqual({ ok: false, error: 'The email could not be sent.' });
+    await expect(sendNoticeEmail('a@example.org', 's', 'b', env)).resolves.toEqual({
+      ok: false,
+      error: 'The email could not be sent.',
+    });
   });
 
   it('treats a thrown provider error as a failure', async () => {
