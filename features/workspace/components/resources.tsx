@@ -28,6 +28,7 @@ import { ResourceForm, type Field } from './resource-form';
 import { str } from '@/lib/rows';
 import { errorFrom } from '@/lib/http';
 import { ReviewThread } from './review-thread';
+import { BylawVersionHistory } from './bylaw-history';
 import { useBackend } from '@/components/backend';
 import type { Building, Row, Profile } from '@/lib/schema';
 import { pretty, DOCUMENT_TYPES, ROLE_LABELS, DISCLAIMER } from '@/lib/constants';
@@ -1441,6 +1442,17 @@ function Editor({
               Reason for change
               <textarea name="rationale" rows={2} placeholder="What prompted this amendment?" />
             </label>
+          )}
+          {isBylaw && (
+            <BylawVersionHistory
+              versions={history.map((v) => ({
+                id: str(v, 'id'),
+                version: Number(v.version),
+                status: str(v, 'status', 'draft'),
+                body: str(v, 'body'),
+                created_at: str(v, 'created_at'),
+              }))}
+            />
           )}
           <div className="review-panel">
             <h3>
