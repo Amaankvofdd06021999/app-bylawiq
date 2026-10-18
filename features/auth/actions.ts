@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/auth/guards';
 import { rateLimit } from '@/lib/security/rate-limit';
+import { AUTH_STEP_TIMEOUT_MS, withTimeout } from '@/lib/security/with-timeout';
 import { checkDb, errorMessage, AppError } from '@/lib/errors';
 import { appUrl } from '@/lib/env';
 export async function authAction(raw: unknown) {
@@ -19,7 +20,11 @@ export async function authAction(raw: unknown) {
       .parse(raw);
     const h = await headers();
     const ip = h.get('x-real-ip') || h.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-    await rateLimit(createHash('sha256').update(ip).digest('hex'), 'auth');
+    await withTimeout(
+      rateLimit(createHash('sha256').update(ip).digest('hex'), 'auth'),
+      AUTH_STEP_TIMEOUT_MS.rateLimit,
+      'auth.rate_limit',
+    );
     const client = await createClient();
     const appUrlValue = appUrl();
     if (v.mode === 'forgot') {
@@ -52,7 +57,11 @@ export async function authAction(raw: unknown) {
         throw new AppError('auth_error', 'Unable to create the account. Check your details or sign in.');
       return { ok: true, message: 'Check your email to verify your account, then sign in.' };
     }
-    const { error } = await client.auth.signInWithPassword({ email: v.email, password: v.password });
+    const { error } = await withTimeout(
+      client.auth.signInWithPassword({ email: v.email, password: v.password }),
+      AUTH_STEP_TIMEOUT_MS.signIn,
+      'auth.sign_in',
+    );
     if (error)
       throw new AppError(
         'auth_error',

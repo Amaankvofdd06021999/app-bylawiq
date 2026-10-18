@@ -6,6 +6,12 @@ import { ArrowRight } from 'lucide-react';
 import { Brand, Button } from '@/components/ui';
 import { authAction, onboardAction, acceptInviteAction } from '../actions';
 import { DISCLAIMER } from '@/lib/constants';
+
+/** The client gives up waiting after this long (server limits total 20 s). */
+const CLIENT_DEADLINE_MS = 25_000;
+const SLOW_MESSAGE = 'That took too long. Check your connection and try again.';
+type AuthResult = { ok: boolean; error?: string; redirect?: string; message?: string };
+
 export function AuthForm({
   mode,
   ready,
@@ -79,12 +85,22 @@ export function AuthForm({
               setBusy(true);
               setError('');
               const f = new FormData(e.currentTarget);
-              const r = await authAction({
-                mode,
-                email: f.get('email'),
-                password: mode === 'forgot' ? undefined : f.get('password'),
-                consent: f.get('consent') === 'on',
-              });
+              // Longer than the server's own limits (lib/security/with-timeout.ts), so a hung request still ends in a visible
+              // message and the button comes back, even if the server never answers.
+              let deadline: ReturnType<typeof setTimeout> | undefined;
+              const slow: AuthResult = { ok: false, error: SLOW_MESSAGE };
+              // A network failure rejects the call instead of returning a result: show the same message, so the button recovers.
+              const r = await Promise.race<AuthResult>([
+                authAction({
+                  mode,
+                  email: f.get('email'),
+                  password: mode === 'forgot' ? undefined : f.get('password'),
+                  consent: f.get('consent') === 'on',
+                }).catch((): AuthResult => ({ ok: false, error: SLOW_MESSAGE })),
+                new Promise<AuthResult>((resolve) => {
+                  deadline = setTimeout(() => resolve(slow), CLIENT_DEADLINE_MS);
+                }),
+              ]).finally(() => clearTimeout(deadline));
               setBusy(false);
               if (!r.ok) setError(r.error || 'Please try again.');
               else if (r.redirect) router.push(r.redirect);

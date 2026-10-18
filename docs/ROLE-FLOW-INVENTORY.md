@@ -129,6 +129,7 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 
 | Capability | PRD | Status | Evidence / gap |
 |---|---|---|---|
+| Sign-in: bounded server steps, visible failure, form recovers | §3 | Tested locally (unit 7; E2E `sign-in-recovery` 2 passed: a held sign-in shows a message and the button comes back). **CI: pending for this commit. Staging: none** | Rate-limit step bounded 8 s, sign-in 12 s, client deadline 25 s (`lib/security/with-timeout.ts`, `features/auth/components/auth-form.tsx`). A timeout is logged with its step name only |
 | Invitation email: creation | §8 | Tested locally | `invitation_email_status` migration, `invitations.test.ts` (mocked provider) |
 | Invitation email: delivery | §8 | **Blocked** | No staging provider configured or verified |
 | Malware scanner | §11 | Built, Blocked | Fails closed; local stub tested; real endpoint Blocked |
