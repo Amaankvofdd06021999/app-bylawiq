@@ -1,13 +1,17 @@
 # Role and flow inventory
 
-Source: `docs/BYLAWIQ-PRD-v3.md` (sections 3 to 14), the release checklist, and the code and tests as they stand at `b696b73`.
+This is the source of truth for role-flow status. Update it in the same commit as any change that moves a status.
+
+**Snapshot:** code at commit `0b3df47` (bylaw version history). Every row except the bylaw rows was last verified at
+`b696b73`. The bylaw rows were verified at `0b3df47`. Sources: `docs/BYLAWIQ-PRD-v3.md` (sections 3 to 14), the release
+checklist, and the code and tests.
 
 ## Status vocabulary
 
 | Status | Meaning |
 |---|---|
 | **Tested on staging** | Passing real-app test on a staging environment with the launch configuration. **None yet: no staging environment exists.** |
-| **Tested locally** | Passing real-app E2E or pgTAP test on the local stack. Not staging evidence. |
+| **Tested locally** | Passing real-app E2E, unit or pgTAP test on the local stack. Not staging evidence. |
 | **Built** | Code exists and is reachable, with no passing test that covers it. |
 | **Off for launch** | Built or partly built, switched off in code (`lib/launch-scope.ts`) or by reviewed decision. Not complete. |
 | **Blocked** | Built or designed, but depends on an approval, a provider or a hosted service that is not verified. |
@@ -19,16 +23,16 @@ denial tests, failure handling, accessible UI states, and a passing real-app sta
 
 ## Role mapping
 
-The release checklist names five roles. The PRD (§3.5) defines eight. The mapping and the differences:
+The release checklist names five roles. The PRD (§3.5) defines eight. The mapping, with the decisions of 2026-10-17:
 
 | Release role | PRD roles | Note |
 |---|---|---|
-| Building manager | `building_manager`, `council_president`, `council_member` | **Decided 2026-10-17: both council roles are in scope.** `council_president` has full control of one building and can invite council. `council_member` reads and asks, and cannot edit bylaws or send notices. Council roles have a permission matrix entry; no UI flow or E2E test exists yet. |
+| Building manager | `building_manager`, `council_president`, `council_member` | **Decided: both council roles are in scope.** `council_president` has full control of one building and can invite council. `council_member` reads and asks, and cannot edit bylaws or send notices. Council roles have a permission matrix entry; no UI flow or E2E test exists yet. |
 | Portfolio manager | `portfolio_manager`, `portfolio_assistant` | The assistant role (drafts only) has a matrix entry, no UI test. |
-| Firm owner | `org_owner` (PRD "Admin" account type) | **Decided 2026-10-17: firm owner = PRD `org_owner`.** The firm owner sees every building linked to the firm, the roster, the team and the knowledge library. Billing stays off until payments are approved. `org_admin` keeps all buildings and team access without billing. |
+| Firm owner | `org_owner` (PRD "Admin" account type) | **Decided: firm owner = PRD `org_owner`.** The firm owner sees every building linked to the firm, the roster, the team and the knowledge library. Billing stays off until payments are approved. `org_admin` keeps all buildings and team access without billing. |
 | Resident | Owner and resident read-only portal (Phase 4) | Deferred by the PRD. The release resident is the invited resident only. Council members are building-workspace roles, not residents. |
 | Platform admin | BylawIQ staff (not a PRD role) | Operator role. |
-| *(not in the five)* | `external_counsel` | **Decided 2026-10-17: in scope, built with the legal review workflow.** Time-boxed, read-only access to a review packet. Counsel cannot approve, adopt or send. Missing (see Legal review rows). |
+| *(not in the five)* | `external_counsel` | **Decided: in scope, built with the legal review workflow.** Time-boxed, read-only access to a review packet. Counsel cannot approve, adopt or send. Missing (see Legal review rows). |
 
 ## Building manager
 
@@ -39,12 +43,12 @@ The release checklist names five roles. The PRD (§3.5) defines eight. The mappi
 | Upload bylaw to vault: scan, size limit, consent | §11 | Tested locally | `building-documents-ask`: malware reject, no-text PDF, 4 MB limit, retry. Real scanner: Blocked |
 | Confirm detected structure, document ready | §6.1–6.2 | Tested locally | `building-documents-ask` |
 | Parse bylaw to tree | §6.1 | Tested locally (ingest to review) | Parser quality not verified against real bylaws |
-| Browse bylaws and versions | §6.6 | Built | Versioning migration exists; browse UI not in an E2E test |
-| Create and edit a structured bylaw | §6.2–6.3 | Missing | Only generic resource CRUD (`features/workspace/actions.ts` `mutateAction`). No structured editor |
-| Diff between versions | §6.3 | Missing | No diff module |
+| Create and edit a structured bylaw (new section, new version per edit) | §6.2–6.3 | Tested locally | `save_bylaw` (existing); `supabase/tests/bylaw_versions.test.sql` (10 checks: cross-building and resident denial, direct write refused); `bylaw-versions` E2E (create, edit, compare). Editor UI reuses the existing bylaw form |
+| Version history, newest first, per bylaw | §6.6 | Tested locally | `bylaw-history.test.tsx` (3); `bylaw-versions` E2E. Empty and too-large states |
+| Diff between versions (word level) | §6.3 | Tested locally | `bylaw-diff.test.ts` (8, including rebuild and the too-large fallback); `bylaw-versions` E2E |
 | Compliance linter | §6.4 | Missing | No linter module (zero matches) |
 | Adoption lifecycle: proposed, voted, adopted; refusals | §6.5 | Tested locally | `building-notices-disputes` (no-majority refusal, failed adoption) |
-| LTO filing tracking | §6.5 | Missing | No dedicated module found |
+| LTO filing tracking | §6.5 | Missing | No dedicated module found. `lto_filing_ref` exists on documents only |
 | Legal review trigger, review panel | §7.1–7.2 | Missing | No module |
 | Risk scoring, review packet | §7.2–7.3 | Missing | No module (zero matches) |
 | CBA-BC referral, counsel invitation | §7.2–7.4 | Missing | `external_counsel` appears only in the role table and access hook |
@@ -143,11 +147,11 @@ Counted from the tables above, 76 rows (the role-mapping table is not counted):
 | Status | Rows |
 |---|---|
 | Tested on staging | **0** |
-| Tested locally | 27 |
-| Built, not tested | 11 |
+| Tested locally | 30 |
+| Built, not tested | 10 |
 | Off for launch | 10 |
 | Blocked | 6 |
-| Missing | 21 |
+| Missing | 19 |
 | Deferred by PRD | 1 |
 
 Notes on the counts:
@@ -159,32 +163,32 @@ Notes on the counts:
   Ontario and Alberta expansion. Only the owner portal appears in the role tables.
 - "Tested locally" is not staging evidence. No row has staging evidence.
 
-## What "complete" needs next
+## Tracker
 
-Decided 2026-10-17: firm owner = `org_owner`; both council roles in scope; external counsel in scope with legal review.
-Product decisions still open are listed in the last table below.
+Dependency order. Each row has one owner, one target commit, and one acceptance test. An item closes only when its
+acceptance test passes on **staging** with the launch configuration. "Built" and "tested locally" are not closure.
 
-Work is tracked here in dependency order. "Owner" is who must act. "Evidence" is what closes the item. An item closes only
-when its evidence exists. "Built" and "tested locally" are not closure.
+"Target commit" is the commit that delivers the item. "Local" means the item is done on the local stack, with its
+acceptance test passing there. A row says "pending" until its commit exists.
 
-| # | Work item | Depends on | Owner | Next action | Evidence to close |
-|---|---|---|---|---|---|
-| 1 | Staging environment, operator, migration-history reconciliation | Operator and project ref | **Operator** (human) | Provide staging project ref and operator access. Then run the history check in `docs/STAGING-ACCEPTANCE.md` §1 | Migration history matches `supabase/migrations`; approval recorded before any apply |
-| 2 | Release operations: env names, signing, scanner, invitation email, background services, upload limit, monitoring | 1 | Operator, then Engineering | Run `docs/STAGING-ACCEPTANCE.md` §2–§7 on staging | Each check recorded pass or fail, with names and results only |
-| 3 | Legal corpus approval and loading | Counsel approval in writing | **Counsel and product** | Obtain written approval of the corpus and its version | Approval record; corpus loaded from `kb/dist` on staging |
-| 4 | Ask: eval gate, real providers, signing, scanner | 2, 3 | Engineering | Run the legal eval against `kb/dist/evals.jsonl`. Keep `answers` false until it passes | Eval report; staging Ask acceptance (`STAGING-ACCEPTANCE.md` §10 criteria) |
-| 5 | Structured bylaws: create, edit, versions, browse, diff | Document ingest (done locally) | Engineering | Design schema and role rules from PRD §6.1–6.3. Migration needs approval before apply | Persisted data; permission and cross-building denial tests; staging acceptance |
-| 6 | Compliance linter and LTO filing tracking | 5 | Engineering | Linter rules from PRD §6.4; filing from §6.5 | As row 5, plus deterministic fallback tests |
-| 7 | Legal review workflow and external counsel | 5 | Engineering, with counsel review of the packet rules | Risk scoring and packet from PRD §7; time-boxed read-only counsel access (decided) | Counsel denied approve, adopt and send; packet persisted; staging acceptance |
-| 8 | Notices: templates from the bylaw tree, fine validation, resident delivery | 5 | Engineering | Template and validation rules from PRD §10 | Fine validation refusals tested; delivery to residents verified on staging |
-| 9 | Notifications: matching engine, digest | 5, 8 | Engineering | Matching and digest from PRD §8.3–8.4 | Precision tests; digest delivered on staging via email |
-| 10 | Council roles UI and tests | Decided (in scope) | Engineering | council_president invites council; council_member read and ask only | Denial tests for council_member on edits and notices; staging acceptance |
-| 11 | Account conversion and plus-addressing | Product confirms PRD §3.3 flow | Engineering | Plus-address normalisation; single to multi conversion with re-authentication | Audit record written; denial tests; staging acceptance |
-| 12 | Municipal address resolution and coverage | Corpus (row 3) | Engineering, with product on coverage text | Resolve address to jurisdiction; show coverage status (PRD §5) | Coverage shown wherever municipal law applies; staging acceptance |
-| 13 | Portfolio analytics | 5 | Engineering | Define metrics with product first (PRD §13) | Metric definitions approved; denial tests; staging acceptance |
-| 14 | Platform admin: grant and revoke, flags, audit viewer | 1 | Engineering; operator approval for grants | Review the uncommitted migration; build UI and tests | Two-operator approval test; audit row per change; staging acceptance |
-| 15 | Resident explainers and verification | 3 | Engineering | Add tests for the existing component | Real-app test on staging |
-| 16 | Monitoring and alerts | 2 | Operator and Engineering | Choose the monitoring service with the operator | Alert fired and received in staging |
+| # | Work item | Owner | Depends on | Target commit | Acceptance test | Status | Next action |
+|---|---|---|---|---|---|---|---|
+| 1 | Staging environment and operator; migration-history reconciliation | **Operator** (human) | Staging project ref and operator access | pending | `docs/STAGING-ACCEPTANCE.md` §1: hosted history matches `supabase/migrations`; any apply has written approval | Blocked | Provide the staging project ref and operator access |
+| 2 | Release operations: env names, signing, scanner, invitation email, background services, upload limit, monitoring | Operator, then Engineering | 1 | pending | `docs/STAGING-ACCEPTANCE.md` §2–§7, each check recorded pass or fail on staging | Blocked | Run the runbook once item 1 is done |
+| 3 | Legal corpus approval and loading | **Counsel and product** | Written approval of corpus and version | pending | Approval record; corpus loaded from `kb/dist` on staging | Blocked | Obtain written approval |
+| 4 | Ask: legal eval, real providers, signing, scanner | Engineering | 2, 3 | pending | Eval report passes; staging Ask acceptance (`STAGING-ACCEPTANCE.md` §10); `answers` flipped only by reviewed change | Off for launch | Keep `answers` false until the eval passes |
+| 5 | Structured bylaws: create, edit, version history, word diff | Engineering | Document ingest (done locally) | `0b3df47` (local) | `supabase/tests/bylaw_versions.test.sql` (10/10); `bylaw-diff.test.ts` (8/8); `bylaw-history.test.tsx` (3/3); `bylaw-versions` E2E (4 passed on desktop and mobile). Rollback: revert `0b3df47`, no migration involved | Tested locally. **Staging acceptance pending** | Run the same acceptance test on staging after item 2. Add council_member denial on bylaw edits when item 10 lands |
+| 6 | Compliance linter and LTO filing tracking | Engineering | 5 | pending | Linter rules from PRD §6.4 with deterministic tests; filing record persisted; cross-building denial; staging | Missing | Write linter rule set from PRD §6.4 with product review |
+| 7 | Legal review workflow and time-limited counsel access | Engineering, with counsel review of packet rules | 5 | pending | Counsel denied approve, adopt and send (pgTAP); packet persisted; access expires (pgTAP); staging | Missing | Design packet and counsel grant schema, subject to migration approval |
+| 8 | Notices: templates from the bylaw tree, fine validation, resident delivery | Engineering | 5 | pending | Fine validation refusals (unit); delivery to a resident verified on staging | Missing | Specify templates from PRD §10 |
+| 9 | Notifications: matching engine and digest | Engineering | 5, 8 | pending | Precision tests on matching; digest delivered on staging by email | Missing | Specify matching rules from PRD §8.3 |
+| 10 | Council roles: screens and permissions | Engineering | Decided (in scope) | pending | council_president invites council; council_member denied edits and notices (pgTAP and E2E); staging | Built (matrix only) | Add council screens and denial tests |
+| 11 | Account conversion and plus-addressing | Engineering; product confirms PRD §3.3 flow | Re-authentication design | pending | Plus-address normalisation (unit); conversion writes an audit row (pgTAP); denial tests; staging | Missing | Specify conversion flow with product |
+| 12 | Municipal address resolution and coverage | Engineering; product on coverage text | 3 (corpus) | pending | Coverage shown wherever municipal law applies; staging | Missing | Specify resolution with product |
+| 13 | Portfolio analytics | Engineering; product defines metrics | 5 | pending | Metric definitions approved; denial tests; staging | Missing | Product defines metrics (PRD §13) |
+| 14 | Platform admin: grant, revoke, flags, audit viewer | Engineering; operator for grants | 1 | pending | Two-operator approval test; audit row per change; UI E2E; staging | Missing (grant, revoke); Built (flags, audit) | Review the uncommitted grant migration; add UI tests |
+| 15 | Resident explainers and verification | Engineering | 3 | pending | Real-app test of explainers; verification tests | Built | Add tests |
+| 16 | Monitoring and alerts | Operator and Engineering | 2 | pending | Alert fired and received on staging | Missing | Choose service with operator |
 
 ### Product decisions still open
 
@@ -196,4 +200,4 @@ when its evidence exists. "Built" and "tested locally" are not closure.
 | Monitoring service | No service exists in the repository | Row 16 |
 
 Launch readiness for the five-role subset does not make the platform complete. The PRD's Phases 0–10 are the complete
-scope. Phase 6 (bylaw editor and linter), Phase 7 (legal review) and Phase 9 (updates) are largely Missing above.
+scope. Phase 6 (linter and LTO), Phase 7 (legal review) and Phase 9 (updates) are largely Missing above.
