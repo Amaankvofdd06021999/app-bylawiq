@@ -76,3 +76,83 @@ export async function searchFirmKnowledgeAction(raw: unknown): Promise<SearchRes
     return { ok: false, error: errorMessage(e) };
   }
 }
+
+const SaveDocSchema = z.object({
+  id: z.string().uuid().optional(),
+  collection: z.enum(['templates', 'policies', 'guidance', 'legal_tracker']),
+  title: z.string().trim().min(1).max(180),
+  body: z.string().min(1).max(200_000),
+});
+
+export async function saveFirmDocAction(
+  raw: unknown,
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  try {
+    const user = await requireUser();
+    const input = SaveDocSchema.parse(raw);
+
+    const { data: member } = await user.client
+      .from('org_members')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .in('role', ['org_owner', 'org_admin', 'portfolio_manager'])
+      .limit(1)
+      .maybeSingle();
+
+    if (!member) return { ok: false, error: 'You do not have permission to save firm knowledge.' };
+
+    const kindMap: Record<string, 'template' | 'policy' | 'guide' | 'precedent'> = {
+      templates: 'template',
+      policies: 'policy',
+      guidance: 'guide',
+      legal_tracker: 'precedent',
+    };
+
+    const docKind = kindMap[input.collection] || 'guide';
+
+    if (input.id) {
+      const { error } = await user.client
+        .from('firm_documents')
+        .update({
+          title: input.title,
+          description: input.body,
+          doc_kind: docKind,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', input.id)
+        .eq('firm_id', member.org_id);
+      checkDb(error);
+      revalidatePath('/workspace');
+      return { ok: true, id: input.id };
+    }
+
+    const { data, error } = await user.client.rpc('publish_firm_document', {
+      p_firm: member.org_id,
+      p_title: input.title,
+      p_kind: docKind,
+      p_text: input.body,
+    });
+    checkDb(error);
+    revalidatePath('/workspace');
+    return { ok: true, id: z.uuid().parse(data) };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+export async function deleteFirmDocAction(raw: {
+  id: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const user = await requireUser();
+    const { id } = z.object({ id: z.uuid() }).parse(raw);
+    const { error } = await user.client.from('firm_documents').delete().eq('id', id);
+    checkDb(error);
+    revalidatePath('/workspace');
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+

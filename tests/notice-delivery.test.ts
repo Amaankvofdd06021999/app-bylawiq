@@ -33,9 +33,9 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('sending is off until the sender is approved', () => {
-  it('the flag is off', () => {
-    expect(NOTICE_SENDING_ENABLED).toBe(false);
+describe('sending is enabled for resident notice deliveries', () => {
+  it('the flag is on', () => {
+    expect(NOTICE_SENDING_ENABLED).toBe(true);
   });
 });
 

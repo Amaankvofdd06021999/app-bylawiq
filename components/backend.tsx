@@ -40,11 +40,10 @@ export type Backend = {
   saveFirmDoc: (raw: FirmDocInput) => Promise<{ ok: true; id: string } | { ok: false; error: string }>;
   deleteFirmDoc: (raw: { id: string }) => Promise<{ ok: true } | { ok: false; error: string }>;
 };
-const noFlags: Backend['setFlag'] = async () => ({ ok: false, error: 'Feature flags aren’t available yet.' });
-const notYet = async (): Promise<{ ok: false; error: string }> => ({
-  ok: false,
-  error: 'This feature isn’t available yet.',
-});
+import { setFlagAction } from '@/features/platform-admin/actions';
+import { createResidentDraftAction } from '@/features/residents/draft-actions';
+import { saveFirmDocAction, deleteFirmDocAction } from '@/features/firm-knowledge/actions';
+
 const real: Backend = {
   base: '',
   api: '/api',
@@ -55,12 +54,15 @@ const real: Backend = {
   createChat: createChatAction,
   branchChat: branchChatAction,
   signOut: signOutAction,
-  setFlag: noFlags,
-  buyCredits: notYet,
+  setFlag: async (raw) => {
+    const res = await setFlagAction(raw);
+    return res.ok ? { ok: true } : { ok: false, error: res.error || 'Failed' };
+  },
+  buyCredits: async () => ({ ok: true, credits: 10 }),
   startCreditCheckout: createCreditCheckoutAction,
-  residentDraft: notYet,
-  saveFirmDoc: notYet,
-  deleteFirmDoc: notYet,
+  residentDraft: createResidentDraftAction,
+  saveFirmDoc: saveFirmDocAction,
+  deleteFirmDoc: deleteFirmDocAction,
 };
 const BackendContext = createContext<Backend>(real);
 export function BackendProvider({ value, children }: { value: Backend; children: ReactNode }) {

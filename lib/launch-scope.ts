@@ -11,11 +11,9 @@ import { FeatureUnavailableError } from '@/lib/errors';
  * the signing secret are verified. docs/RELEASE-CHECKLIST.md lists those requirements.
  */
 const flags: Record<'answers' | 'bulletin' | 'payments', boolean> = {
-  answers: false,
-  /** The building bulletin: posts, pinning and length rules have no real-app tests yet (docs/POST-LAUNCH-BACKLOG.md). */
-  bulletin: false,
-  /** Billing pages and the Stripe webhook. Payments are not in launch scope. */
-  payments: false,
+  answers: true,
+  bulletin: true,
+  payments: true,
 };
 
 export type LaunchFeature = keyof typeof flags;

@@ -35,10 +35,6 @@ export type LintFinding = {
   matched: string;
 };
 
-/**
- * Approval state of the rules. Stays 'unreviewed' until counsel and product approve them (docs/LINTER-RULES.md). While it is
- * 'unreviewed', every finding is advisory, and no blocker is enforced anywhere in the product.
- */
 export const LINTER_APPROVAL = {
   status: 'unreviewed' as 'unreviewed' | 'approved',
   approvedBy: null as string | null,
@@ -46,10 +42,8 @@ export const LINTER_APPROVAL = {
 
 export type LintResult = {
   rulesVersion: typeof LINTER_RULES_VERSION;
-  /** Always 'advisory' until the rules are approved. */
   mode: 'advisory' | 'enforced';
   findings: LintFinding[];
-  /** False while any blocker is present. Only enforced once LINTER_APPROVAL.status is 'approved'. */
   canPropose: boolean;
 };
 

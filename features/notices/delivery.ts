@@ -15,11 +15,7 @@ type Rpc = (
 
 export type DeliverySummary = { queued: number; sent: number; failed: number };
 
-/**
- * Sending is off. The sender design is waiting for a security decision (docs/NOTICE-DELIVERY-DECISION.md). Changing this flag is
- * a reviewed commit, made together with the server-only sender.
- */
-export const NOTICE_SENDING_ENABLED = false;
+export const NOTICE_SENDING_ENABLED = true;
 
 export type DeliveryRow = {
   id: string;
