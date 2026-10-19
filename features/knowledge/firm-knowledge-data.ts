@@ -74,23 +74,17 @@ export async function firmKnowledgeData(
       {
         id: 'templates',
         label: 'Notice and bylaw templates',
-        docs: allDocs
-          .filter((d) => d.doc_kind === 'template')
-          .map((d) => formatDoc(d, 'templates')),
+        docs: allDocs.filter((d) => d.doc_kind === 'template').map((d) => formatDoc(d, 'templates')),
       },
       {
         id: 'policies',
         label: 'Internal policy',
-        docs: allDocs
-          .filter((d) => d.doc_kind === 'policy')
-          .map((d) => formatDoc(d, 'policies')),
+        docs: allDocs.filter((d) => d.doc_kind === 'policy').map((d) => formatDoc(d, 'policies')),
       },
       {
         id: 'guidance',
         label: 'Staff guidance',
-        docs: allDocs
-          .filter((d) => d.doc_kind === 'guide')
-          .map((d) => formatDoc(d, 'guidance')),
+        docs: allDocs.filter((d) => d.doc_kind === 'guide').map((d) => formatDoc(d, 'guidance')),
       },
       {
         id: 'legal_tracker',

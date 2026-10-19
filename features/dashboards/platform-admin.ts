@@ -1,6 +1,5 @@
 import 'server-only';
 import type { SessionUser } from '@/lib/auth/guards';
-import { checkDb } from '@/lib/errors';
 import type { PlatformAdminData } from './types';
 
 export async function isPlatformAdminUser(user: SessionUser): Promise<boolean> {

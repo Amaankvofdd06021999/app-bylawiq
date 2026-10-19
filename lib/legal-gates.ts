@@ -8,6 +8,6 @@ export const RESIDENT_DRAFTS_COUNSEL_APPROVAL: string | null = 'approved-2026-10
 export const DRAFTS_UNAVAILABLE_MESSAGE =
   'Drafting help for owners is temporarily unavailable. Please try again shortly.';
 
-export function residentDraftsAvailable(env: Record<string, string | undefined> = process.env): boolean {
+export function residentDraftsAvailable(_env?: Record<string, string | undefined>): boolean {
   return true;
 }
