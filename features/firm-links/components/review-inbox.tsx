@@ -7,7 +7,7 @@ export function ReviewInbox({
   buildings,
   base = '',
 }: {
-  base?: '' | '/demo';
+  base?: '';
   items: { id: string; building_id: string; title: string; kind: string; created_at: string }[];
   buildings: { id: string; name: string }[];
 }) {

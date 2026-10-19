@@ -11,10 +11,10 @@ import { signOutAction } from '@/features/auth/actions';
 import type { DraftInput, DraftResult } from '@/features/residents/types';
 import type { FirmDocInput } from '@/features/knowledge/types';
 import { createCreditCheckoutAction } from '@/features/residents/checkout-actions';
-/** The seam between screens and whatever serves them: the real server actions and API, or the demo's mock ones. */
+/** The client-side seam between screens and server actions/API. */
 export type Backend = {
-  base: '' | '/demo'; // prefix for app links: `${base}/b/${id}/${section}`, `${base}/workspace`
-  api: '/api' | '/api/demo'; // prefix for upload, sources, download, export, chat
+  base: ''; // prefix for app links: `${base}/b/${id}/${section}`, `${base}/workspace`
+  api: '/api'; // prefix for upload, sources, download, export, chat
   mutate: typeof mutateAction;
   createFirmCode: typeof createFirmCodeAction;
   revokeFirmLink: typeof revokeFirmLinkAction;
@@ -22,13 +22,10 @@ export type Backend = {
   createChat: typeof createChatAction;
   branchChat: typeof branchChatAction;
   signOut: () => Promise<unknown>;
-  /** Platform feature flags. Demo only for now: the real app has no flags table, so the default says so. */
   setFlag: (raw: {
     flag: 'residentAi';
     enabled: boolean;
   }) => Promise<{ ok: true } | { ok: false; error: string }>;
-  /** Resident credits and drafting tools, and firm knowledge editing. Demo only for now: the real app has no
-   * payments, resident drafting or firm knowledge tables yet, so each default says the feature isn't available. */
   buyCredits: (raw: {
     buildingId: string;
   }) => Promise<{ ok: true; credits: number } | { ok: false; error: string }>;

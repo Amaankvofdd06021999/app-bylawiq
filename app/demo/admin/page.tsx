@@ -1,7 +1,0 @@
-import { demoSource } from '@/mock/data-source';
-import { PlatformAdminScreen } from '@/app/_screens/platform-admin';
-export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Platform overview' };
-export default async function DemoAdminPage() {
-  return PlatformAdminScreen({ source: await demoSource() });
-}

@@ -13,18 +13,13 @@ import type { ResidentData } from '@/features/residents/types';
 import type { FirmKnowledgeData } from '@/features/knowledge/types';
 
 /**
- * The read side of the app: everything a screen needs, already scoped to the signed-in person.
+ * The read side of the app: everything a screen needs, scoped to the signed-in person.
  *
- * There are two implementations:
- *  - `data/supabase.ts` — the real app. Every read runs as the authenticated user, behind Row Level Security.
- *  - `mock/data-source.ts` — the interactive demo at `/demo`, reading an in-memory store per browser session.
+ * Implementation:
+ *  - `data/supabase.ts` — every read runs as the authenticated user, behind Row Level Security (RLS).
  *
- * Screens (`app/_screens/*`) only ever talk to this interface, so they are written once and render identically
- * for both. The write side is the client-side `Backend` in `components/backend.tsx`.
- *
- * Methods marked "optional feature" return `null` when the source doesn't support that feature yet. The real
- * app has no tables for role dashboards, resident tools or firm knowledge so far (see docs/HANDOFF.md), so
- * `data/supabase.ts` returns `null` for them and the screens fall back to the plain views.
+ * Screens (`app/_screens/*`) read through this interface and render live data.
+ * The write side is the client-side `Backend` in `components/backend.tsx`.
  *
  * Every method throws `UnauthorizedError` when nobody is signed in (screens send them to `signInPath`), and
  * `NotFoundError` for anything outside the person's scope — never another building's data (AGENTS.md §0).
@@ -72,7 +67,7 @@ export interface DataSource {
   firmKnowledge(buildingId: string): Promise<FirmKnowledgeData | null>;
 }
 
-export type AppBase = '' | '/demo';
+export type AppBase = '';
 export type Layer = Source['kind'];
 
 export type WorkspaceData = {

@@ -10,9 +10,8 @@ import {
   unlinkAccountAction,
   buildingAccountLinksAction,
 } from './invite';
-// Account linking runs against real accounts, so the demo (base '/demo') shows neither of these.
 export function LinkedAccounts() {
-  return useBackend().base === '/demo' ? null : <AccountSwitcher />;
+  return <AccountSwitcher />;
 }
 function AccountSwitcher() {
   const { base } = useBackend();
@@ -126,9 +125,8 @@ type AccountLink = {
   expires_at: string;
   revoked_at: string | null;
 };
-/** Org admin view of links involving this organization's accounts (PRD 3.3: visible to admins and revocable). */
 export function OrgAccountLinks({ buildingId }: { buildingId: string }) {
-  return useBackend().base === '/demo' ? null : <OrgAccountLinkList buildingId={buildingId} />;
+  return <OrgAccountLinkList buildingId={buildingId} />;
 }
 function OrgAccountLinkList({ buildingId }: { buildingId: string }) {
   const [links, setLinks] = useState<AccountLink[]>([]),

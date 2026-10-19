@@ -63,7 +63,7 @@ export function appUrl() {
     (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000')
   );
 }
-/** The interactive demo (`/demo`, `/api/demo`) exists only when DEMO_MODE is exactly `on`; otherwise every demo route is a 404. */
+/** The interactive demo is retired in production. */
 export function demoEnabled() {
-  return process.env.DEMO_MODE === 'on';
+  return false;
 }
