@@ -1,6 +1,7 @@
 'use client';
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Building2,
   Coins,
@@ -24,6 +25,13 @@ const sections = [
   ['flags', 'Feature flags'],
   ['audit', 'Audit'],
 ] as const;
+
+const adminSubPages = [
+  ['/admin/buildings', 'Buildings'],
+  ['/admin/chat-analytics', 'AI analytics'],
+  ['/admin/platform', 'System console'],
+  ['/admin/team', 'Team'],
+] as const;
 /** The platform admin works outside any building, so there is no building sidebar: a slim top bar with the
  * brand, in-page sections and sign out. */
 export function PlatformFrame({ name, children }: { name: string; children: ReactNode }) {
@@ -45,6 +53,21 @@ export function PlatformFrame({ name, children }: { name: string; children: Reac
             <a key={id} href={'#' + id}>
               {label}
             </a>
+          ))}
+          <span
+            className="admin-nav-divider"
+            style={{
+              borderLeft: '1px solid var(--border)',
+              margin: '0 4px',
+              height: '14px',
+              alignSelf: 'center',
+            }}
+            aria-hidden
+          />
+          {adminSubPages.map(([href, label]) => (
+            <Link key={href} href={base + href}>
+              {label}
+            </Link>
           ))}
         </nav>
         <div className="admin-user">

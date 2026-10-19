@@ -66,14 +66,13 @@ const tabs = [
   ['documents', 'Documents', Files, 'vault.read'],
   ['updates', 'Updates', Bell, 'chat.use'],
 ] as const;
-// Demo only: a paying resident's own navigation (`residentNav`), replacing the staff list above. Paid tools need the
-// demo-only `chat.resident` (dropped while resident AI is off); the real app never passes `residentNav`.
+// Resident navigation (`residentNav`), providing direct access to self-service tools for building residents.
 const residentNavigation = [
   ['home', 'Home', House, ''],
-  ['ask', 'Ask BylawIQ', MessageSquare, 'chat.resident'],
-  ['explainers', 'Explainers', Lightbulb, 'chat.resident'],
-  ['draft', 'Draft a notice', FilePen, 'chat.resident'],
-  ['reply', 'Reply to a letter', Reply, 'chat.resident'],
+  ['ask', 'Ask BylawIQ', MessageSquare, 'building.read'],
+  ['explainers', 'Explainers', Lightbulb, 'building.read'],
+  ['draft', 'Draft a notice', FilePen, 'building.read'],
+  ['reply', 'Reply to a letter', Reply, 'building.read'],
   ['my-drafts', 'My drafts', FolderOpen, ''],
   ['credits', 'Credits', Coins, ''],
   ['documents', 'Documents', Files, 'vault.read'],
@@ -110,7 +109,7 @@ export function Shell({
   const can = (p: string) => !permissions || permissions.includes(p);
   const active = buildings.find((b) => b.id === activeId) || buildings[0];
   // Building-scoped links (Ask, Updates, Settings…) need a building to point at; with none, only the overview shows.
-  const canAsk = active != null && (can('chat.use') || can('chat.resident'));
+  const canAsk = active != null && (can('chat.use') || can('chat.resident') || resident);
   const items = active ? visibleNav(permissions, firmKnowledge) : [],
     residentItems = resident ? residentNav(permissions) : [],
     bar: (readonly [string, string, typeof House, string])[] = resident
