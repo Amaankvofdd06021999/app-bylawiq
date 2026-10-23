@@ -1,12 +1,8 @@
 import 'server-only';
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
-import { pdfText } from '@/lib/ai/pdf-text';
-import mammoth from 'mammoth';
 import { adminDb } from '@/lib/supabase/admin';
-import { embeddings } from '@/lib/ai/embeddings';
 import { structuralChunks, contextualText } from '@/lib/ai/chunking';
-import { scrapePage } from '@/lib/security/web-source';
 import { checkDb, AppError } from '@/lib/errors';
 import { NonRetriableError } from 'inngest';
 import { inngest } from './client';
@@ -87,7 +83,10 @@ export const ingestDocument = inngest.createFunction(
       const parsed = await step.run('scan-and-parse', async () => {
         try {
           await status('parsing');
-          if (document.source_url) return scrapePage(document.source_url);
+          if (document.source_url) {
+            const { scrapePage } = await import('@/lib/security/web-source');
+            return scrapePage(document.source_url);
+          }
           if (!document.storage_path) throw new AppError('file_missing', 'The uploaded file is unavailable.');
           const { data, error } = await db.storage.from('vault').download(document.storage_path);
           checkDb(error);
@@ -109,7 +108,11 @@ export const ingestDocument = inngest.createFunction(
           await status('parsing');
           const ext = document.storage_path.split('.').pop();
           if (ext === 'txt' || ext === 'md') return bytes.toString('utf8');
-          if (ext === 'docx') return (await mammoth.extractRawText({ buffer: bytes })).value;
+          if (ext === 'docx') {
+            const mammoth = (await import('mammoth')).default;
+            return (await mammoth.extractRawText({ buffer: bytes })).value;
+          }
+          const { pdfText } = await import('@/lib/ai/pdf-text');
           const text = await pdfText(new Uint8Array(bytes));
           assertTextLayer(text);
           return text;
@@ -144,6 +147,7 @@ export const ingestDocument = inngest.createFunction(
       for (let i = 0; i < sections.length; i += 64) {
         await step.run('embed-batch-' + i, async () => {
           const slice = sections.slice(i, i + 64);
+          const { embeddings } = await import('@/lib/ai/embeddings');
           const vectors = await embeddings(
             slice.map((s) => contextualText(document.title, document.effective_date, s)),
             'document',
