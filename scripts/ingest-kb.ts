@@ -29,7 +29,7 @@
  * never deleted: an item leaving a build is not a repeal, and deciding what it means is a person's
  * job (the same rule kb/tools/import-bclaws.ts follows for sections that disappear from BC Laws).
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve, join } from 'node:path';
 import { z } from 'zod';
@@ -158,13 +158,36 @@ function readDist(dir: string): { manifest: z.infer<typeof ManifestSchema>; item
  * legal chunk and a user's query land in the same space. Batched, because the whole corpus is a few
  * thousand chunks and the service limits request size.
  */
+const CACHE_FILE = resolve('kb', '.embeddings-cache.json');
+
+function loadCache(): Record<string, number[]> {
+  try {
+    if (existsSync(CACHE_FILE)) return JSON.parse(readFileSync(CACHE_FILE, 'utf8'));
+  } catch {}
+  return {};
+}
+
+function saveCache(cache: Record<string, number[]>) {
+  try {
+    writeFileSync(CACHE_FILE, JSON.stringify(cache));
+  } catch (e) {
+    console.error('Failed to save embedding cache:', e);
+  }
+}
+
 async function embed(texts: string[], apiKey: string): Promise<number[][]> {
-  const out: number[][] = [];
-  for (let i = 0; i < texts.length; i += 64) {
-    const batch = texts.slice(i, i + 64);
+  const cache = loadCache();
+  const missing = texts.filter((t) => !cache[t]);
+  if (missing.length < texts.length) {
+    console.log(`  Loaded ${texts.length - missing.length}/${texts.length} chunk embeddings from local cache.`);
+  }
+
+  const BATCH_SIZE = 20;
+  for (let i = 0; i < missing.length; i += BATCH_SIZE) {
+    const batch = missing.slice(i, i + BATCH_SIZE);
     let attempts = 0;
     let response: Response | null = null;
-    while (attempts < 6) {
+    while (attempts < 10) {
       response = await fetch('https://api.voyageai.com/v1/embeddings', {
         method: 'POST',
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -178,9 +201,9 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
       });
       if (response.status === 429) {
         attempts++;
-        const retryAfter = Number(response.headers.get('retry-after') || 20);
-        const waitMs = Math.max(retryAfter * 1000, 20000);
-        process.stdout.write(`\n  Rate limited (429). Pausing for ${waitMs / 1000}s (attempt ${attempts}/6)... `);
+        const retryAfter = Number(response.headers.get('retry-after') || 30);
+        const waitMs = Math.max(retryAfter * 1000, 30000);
+        process.stdout.write(`\n  Rate limited (429). Pausing for ${waitMs / 1000}s (attempt ${attempts}/10)... `);
         await new Promise((r) => setTimeout(r, waitMs));
         continue;
       }
@@ -188,6 +211,7 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
     }
     if (!response || !response.ok)
       throw new Error(`embedding request failed: HTTP ${response?.status}. Nothing further was written.`);
+
 
     const body = z
       .object({
@@ -198,11 +222,16 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
       .parse(await response.json());
     if (body.data.length !== batch.length)
       throw new Error('the embedding service returned an incomplete batch. Nothing further was written.');
-    out.push(...body.data.sort((a, b) => a.index - b.index).map((d) => d.embedding));
-    process.stdout.write(`\r  embedded ${out.length}/${texts.length} chunk(s)`);
+    
+    for (const d of body.data) {
+      cache[batch[d.index]] = d.embedding;
+    }
+    saveCache(cache);
+    process.stdout.write(`\r  embedded ${Object.keys(cache).length}/${texts.length} chunk(s)`);
+    await new Promise((r) => setTimeout(r, 2000));
   }
   if (texts.length) process.stdout.write('\n');
-  return out;
+  return texts.map((t) => cache[t]);
 }
 
 async function apply(items: Item[], kbVersion: string): Promise<void> {
