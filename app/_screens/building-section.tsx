@@ -107,8 +107,6 @@ export async function BuildingSectionScreen({
       return <Shell {...shell}>{view}</Shell>;
     }
     if (section !== 'home') notFound();
-    // The building home is the single-building view; a multi-building person's home is the overview.
-    if (!state.profile.bound_building_id) redirect(source.base + '/workspace');
     const [dashboard, status] = await Promise.all([
       source.buildingDashboard(buildingId),
       source.firmLinkStatus(buildingId),

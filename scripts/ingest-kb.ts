@@ -162,19 +162,33 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
   const out: number[][] = [];
   for (let i = 0; i < texts.length; i += 64) {
     const batch = texts.slice(i, i + 64);
-    const response = await fetch('https://api.voyageai.com/v1/embeddings', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        input: batch,
-        model: EMBEDDING_MODEL,
-        input_type: 'document',
-        truncation: false,
-      }),
-      signal: AbortSignal.timeout(120_000),
-    });
-    if (!response.ok)
-      throw new Error(`embedding request failed: HTTP ${response.status}. Nothing further was written.`);
+    let attempts = 0;
+    let response: Response | null = null;
+    while (attempts < 6) {
+      response = await fetch('https://api.voyageai.com/v1/embeddings', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: batch,
+          model: EMBEDDING_MODEL,
+          input_type: 'document',
+          truncation: false,
+        }),
+        signal: AbortSignal.timeout(120_000),
+      });
+      if (response.status === 429) {
+        attempts++;
+        const retryAfter = Number(response.headers.get('retry-after') || 20);
+        const waitMs = Math.max(retryAfter * 1000, 20000);
+        process.stdout.write(`\n  Rate limited (429). Pausing for ${waitMs / 1000}s (attempt ${attempts}/6)... `);
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+      break;
+    }
+    if (!response || !response.ok)
+      throw new Error(`embedding request failed: HTTP ${response?.status}. Nothing further was written.`);
+
     const body = z
       .object({
         data: z.array(
