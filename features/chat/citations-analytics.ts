@@ -159,7 +159,7 @@ export async function getBuildingChatAnalytics(buildingId: string, days: number 
 
   const { data: sessions, error: sessionsError } = await db
     .from('resident_audit_log')
-    .select('*')
+    .select('id, user_id, building_id, action, details, created_at')
     .eq('building_id', buildingId)
     .eq('action', 'resident_answer')
     .gte('created_at', startDate.toISOString());
@@ -168,7 +168,7 @@ export async function getBuildingChatAnalytics(buildingId: string, days: number 
 
   const { data: failed, error: failedError } = await db
     .from('resident_audit_log')
-    .select('*')
+    .select('id, user_id, building_id, action, details, created_at')
     .eq('building_id', buildingId)
     .eq('action', 'verification_failed')
     .gte('created_at', startDate.toISOString());
@@ -177,7 +177,7 @@ export async function getBuildingChatAnalytics(buildingId: string, days: number 
 
   const { data: rateLimited, error: rateLimitError } = await db
     .from('resident_audit_log')
-    .select('*')
+    .select('id, user_id, building_id, action, details, created_at')
     .eq('building_id', buildingId)
     .eq('action', 'rate_limit_hit')
     .gte('created_at', startDate.toISOString());
@@ -241,7 +241,7 @@ export async function getFirmChatAnalytics(orgId: string, days: number = 30) {
   // Get sessions across all buildings
   const { data: sessions, error: sessionsError } = await db
     .from('resident_audit_log')
-    .select('*')
+    .select('id, user_id, building_id, action, details, created_at')
     .in('building_id', buildingIds)
     .eq('action', 'resident_answer')
     .gte('created_at', startDate.toISOString());
@@ -250,7 +250,7 @@ export async function getFirmChatAnalytics(orgId: string, days: number = 30) {
 
   const { data: failed, error: failedError } = await db
     .from('resident_audit_log')
-    .select('*')
+    .select('id, user_id, building_id, action, details, created_at')
     .in('building_id', buildingIds)
     .eq('action', 'verification_failed')
     .gte('created_at', startDate.toISOString());
@@ -283,7 +283,7 @@ export async function getPlatformChatAnalytics(days: number = 30) {
 
   const { data: sessions, error: sessionsError } = await db
     .from('resident_audit_log')
-    .select('*')
+    .select('id, user_id, building_id, action, details, created_at')
     .eq('action', 'resident_answer')
     .gte('created_at', startDate.toISOString());
 
@@ -291,7 +291,7 @@ export async function getPlatformChatAnalytics(days: number = 30) {
 
   const { data: failed, error: failedError } = await db
     .from('resident_audit_log')
-    .select('*')
+    .select('id, user_id, building_id, action, details, created_at')
     .eq('action', 'verification_failed')
     .gte('created_at', startDate.toISOString());
 

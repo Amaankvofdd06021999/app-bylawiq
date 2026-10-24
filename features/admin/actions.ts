@@ -1,4 +1,5 @@
 'use server';
+import { createHash, randomBytes } from 'node:crypto';
 import { requireUser } from '@/lib/auth/guards';
 import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
@@ -28,43 +29,35 @@ export async function inviteTeamMemberAction(raw: unknown) {
       throw new ForbiddenError('Only org owners and admins can invite team members');
     }
 
-    // Check if user is already a member
-    const { data: existingMember } = await db
-      .from('org_members')
-      .select('id')
-      .eq('org_id', orgMember.org_id)
-      .match({ email: input.email })
-      .single();
-
-    if (existingMember) {
-      return { ok: false, error: 'User is already a member of this organization' };
+    const targetRole = input.role === 'portfolio_assistant' ? 'portfolio_manager' : input.role;
+    if (targetRole !== 'org_admin' && targetRole !== 'portfolio_manager') {
+      return { ok: false, error: 'Only org_admin and portfolio_manager roles can be invited to a firm' };
     }
 
-    // Create invitation
-    const { data: invitation, error: inviteError } = await db
-      .from('invitations')
-      .insert({
-        org_id: orgMember.org_id,
-        email: input.email,
-        role: input.role,
-        invited_by: user.id,
-        status: 'pending',
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      })
-      .select('id')
-      .single();
+    const token = randomBytes(24).toString('base64url');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Create firm invitation via canonical database procedure
+    const { data: invitationId, error: inviteError } = await db.rpc('create_firm_invitation', {
+      p_org: orgMember.org_id,
+      p_email: input.email.trim().toLowerCase(),
+      p_role: targetRole,
+      p_token_hash: tokenHash,
+      p_expires: expiresAt,
+    });
 
     checkDb(inviteError);
-    if (!invitation) throw new NotFoundError();
 
     // Send invitation email
     const { data: org } = await db.from('organizations').select('name').eq('id', orgMember.org_id).single();
 
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/workspace?firmInvite=${token}`;
     console.log(
-      `[EMAIL] Team invite: ${input.email} to ${org?.name} org=${orgMember.org_id} code=${invitation.id}`,
+      `[EMAIL] Team invite: ${input.email} to ${org?.name} org=${orgMember.org_id} link=${inviteLink}`,
     );
 
-    return { ok: true, invitationId: invitation.id };
+    return { ok: true, invitationId: String(invitationId) };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }

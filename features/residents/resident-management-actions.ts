@@ -110,10 +110,10 @@ export async function removeResidentAction(raw: unknown) {
       throw new ForbiddenError('Resident not found in this building');
     }
 
-    // Soft delete the membership
+    // Suspend the membership
     const { error: deleteError } = await db
       .from('building_members')
-      .update({ deleted_at: new Date().toISOString() })
+      .update({ status: 'suspended' })
       .eq('id', targetMember.id);
 
     checkDb(deleteError);

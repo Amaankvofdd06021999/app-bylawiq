@@ -28,6 +28,10 @@ Each tracked file deleted in the working tree, with its disposition. "Required" 
 | `features/residents/resident-chat-*.ts`, `resident-chat-gated*.tsx`, `resident-chat-ui.tsx`, `resident-chat-schema.ts` | Resident AI chat. Disabled by decision D5 until counsel approval. Intentional. |
 | `e2e/bulletin.spec.ts`, `e2e/chat-rag.spec.ts` (root `e2e/`) | Duplicates of `tests/e2e`, which had `fixme` markers. Intentional. |
 | `supabase/tests/bulletin_rls.test.sql`, `rls_dashboards.test.sql`, `rls_firm_knowledge.test.sql`, `rls_session_role.test.sql` | Never valid: non-UUID fixtures and invalid SQL. Intentional. Equivalent coverage must be re-written (item 4). |
+| `features/admin/firm-onboarding-actions.ts` | Dead prototype using non-existent `building_links`. Canonical workflow lives in `features/platform-admin/actions.ts`. Intentional. |
+| `features/documents/document-approval-queries.ts`, `document-approval-schema.ts` | Orphaned prototypes referencing obsolete schema. Canonical review queries live in `features/workspace/actions.ts`. Intentional. |
+| `features/auth/actions-role-switch.ts` | Unused action attempting client session refresh. Role scoping is routed natively via URL (`/b/[id]`). Intentional. |
+| `features/residents/components/legal-disclaimer.tsx` | Duplicate unused component. Live screens use `legal-banner.tsx`. Intentional. |
 | `test/setup.ts` | No config references it; Vitest uses `@testing-library/jest-dom/vitest`. Intentional. |
 
 ## Restored in this review

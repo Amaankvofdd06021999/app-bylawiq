@@ -1,4 +1,4 @@
-﻿import 'server-only';
+import 'server-only';
 import { requireUser } from '@/lib/auth/guards';
 import { checkDb } from '@/lib/errors';
 import { directoryFor } from '@/lib/directory';
@@ -65,9 +65,9 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
 export async function getPendingInvitations(): Promise<PendingInvitation[]> {
   const db = await createClient();
 
-  // invitations has no status column: pending means not accepted, not revoked, and not yet expired.
+  // firm_invitations has no status column: pending means not accepted, not revoked, and not yet expired.
   const { data, error } = await db
-    .from('invitations')
+    .from('firm_invitations')
     .select('id, email, role, created_at, expires_at')
     .is('accepted_at', null)
     .is('revoked_at', null)

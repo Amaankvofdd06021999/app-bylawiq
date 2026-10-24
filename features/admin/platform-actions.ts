@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin';
 import { directoryFor } from '@/lib/directory';
-import { checkDb, ForbiddenError, errorMessage, AppError } from '@/lib/errors';
+import { checkDb, ForbiddenError, errorMessage, AppError, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 import {
   getAllBuildings,
@@ -138,11 +138,14 @@ export async function breakGlassReadAction(raw: unknown) {
     // Read document
     const { data: document, error: readError } = await db
       .from('documents')
-      .select('*')
+      .select('id, building_id, title, type, status, storage_path, created_at')
       .eq('id', input.documentId)
-      .single();
+      .maybeSingle();
 
     checkDb(readError);
+    if (!document) {
+      throw new NotFoundError('Document not found or inaccessible under current security scope');
+    }
 
     // Log high-audit break-glass access
     await db.from('platform_admin_audit').insert({

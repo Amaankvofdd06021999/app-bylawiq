@@ -4,6 +4,9 @@ import { requireUser, requirePermission } from '@/lib/auth/guards';
 import { ForbiddenError } from '@/lib/errors';
 import { getNoticeForDelivery, listNoticeDeliveries } from '@/features/notices/delivery-queries';
 import { NoticeDeliveryPanel } from '@/features/notices/components/delivery-panel';
+import { Shell } from '@/components/shell';
+import { openBuilding } from '@/app/_screens/guard';
+import { supabaseSource } from '@/data/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,19 +25,34 @@ export default async function NoticeDeliveryPage({
     throw e;
   }
 
+  const source = supabaseSource();
+  const state = await openBuilding(source, buildingId);
+
   const notice = await getNoticeForDelivery(user, buildingId, noticeId);
   if (!notice) notFound();
   const deliveries = await listNoticeDeliveries(user, noticeId);
 
   return (
-    <main className="workspace-page">
-      <PageHeading title={notice.title} description={`Notice status: ${notice.status.replace(/_/g, ' ')}`} />
-      <NoticeDeliveryPanel
-        buildingId={buildingId}
-        noticeId={noticeId}
-        noticeStatus={notice.status}
-        deliveries={deliveries}
-      />
-    </main>
+    <Shell
+      profile={state.profile}
+      buildings={state.buildings}
+      activeId={buildingId}
+      permissions={state.permissions}
+      unreadUpdates={state.unreadUpdates}
+      {...state.nav}
+    >
+      <main className="workspace-page" style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
+        <PageHeading
+          title={notice.title}
+          description={`Notice status: ${notice.status.replace(/_/g, ' ')}`}
+        />
+        <NoticeDeliveryPanel
+          buildingId={buildingId}
+          noticeId={noticeId}
+          noticeStatus={notice.status}
+          deliveries={deliveries}
+        />
+      </main>
+    </Shell>
   );
 }

@@ -63,7 +63,7 @@ export async function updateSeatsAction(raw: unknown) {
     // Update seats
     const { error: updateError } = await db
       .from('billing_accounts')
-      .update({ seats: input.seats, updated_at: new Date().toISOString() })
+      .update({ seats: input.seats })
       .eq('org_id', orgMember.org_id);
 
     checkDb(updateError);
