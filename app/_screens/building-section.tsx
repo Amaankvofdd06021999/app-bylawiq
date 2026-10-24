@@ -73,7 +73,16 @@ export async function BuildingSectionScreen({
 }: {
   source: DataSource;
   params: Promise<{ buildingId: string; section: string }>;
-  searchParams: Promise<{ agent?: string; scope?: string; tab?: string; collection?: string }>;
+  searchParams: Promise<{
+    agent?: string;
+    scope?: string;
+    tab?: string;
+    collection?: string;
+    draft?: string;
+    kind?: string;
+    draftTitle?: string;
+    draftBody?: string;
+  }>;
 }) {
   const { buildingId, section } = await params;
   if (!isSection(section)) notFound();
@@ -130,7 +139,7 @@ export async function BuildingSectionScreen({
     );
   }
 
-  const { agent, scope, tab, collection } = await searchParams;
+  const { agent, scope, tab, collection, draft, kind, draftTitle, draftBody } = await searchParams;
   // The Firm tab: only for staff of the firm this building is linked to. Anyone else asking for it gets the
   // building tab, with no hint that firm knowledge exists.
   const firmTab = section === 'knowledge' && state.nav.firmKnowledge;
@@ -183,6 +192,15 @@ export async function BuildingSectionScreen({
         rows={related[section] || []}
         related={related}
         firmLinked={firm?.status === 'active'}
+        initialDraft={
+          section === 'notices' && (draft || draftTitle)
+            ? {
+                title: typeof draftTitle === 'string' ? draftTitle : undefined,
+                kind: typeof kind === 'string' ? kind : undefined,
+                body: typeof draftBody === 'string' ? draftBody : undefined,
+              }
+            : undefined
+        }
         accountLinks={
           section === 'members' && state.permissions.includes('org.manage') ? (
             <OrgAccountLinks buildingId={buildingId} />

@@ -29,6 +29,7 @@ export async function POST(req: Request) {
             .min(1)
             .max(1),
         }),
+        layers: z.array(z.enum(['building', 'firm', 'legal', 'staff', 'financial'])).optional(),
       })
       .parse(await req.json());
     const { data, error } = await user.client
@@ -97,7 +98,7 @@ export async function POST(req: Request) {
       }));
     if (!run.data) throw new NotFoundError();
     const runId = run.data.id;
-    const work = generateAnswer(user, chat, runId, v.message.parts[0].text, priorMessages);
+    const work = generateAnswer(user, chat, runId, v.message.parts[0].text, priorMessages, v.layers);
     after(async () => {
       await work;
       // Deduct wallet credits after chat completes (residents only)

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -51,6 +51,7 @@ export function Resources({
   firmLinked = false,
   linkedMember = false,
   accountLinks,
+  initialDraft,
 }: {
   section: string;
   building: Building;
@@ -62,13 +63,25 @@ export function Resources({
   linkedMember?: boolean;
   /** Members section: the organization's account-link panel, when the page offers it. */
   accountLinks?: ReactNode;
+  initialDraft?: { title?: string; kind?: string; body?: string };
 }) {
   const router = useRouter(),
     backend = useBackend();
   const [query, setQuery] = useState(''),
     [filter, setFilter] = useState('all'),
     [form, setForm] = useState<FormConfig | null>(null),
-    [selected, setSelected] = useState<Row | null>(null),
+    [selected, setSelected] = useState<Row | null>(() => {
+      if (section === 'notices' && initialDraft) {
+        return {
+          id: '',
+          title: initialDraft.title || 'Notice under s. 135',
+          body_md: initialDraft.body || '',
+          kind: initialDraft.kind || 's135_notice',
+          status: 'draft',
+        };
+      }
+      return null;
+    }),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [upload, setUpload] = useState(false),

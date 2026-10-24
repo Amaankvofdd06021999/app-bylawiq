@@ -124,8 +124,10 @@ function sourceType(item: Item): string {
       if (item.id.startsWith('bc.bcca.')) return 'bcca_decision';
       if (item.id.startsWith('bc.bcsc.')) return 'bcsc_decision';
       return 'court_decision';
+    case 'topic-guide':
+      return 'topic_guide';
     default:
-      throw new Error(`no legal_sources type for kb type ${item.type}`);
+      return item.type.replace(/-/g, '_');
   }
 }
 
@@ -364,21 +366,21 @@ async function main(): Promise<void> {
   if (!process.env.KB_DIST_DIR) console.warn('KB_DIST_DIR is not set; using kb/dist');
   const { manifest, items } = readDist(distDir);
 
-  const law = items.filter((i) => i.layer === 'law');
-  const skipped = items.filter((i) => i.layer !== 'law');
+  const inScope = items.filter((i) => i.layer === 'law' || i.layer === 'topic');
+  const skipped = items.filter((i) => i.layer !== 'law' && i.layer !== 'topic');
 
   console.log(`kb ${manifest.kb_version}, built ${manifest.built_at}, ${manifest.status_filter}`);
   console.log(`corpus ${manifest.corpus_sha256.slice(0, 12)} from ${distDir}\n`);
   console.log(
-    `Would load ${law.length} law item(s) into legal_sources and ${law.reduce((n, i) => n + i.chunks.length, 0)} chunk(s) into legal_chunks:`,
+    `Would load ${inScope.length} legal & topic item(s) into legal_sources and ${inScope.reduce((n, i) => n + i.chunks.length, 0)} chunk(s) into legal_chunks:`,
   );
-  for (const i of law) {
+  for (const i of inScope) {
     console.log(
       `  ${i.id}  [${sourceType(i)}]  ${i.citation ?? ''}  ${i.chunks.length} chunk(s)  ${i.status}`,
     );
   }
   if (skipped.length) {
-    console.log(`\nSkipping ${skipped.length} non-law item(s) (no target table yet):`);
+    console.log(`\nSkipping ${skipped.length} non-legal item(s) (no target table yet):`);
     for (const i of skipped) console.log(`  ${i.id}  [${i.layer}/${i.type}]`);
   }
 
@@ -396,7 +398,7 @@ async function main(): Promise<void> {
       throw new Error('refusing to load unapproved kb items into a production database.');
     }
   }
-  await apply(law, manifest.kb_version);
+  await apply(inScope, manifest.kb_version);
 }
 
 main().catch((err: unknown) => {

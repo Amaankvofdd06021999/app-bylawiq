@@ -115,7 +115,7 @@ export function supabaseSource(): DataSource {
       return {
         documents,
         chats,
-        availableLayers: ['building', 'legal', 'staff'] as Layer[],
+        availableLayers: (isResident ? ['building', 'legal'] : ['building', 'legal', 'firm']) as Layer[],
         wallet,
         askPaused: false,
         askUnavailable: !launchFeatureEnabled('answers'),
@@ -123,7 +123,7 @@ export function supabaseSource(): DataSource {
     },
 
     async layers() {
-      return ['building', 'legal', 'staff'] as Layer[];
+      return ['building', 'legal', 'firm'] as Layer[];
     },
 
     async firmLinkStatus(buildingId) {

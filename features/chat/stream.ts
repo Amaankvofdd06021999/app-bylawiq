@@ -1,4 +1,4 @@
-﻿import 'server-only';
+import 'server-only';
 import { createHmac } from 'node:crypto';
 import { streamText, Output, UI_MESSAGE_STREAM_HEADERS, type UIMessageChunk } from 'ai';
 import { z } from 'zod';
@@ -23,6 +23,7 @@ export async function generateAnswer(
   runId: string,
   question: string,
   history: { role: 'user' | 'assistant'; text: string }[],
+  layers?: string[],
 ) {
   // Refused before any retrieval or model call. The route refuses first; this keeps the model path closed on its own.
   requireLaunchFeature('answers');
@@ -108,7 +109,7 @@ export async function generateAnswer(
 
     // Step 3: Retrieve with expanded queries
     await progress('Searching the selected sources…');
-    const result = await retrieve(user, chat, expandedQueries[0]); // Use primary query, but expansion helped ranking
+    const result = await retrieve(user, chat, expandedQueries[0], layers); // Use primary query, but expansion helped ranking
     if (abort.signal.aborted) throw new AppError('cancelled', 'Generation stopped.');
     // Financial context informs the model but cannot be cited. Without a citable source there is no grounded answer.
     if (!result.sources.some(isCitableSource)) {
@@ -285,6 +286,7 @@ export async function generateAnswer(
       const unique = [...new Map(evidence.map((e) => [e.source, e])).values()];
       for (const e of unique) {
         const s = result.sources.find((s) => s.id === e.source)!;
+        if (s.kind === 'firm') continue;
         checkDb(
           (
             await user.client.from('message_citations').insert({

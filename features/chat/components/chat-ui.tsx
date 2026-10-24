@@ -748,7 +748,21 @@ export function Conversation({
                       Copy
                     </Button>
                     {canDraft && (
-                      <Link className="button button-ghost button-small" href={root + '/notices'}>
+                      <Link
+                        className="button button-ghost button-small"
+                        href={
+                          root +
+                          '/notices' +
+                          (data?.data?.answer?.nextSteps?.[0]?.text
+                            ? '?' +
+                              new URLSearchParams({
+                                draft: '1',
+                                kind: 's135_notice',
+                                draftTitle: 'Notice: ' + data.data.answer.nextSteps[0].text.slice(0, 60),
+                              }).toString()
+                            : '')
+                        }
+                      >
                         <FileText size={13} />
                         Draft correspondence
                       </Link>
