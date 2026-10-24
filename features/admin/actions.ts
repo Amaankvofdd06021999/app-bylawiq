@@ -1,4 +1,4 @@
-﻿'use server';
+'use server';
 import { requireUser } from '@/lib/auth/guards';
 import { checkDb, ForbiddenError, errorMessage, NotFoundError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
@@ -127,13 +127,19 @@ export async function removeTeamMemberAction(raw: unknown) {
     // Notify user of removal
     const { data: removedUser } = await db
       .from('profiles')
-      .select('email')
+      .select('display_name')
       .eq('id', targetMember.user_id)
-      .single();
+      .maybeSingle();
 
-    const { data: org } = await db.from('organizations').select('name').eq('id', orgMember.org_id).single();
+    const { data: org } = await db
+      .from('organizations')
+      .select('name')
+      .eq('id', orgMember.org_id)
+      .maybeSingle();
 
-    console.log(`[EMAIL] Team member removed: ${removedUser?.email} from ${org?.name}`);
+    console.log(
+      `[EMAIL] Team member removed: ${removedUser?.display_name || targetMember.user_id} from ${org?.name}`,
+    );
 
     return { ok: true };
   } catch (e) {

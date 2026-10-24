@@ -70,36 +70,37 @@ export async function revokeBuildingLinkAction(raw: unknown) {
 
     checkDb(suspendError);
 
-    // Close any pending reviews with a system comment
+    // Close any pending reviews in generated_documents
     const { data: pendingReviews, error: reviewsError } = await db
-      .from('document_reviews')
-      .select('id')
+      .from('generated_documents')
+      .select('id, building_id')
       .eq('building_id', link.building_id)
-      .eq('status', 'pending');
+      .eq('review_by', 'firm')
+      .eq('status', 'pending_review');
 
     checkDb(reviewsError);
 
     if (pendingReviews && pendingReviews.length > 0) {
       const { error: closeError } = await db
-        .from('document_reviews')
+        .from('generated_documents')
         .update({
-          status: 'closed',
-          closed_reason: 'building_link_revoked',
-          closed_at: new Date().toISOString(),
+          status: 'draft',
+          review_by: 'building',
+          updated_at: new Date().toISOString(),
         })
         .eq('building_id', link.building_id)
-        .eq('status', 'pending');
+        .eq('review_by', 'firm')
+        .eq('status', 'pending_review');
 
       checkDb(closeError);
 
-      // Add system comments to closed reviews
+      // Add comments to closed reviews
       for (const review of pendingReviews) {
-        const { error: commentError } = await db.from('review_comments').insert({
-          review_id: review.id,
+        const { error: commentError } = await db.from('document_review_comments').insert({
+          document_id: review.id,
+          building_id: link.building_id,
           author_id: user.id,
-          type: 'system',
-          content: 'Review closed: Building link to firm was revoked',
-          created_at: new Date().toISOString(),
+          body: 'Review closed: Building link to firm was revoked',
         });
 
         if (commentError) {
@@ -173,7 +174,8 @@ export async function getBuildingDetailsAction(raw: unknown) {
         `
         id,
         name,
-        jurisdiction,
+        region,
+        municipality,
         created_at,
         documents(count),
         building_members(count)
@@ -190,7 +192,8 @@ export async function getBuildingDetailsAction(raw: unknown) {
       building: {
         id: building.id,
         name: building.name,
-        jurisdiction: building.jurisdiction,
+        jurisdiction: building.region || building.municipality || 'BC',
+        region: building.region,
         createdAt: building.created_at,
         linkStatus: link.status,
         documentCount: building.documents?.[0]?.count || 0,

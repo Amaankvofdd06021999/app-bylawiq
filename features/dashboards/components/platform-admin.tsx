@@ -29,6 +29,8 @@ const sections = [
 const adminSubPages = [
   ['/admin/buildings', 'Buildings'],
   ['/admin/transfer', 'Transfer building'],
+  ['/admin/regional-kb', 'Regional KBs'],
+  ['/admin/billing', 'Billing & Plans'],
   ['/admin/chat-analytics', 'AI analytics'],
   ['/admin/platform', 'System console'],
   ['/admin/onboarding', 'Onboard firm'],

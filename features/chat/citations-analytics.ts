@@ -216,26 +216,27 @@ export async function getFirmChatAnalytics(orgId: string, days: number = 30) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  // Get all buildings in org
-  const { data: buildings, error: buildingsError } = await db
+  // Get all buildings linked to or owned by this org
+  const { data: links, error: linksError } = await db
+    .from('firm_building_links')
+    .select('building_id')
+    .eq('firm_org_id', orgId)
+    .eq('status', 'active');
+
+  checkDb(linksError);
+
+  const { data: directBuildings, error: directError } = await db
     .from('buildings')
     .select('id')
-    .eq('organization_id', orgId);
+    .eq('org_id', orgId);
 
-  checkDb(buildingsError);
+  checkDb(directError);
 
-  if (!buildings || buildings.length === 0) {
-    return {
-      buildings: 0,
-      totalSessions: 0,
-      failureRate: 0,
-      averageCostPerSession: 0,
-      topQuestionTypes: [],
-      totalSpend: 0,
-    };
-  }
+  const buildingIdSet = new Set<string>();
+  (links ?? []).forEach((l) => buildingIdSet.add(l.building_id));
+  (directBuildings ?? []).forEach((b) => buildingIdSet.add(b.id));
 
-  const buildingIds = buildings.map((b) => b.id);
+  const buildingIds = Array.from(buildingIdSet);
 
   // Get sessions across all buildings
   const { data: sessions, error: sessionsError } = await db

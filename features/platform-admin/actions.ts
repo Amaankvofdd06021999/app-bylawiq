@@ -1,7 +1,7 @@
 'use server';
 import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
-import { checkDb, ForbiddenError, errorMessage } from '@/lib/errors';
+import { checkDb, errorMessage } from '@/lib/errors';
 
 export async function setFlagAction(raw: unknown) {
   try {
@@ -14,7 +14,7 @@ export async function setFlagAction(raw: unknown) {
       .parse(raw);
 
     // Verify platform admin
-    const { data: isAdmin, error } = await user.client.rpc('set_flag', {
+    const { error } = await user.client.rpc('set_flag', {
       p_flag_name: flag,
       p_enabled: enabled,
     });
@@ -283,4 +283,3 @@ export async function transferBuildingFirmAction(raw: unknown) {
     return { ok: false, error: errorMessage(e) };
   }
 }
-

@@ -44,7 +44,6 @@ export async function setDocumentVisibilityAction(raw: unknown) {
       .from('documents')
       .update({
         owner_visible: input.ownerVisible,
-        updated_at: new Date().toISOString(),
       })
       .eq('id', input.documentId)
       .eq('building_id', input.buildingId);
@@ -83,7 +82,7 @@ export async function getResidentVisibleDocuments(raw: unknown) {
     // Get only owner-visible documents
     const { data: documents, error } = await db
       .from('documents')
-      .select('id, title, document_type, created_at, updated_at')
+      .select('id, title, type, created_at')
       .eq('building_id', input.buildingId)
       .eq('owner_visible', true)
       .is('deleted_at', null)
@@ -91,7 +90,16 @@ export async function getResidentVisibleDocuments(raw: unknown) {
 
     checkDb(error);
 
-    return { ok: true, documents: documents || [] };
+    return {
+      ok: true,
+      documents: (documents || []).map((d) => ({
+        id: d.id,
+        title: d.title,
+        type: d.type,
+        document_type: d.type,
+        created_at: d.created_at,
+      })),
+    };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
@@ -126,7 +134,7 @@ export async function getDocumentVisibilityStatus(raw: unknown) {
         `
       id,
       title,
-      document_type,
+      type,
       owner_visible,
       status,
       created_at
@@ -138,7 +146,18 @@ export async function getDocumentVisibilityStatus(raw: unknown) {
 
     checkDb(error);
 
-    return { ok: true, documents: documents || [] };
+    return {
+      ok: true,
+      documents: (documents || []).map((d) => ({
+        id: d.id,
+        title: d.title,
+        type: d.type,
+        document_type: d.type,
+        owner_visible: d.owner_visible,
+        status: d.status,
+        created_at: d.created_at,
+      })),
+    };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
@@ -175,7 +194,7 @@ export async function getDocumentsByVisibility(raw: unknown) {
 
     const { data: documents, error } = await db
       .from('documents')
-      .select('id, title, document_type, created_at')
+      .select('id, title, type, created_at')
       .eq('building_id', input.buildingId)
       .eq('owner_visible', ownerVisible)
       .is('deleted_at', null)
@@ -183,7 +202,16 @@ export async function getDocumentsByVisibility(raw: unknown) {
 
     checkDb(error);
 
-    return { ok: true, documents: documents || [] };
+    return {
+      ok: true,
+      documents: (documents || []).map((d) => ({
+        id: d.id,
+        title: d.title,
+        type: d.type,
+        document_type: d.type,
+        created_at: d.created_at,
+      })),
+    };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }

@@ -7,11 +7,27 @@ export default async function PortfolioPage() {
   const user = await requireUser().catch(() => redirect('/login'));
   const db = await createClient();
 
-  // Verify user is multi-building (strata manager)
-  const { data: assignments } = await db.from('org_assignments').select('id').eq('user_id', user.id).limit(1);
+  // Verify user is multi-building (strata manager or firm staff)
+  const { data: staffMemberships } = await db
+    .from('building_members')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .neq('role', 'owner_resident')
+    .limit(1);
 
-  if (!assignments || assignments.length === 0) {
-    redirect('/');
+  const { data: firmMemberships } = await db
+    .from('org_members')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (
+    (!staffMemberships || staffMemberships.length === 0) &&
+    (!firmMemberships || firmMemberships.length === 0)
+  ) {
+    redirect('/workspace');
   }
 
   return (

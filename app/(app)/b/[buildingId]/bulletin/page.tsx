@@ -5,13 +5,15 @@ import { launchFeatureEnabled } from '@/lib/launch-scope';
 import { BulletinFeed } from '@/features/bulletin/components/bulletin-feed';
 import { CreatePostForm } from '@/features/bulletin/components/create-post-form';
 import { getBulletinFeed } from '@/features/bulletin/bulletin-queries';
+import { Shell } from '@/components/shell';
+import { openBuilding } from '@/app/_screens/guard';
+import { supabaseSource } from '@/data/supabase';
 
 interface Props {
   params: Promise<{ buildingId: string }>;
 }
 
 export default async function BulletinPage({ params }: Props) {
-  // The bulletin is off for this release (lib/launch-scope.ts). The page does not load posts.
   if (!launchFeatureEnabled('bulletin')) notFound();
   const { buildingId } = await params;
   const user = await requireUser();
@@ -46,89 +48,101 @@ export default async function BulletinPage({ params }: Props) {
     offset: 0,
   });
 
+  const source = supabaseSource();
+  const state = await openBuilding(source, buildingId);
+
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>Building Bulletin</h1>
-        <p className="subtitle">{building.name}</p>
-      </div>
+    <Shell
+      profile={state.profile}
+      buildings={state.buildings}
+      activeId={buildingId}
+      permissions={state.permissions}
+      unreadUpdates={state.unreadUpdates}
+      {...state.nav}
+    >
+      <div className="page-container">
+        <div className="page-header">
+          <h1>Building Bulletin</h1>
+          <p className="subtitle">{building.name}</p>
+        </div>
 
-      <div className="page-content">
-        {isStaff && (
-          <section className="create-section">
-            <h2>Create New Post</h2>
-            <CreatePostForm buildingId={buildingId} />
+        <div className="page-content">
+          {isStaff && (
+            <section className="create-section">
+              <h2>Create New Post</h2>
+              <CreatePostForm buildingId={buildingId} />
+            </section>
+          )}
+
+          <section className="feed-section">
+            <h2>Recent Posts</h2>
+            <BulletinFeed posts={posts} isStaff={isStaff} />
           </section>
-        )}
+        </div>
 
-        <section className="feed-section">
-          <h2>Recent Posts</h2>
-          <BulletinFeed posts={posts} isStaff={isStaff} />
-        </section>
-      </div>
-
-      <style>{`
-        .page-container {
-          max-width: 900px;
-          margin: 0 auto;
-          padding: 2rem 1rem;
-        }
-
-        .page-header {
-          margin-bottom: 2rem;
-        }
-
-        .page-header h1 {
-          margin: 0 0 0.5rem 0;
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .subtitle {
-          margin: 0;
-          color: #666;
-          font-size: 0.95rem;
-        }
-
-        .page-content {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-
-        .create-section {
-          background: #f9fafb;
-          padding: 1.5rem;
-          border-radius: 8px;
-        }
-
-        .create-section h2 {
-          margin: 0 0 1rem 0;
-          font-size: 1.25rem;
-          color: #1f2937;
-        }
-
-        .feed-section h2 {
-          margin: 0 0 1.5rem 0;
-          font-size: 1.25rem;
-          color: #1f2937;
-        }
-
-        @media (max-width: 640px) {
+        <style>{`
           .page-container {
-            padding: 1rem;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+          }
+
+          .page-header {
+            margin-bottom: 2rem;
           }
 
           .page-header h1 {
-            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+          }
+
+          .subtitle {
+            margin: 0;
+            color: #666;
+            font-size: 0.95rem;
+          }
+
+          .page-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
           }
 
           .create-section {
-            padding: 1rem;
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
           }
-        }
-      `}</style>
-    </div>
+
+          .create-section h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            color: #1f2937;
+          }
+
+          .feed-section h2 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.25rem;
+            color: #1f2937;
+          }
+
+          @media (max-width: 640px) {
+            .page-container {
+              padding: 1rem;
+            }
+
+            .page-header h1 {
+              font-size: 1.5rem;
+            }
+
+            .create-section {
+              padding: 1rem;
+            }
+          }
+        `}</style>
+      </div>
+    </Shell>
   );
 }

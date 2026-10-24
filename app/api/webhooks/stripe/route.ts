@@ -7,6 +7,9 @@ import { secret } from '@/lib/env';
 import { errorMessage } from '@/lib/errors';
 import { launchFeatureEnabled } from '@/lib/launch-scope';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   // Payments are off for this release. Refuse before any secret is read or event is processed (lib/launch-scope.ts).
   if (!launchFeatureEnabled('payments')) return NextResponse.json({ error: 'Not found' }, { status: 404 });

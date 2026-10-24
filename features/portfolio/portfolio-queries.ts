@@ -6,21 +6,49 @@
 import { createClient } from '@/lib/supabase/server';
 
 /**
+ * Helper to get all building IDs managed by this user (either through building_members or firm_building_links)
+ */
+async function getUserManagedBuildingIds(
+  db: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<string[]> {
+  // 1. Direct building staff memberships
+  const { data: staffMembers } = await db
+    .from('building_members')
+    .select('building_id')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .neq('role', 'owner_resident');
+
+  // 2. Firm memberships through active firm_building_links
+  const { data: firmMembers } = await db
+    .from('org_members')
+    .select('org_id')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .in('role', ['org_owner', 'org_admin', 'portfolio_manager', 'portfolio_assistant']);
+
+  let firmBuildingIds: string[] = [];
+  if (firmMembers && firmMembers.length > 0) {
+    const firmOrgIds = firmMembers.map((m: { org_id: string }) => m.org_id);
+    const { data: links } = await db
+      .from('firm_building_links')
+      .select('building_id')
+      .in('firm_org_id', firmOrgIds)
+      .eq('status', 'active');
+    firmBuildingIds = links?.map((l: { building_id: string }) => l.building_id) || [];
+  }
+
+  const directBuildingIds = staffMembers?.map((m: { building_id: string }) => m.building_id) || [];
+  return Array.from(new Set([...directBuildingIds, ...firmBuildingIds]));
+}
+
+/**
  * Get portfolio dashboard for strata manager
  */
 export async function getPortfolioDashboard(userId: string) {
   const db = await createClient();
-
-  // Get all assigned buildings for this user
-  const { data: assignments, error: assignmentError } = await db
-    .from('org_assignments')
-    .select('building_id')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
-
-  if (assignmentError) throw assignmentError;
-
-  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
+  const buildingIds = await getUserManagedBuildingIds(db, userId);
 
   if (buildingIds.length === 0) {
     return {
@@ -101,21 +129,20 @@ export async function getPortfolioDashboard(userId: string) {
  */
 export async function getAssignedBuildings(userId: string) {
   const db = await createClient();
+  const buildingIds = await getUserManagedBuildingIds(db, userId);
+
+  if (buildingIds.length === 0) {
+    return [];
+  }
 
   const { data, error } = await db
-    .from('org_assignments')
-    .select(
-      `
-      building_id,
-      building:buildings(id, name, address, municipality)
-    `,
-    )
-    .eq('user_id', userId)
-    .is('deleted_at', null);
+    .from('buildings')
+    .select('id, name, address, municipality')
+    .in('id', buildingIds)
+    .order('name', { ascending: true });
 
   if (error) throw error;
-
-  return (data || []).map((a) => a.building);
+  return data || [];
 }
 
 /**
@@ -123,15 +150,7 @@ export async function getAssignedBuildings(userId: string) {
  */
 export async function searchPortfolioDocuments(userId: string, query: string) {
   const db = await createClient();
-
-  // Get assigned buildings
-  const { data: assignments } = await db
-    .from('org_assignments')
-    .select('building_id')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
-
-  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
+  const buildingIds = await getUserManagedBuildingIds(db, userId);
 
   if (buildingIds.length === 0) {
     return [];
@@ -145,9 +164,9 @@ export async function searchPortfolioDocuments(userId: string, query: string) {
       id,
       title,
       building_id,
-      document_type,
+      type,
       created_at,
-      building:buildings(name, city)
+      building:buildings(name, municipality)
     `,
     )
     .in('building_id', buildingIds)
@@ -157,7 +176,23 @@ export async function searchPortfolioDocuments(userId: string, query: string) {
 
   if (error) throw error;
 
-  return data || [];
+  type DocRow = {
+    id: string;
+    title: string;
+    building_id: string;
+    type: string;
+    created_at: string;
+    building: { name: string; municipality: string } | null;
+  };
+
+  return ((data as unknown as DocRow[]) || []).map((d) => ({
+    id: d.id,
+    title: d.title,
+    building_id: d.building_id,
+    document_type: d.type,
+    created_at: d.created_at,
+    building: d.building ? { name: d.building.name, city: d.building.municipality } : undefined,
+  }));
 }
 
 /**
@@ -165,41 +200,30 @@ export async function searchPortfolioDocuments(userId: string, query: string) {
  */
 export async function getPortfolioPendingReviews(userId: string) {
   const db = await createClient();
-
-  // Get assigned buildings
-  const { data: assignments } = await db
-    .from('org_assignments')
-    .select('building_id')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
-
-  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
+  const buildingIds = await getUserManagedBuildingIds(db, userId);
 
   if (buildingIds.length === 0) {
     return [];
   }
 
-  // Get pending reviews in assigned buildings
+  // Get pending reviews in assigned buildings from generated_documents
   const { data, error } = await db
-    .from('document_reviews')
+    .from('generated_documents')
     .select(
       `
       id,
-      document_id,
+      title,
       building_id,
       status,
       created_at,
-      document:documents(title, submitted_by),
-      building:buildings(name),
-      submitter:profiles!documents.submitted_by(display_name)
+      building:buildings(name)
     `,
     )
     .in('building_id', buildingIds)
-    .in('status', ['pending', 'changes_requested'])
+    .in('status', ['pending_review', 'changes_requested'])
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-
   return data || [];
 }
 
@@ -208,15 +232,7 @@ export async function getPortfolioPendingReviews(userId: string) {
  */
 export async function getPortfolioAnalytics(userId: string) {
   const db = await createClient();
-
-  // Get assigned buildings
-  const { data: assignments } = await db
-    .from('org_assignments')
-    .select('building_id')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
-
-  const buildingIds = assignments?.map((a: { building_id: string }) => a.building_id) || [];
+  const buildingIds = await getUserManagedBuildingIds(db, userId);
 
   if (buildingIds.length === 0) {
     return {
@@ -229,7 +245,7 @@ export async function getPortfolioAnalytics(userId: string) {
     };
   }
 
-  // Notices (generated_documents) carry the draft, approved and sent states. documents holds ingested bylaws.
+  // Notices (generated_documents) carry the draft, approved and sent states.
   const { data: notices, error: noticesError } = await db
     .from('generated_documents')
     .select('status')

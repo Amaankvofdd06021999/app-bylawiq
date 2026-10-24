@@ -4,10 +4,10 @@ import { z } from 'zod';
 import { requireUser } from '@/lib/auth/guards';
 import { directoryFor } from '@/lib/directory';
 import { checkDb, ForbiddenError, NotFoundError, errorMessage } from '@/lib/errors';
-import { createClient } from '@/lib/supabase/server';
 
 /**
  * Document Approval Workflow Actions
+ * Operates on generated_documents and uses RPCs (request_firm_review, decide_firm_review).
  * Implements separation of duties: draft creator ≠ approver
  */
 
@@ -34,68 +34,17 @@ const SendDocumentSchema = z.object({
 });
 
 /**
- * Submit document for review by firm owner
- * Only available to strata managers and building managers
+ * Submit document for review by firm owner/manager
  */
 export async function submitDocumentForReviewAction(raw: unknown) {
   try {
     const user = await requireUser();
     const input = SubmitForReviewSchema.parse(raw);
 
-    const db = await createClient();
-
-    // Get document
-    const { data: document, error: docError } = await db
-      .from('documents')
-      .select('id, building_id, title, submitted_by, status')
-      .eq('id', input.documentId)
-      .eq('building_id', input.buildingId)
-      .single();
-
-    checkDb(docError);
-    if (!document) {
-      throw new NotFoundError('Document not found');
-    }
-
-    // Check status
-    if (document.status !== 'draft') {
-      throw new ForbiddenError('Only draft documents can be submitted for review');
-    }
-
-    // Verify user is staff (not resident)
-    const { data: member } = await db
-      .from('building_members')
-      .select('role')
-      .eq('building_id', input.buildingId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!member || member.role === 'owner_resident') {
-      throw new ForbiddenError('Only staff can submit documents for review');
-    }
-
-    // Update document status to "submitted"
-    const { error: updateError } = await db
-      .from('documents')
-      .update({
-        status: 'submitted',
-        submitted_by: user.id,
-        submitted_at: new Date().toISOString(),
-      })
-      .eq('id', input.documentId);
-
-    checkDb(updateError);
-
-    // Create review entry (pending approval)
-    const { error: reviewError } = await db.from('document_reviews').insert({
-      document_id: input.documentId,
-      building_id: input.buildingId,
-      reviewer_id: user.id,
-      status: 'pending',
-      comment: 'Awaiting firm owner review',
+    const { error } = await user.client.rpc('request_firm_review', {
+      p_id: input.documentId,
     });
-
-    checkDb(reviewError);
+    checkDb(error);
 
     return { ok: true };
   } catch (e) {
@@ -105,68 +54,19 @@ export async function submitDocumentForReviewAction(raw: unknown) {
 
 /**
  * Approve a submitted document
- * Only firm owner can approve (separation of duties)
+ * Only firm owner/reviewer can approve (separation of duties)
  */
 export async function approveDocumentAction(raw: unknown) {
   try {
     const user = await requireUser();
     const input = ApproveDocumentSchema.parse(raw);
 
-    const db = await createClient();
-
-    // Get document
-    const { data: document, error: docError } = await db
-      .from('documents')
-      .select('id, building_id, title, submitted_by, status')
-      .eq('id', input.documentId)
-      .eq('building_id', input.buildingId)
-      .single();
-
-    checkDb(docError);
-    if (!document) {
-      throw new NotFoundError('Document not found');
-    }
-
-    // Verify approver is firm owner
-    const { data: firmMember } = await db
-      .from('org_members')
-      .select('org_id, role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!firmMember || firmMember.role !== 'org_owner') {
-      throw new ForbiddenError('Only firm owners can approve documents');
-    }
-
-    // Separation of duties: approver ≠ submitter
-    if (document.submitted_by === user.id) {
-      throw new ForbiddenError('You cannot approve your own submissions (separation of duties)');
-    }
-
-    // Verify document is in "submitted" status
-    if (document.status !== 'submitted') {
-      throw new ForbiddenError('Only submitted documents can be approved');
-    }
-
-    // Update document to "approved"
-    const { error: updateError } = await db
-      .from('documents')
-      .update({
-        status: 'approved',
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      })
-      .eq('id', input.documentId);
-
-    checkDb(updateError);
-
-    // Update review record
-    const { error: reviewError } = await db
-      .from('document_reviews')
-      .update({ status: 'approved', updated_at: new Date().toISOString() })
-      .eq('document_id', input.documentId);
-
-    checkDb(reviewError);
+    const { error } = await user.client.rpc('decide_firm_review', {
+      p_id: input.documentId,
+      p_decision: 'approved',
+      p_comment: null,
+    });
+    checkDb(error);
 
     return { ok: true };
   } catch (e) {
@@ -176,73 +76,19 @@ export async function approveDocumentAction(raw: unknown) {
 
 /**
  * Request changes on a submitted document
- * Only firm owner can request changes
+ * Only firm owner/reviewer can request changes
  */
 export async function requestDocumentChangesAction(raw: unknown) {
   try {
     const user = await requireUser();
     const input = RequestChangesSchema.parse(raw);
 
-    const db = await createClient();
-
-    // Get document
-    const { data: document, error: docError } = await db
-      .from('documents')
-      .select('id, building_id, title, submitted_by, status')
-      .eq('id', input.documentId)
-      .eq('building_id', input.buildingId)
-      .single();
-
-    checkDb(docError);
-    if (!document) {
-      throw new NotFoundError('Document not found');
-    }
-
-    // Verify requestor is firm owner
-    const { data: firmMember } = await db
-      .from('org_members')
-      .select('org_id, role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!firmMember || firmMember.role !== 'org_owner') {
-      throw new ForbiddenError('Only firm owners can request changes');
-    }
-
-    // Verify document is in "submitted" status
-    if (document.status !== 'submitted') {
-      throw new ForbiddenError('Only submitted documents can be updated');
-    }
-
-    const { data: currentReview, error: currentReviewError } = await db
-      .from('document_reviews')
-      .select('changes_requested_count')
-      .eq('document_id', input.documentId)
-      .maybeSingle();
-    checkDb(currentReviewError);
-
-    // Update review status to "changes_requested"
-    const { error: reviewError } = await db
-      .from('document_reviews')
-      .update({
-        status: 'changes_requested',
-        comment: input.comment,
-        changes_requested_count: (currentReview?.changes_requested_count ?? 0) + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('document_id', input.documentId);
-
-    checkDb(reviewError);
-
-    // Revert document to "draft" so creator can edit
-    const { error: updateError } = await db
-      .from('documents')
-      .update({
-        status: 'draft',
-      })
-      .eq('id', input.documentId);
-
-    checkDb(updateError);
+    const { error } = await user.client.rpc('decide_firm_review', {
+      p_id: input.documentId,
+      p_decision: 'changes_requested',
+      p_comment: input.comment,
+    });
+    checkDb(error);
 
     return { ok: true };
   } catch (e) {
@@ -252,18 +98,18 @@ export async function requestDocumentChangesAction(raw: unknown) {
 
 /**
  * Send approved document to recipient
- * Only firm owner can send (after approval)
+ * Only authorized staff can send (after approval)
  */
 export async function sendApprovedDocumentAction(raw: unknown) {
   try {
     const user = await requireUser();
     const input = SendDocumentSchema.parse(raw);
 
-    const db = await createClient();
+    const db = user.client;
 
     // Get document
     const { data: document, error: docError } = await db
-      .from('documents')
+      .from('generated_documents')
       .select('id, building_id, title, status, approved_by')
       .eq('id', input.documentId)
       .eq('building_id', input.buildingId)
@@ -274,17 +120,6 @@ export async function sendApprovedDocumentAction(raw: unknown) {
       throw new NotFoundError('Document not found');
     }
 
-    // Verify sender is firm owner
-    const { data: firmMember } = await db
-      .from('org_members')
-      .select('org_id, role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!firmMember || firmMember.role !== 'org_owner') {
-      throw new ForbiddenError('Only firm owners can send documents');
-    }
-
     // Verify document is "approved"
     if (document.status !== 'approved') {
       throw new ForbiddenError('Only approved documents can be sent');
@@ -292,25 +127,17 @@ export async function sendApprovedDocumentAction(raw: unknown) {
 
     // Update document to "sent"
     const { error: updateError } = await db
-      .from('documents')
+      .from('generated_documents')
       .update({
         status: 'sent',
-        sent_by: user.id,
         sent_at: new Date().toISOString(),
       })
       .eq('id', input.documentId);
 
     checkDb(updateError);
 
-    // Send email to recipient with document link
-    const { data: sentDocument } = await db
-      .from('documents')
-      .select('title')
-      .eq('id', input.documentId)
-      .single();
-
     console.log(
-      `[EMAIL] Document approval: ${input.recipientEmail} document=${sentDocument?.title} ` +
+      `[EMAIL] Document approval: ${input.recipientEmail} document=${document.title} ` +
         `document_id=${input.documentId}`,
     );
 
@@ -321,26 +148,8 @@ export async function sendApprovedDocumentAction(raw: unknown) {
 }
 
 /**
- * Get pending reviews for firm owner
+ * Get pending reviews for firm owner/manager
  */
-const ReviewRowSchema = z.array(
-  z.object({
-    id: z.string(),
-    document_id: z.string(),
-    building_id: z.string(),
-    status: z.enum(['pending', 'changes_requested']),
-    comment: z.string().nullable(),
-    changes_requested_count: z.number(),
-    created_at: z.string(),
-    document: z
-      .union([
-        z.object({ title: z.string(), submitted_by: z.string().nullable() }),
-        z.array(z.object({ title: z.string(), submitted_by: z.string().nullable() })),
-      ])
-      .nullable(),
-    building: z.union([z.object({ name: z.string() }), z.array(z.object({ name: z.string() }))]).nullable(),
-  }),
-);
 export async function getPendingReviewsAction(raw: unknown) {
   try {
     const user = await requireUser();
@@ -350,37 +159,56 @@ export async function getPendingReviewsAction(raw: unknown) {
       })
       .parse(raw);
 
-    const db = await createClient();
+    const db = user.client;
 
-    // Verify firm owner
-    const { data: firmMember } = await db
+    // Verify firm membership
+    const { data: firmMembers, error: memberError } = await db
       .from('org_members')
       .select('org_id')
       .eq('user_id', user.id)
-      .eq('role', 'org_owner')
-      .single();
+      .in('role', ['org_owner', 'org_admin', 'portfolio_manager'])
+      .eq('status', 'active');
 
-    if (!firmMember) {
-      throw new ForbiddenError('Only firm owners can view pending reviews');
+    checkDb(memberError);
+    if (!firmMembers || firmMembers.length === 0) {
+      return { ok: true, reviews: [] };
     }
 
-    // Get pending reviews for this org
-    const { data: reviews, error } = await db
-      .from('document_reviews')
+    const firmOrgIds = firmMembers.map((m) => m.org_id);
+
+    // Get linked building IDs
+    const { data: links, error: linksError } = await db
+      .from('firm_building_links')
+      .select('building_id')
+      .in('firm_org_id', firmOrgIds)
+      .eq('status', 'active');
+
+    checkDb(linksError);
+    if (!links || links.length === 0) {
+      return { ok: true, reviews: [] };
+    }
+
+    const buildingIds = links.map((l) => l.building_id);
+
+    // Get pending reviews for these linked buildings
+    const { data: docs, error } = await db
+      .from('generated_documents')
       .select(
         `
-      id,
-      document_id,
-      building_id,
-      status,
-      comment,
-      changes_requested_count,
-      created_at,
-      document:documents(title, submitted_by),
-      building:buildings(name)
-    `,
+        id,
+        building_id,
+        kind,
+        title,
+        status,
+        created_by,
+        created_at,
+        building:buildings(name)
+      `,
       )
-      .eq('status', 'pending')
+      .in('building_id', buildingIds)
+      .eq('status', 'pending_review')
+      .eq('review_by', 'firm')
+      .is('deleted_at', null)
       .order('created_at', { ascending: true })
       .limit(input.limit);
 
@@ -388,26 +216,24 @@ export async function getPendingReviewsAction(raw: unknown) {
 
     const one = <T>(value: T | T[] | null): T | undefined =>
       Array.isArray(value) ? value[0] : (value ?? undefined);
-    const rows = ReviewRowSchema.parse(reviews ?? []);
-    const submitterIds = rows
-      .map((r) => one(r.document)?.submitted_by)
-      .filter((id): id is string => Boolean(id));
+
+    const submitterIds = (docs ?? []).map((d) => d.created_by).filter((id): id is string => Boolean(id));
     const directory = await directoryFor(user, submitterIds);
+
     return {
       ok: true,
-      reviews: rows.map((r) => {
-        const document = one(r.document);
-        const building = one(r.building);
-        const submitterEntry = document?.submitted_by ? directory.get(document.submitted_by) : undefined;
+      reviews: (docs ?? []).map((d) => {
+        const building = one(d.building);
+        const submitterEntry = d.created_by ? directory.get(d.created_by) : undefined;
         return {
-          id: r.id,
-          documentId: r.document_id,
-          buildingId: r.building_id,
-          status: r.status,
-          comment: r.comment ?? undefined,
-          changesRequestedCount: r.changes_requested_count,
-          createdAt: r.created_at,
-          document: document ? { title: document.title } : undefined,
+          id: d.id,
+          documentId: d.id,
+          buildingId: d.building_id,
+          status: 'pending' as const,
+          comment: undefined,
+          changesRequestedCount: 0,
+          createdAt: d.created_at,
+          document: { title: d.title },
           building: building ? { name: building.name } : undefined,
           submitter: submitterEntry
             ? { display_name: submitterEntry.displayName || submitterEntry.email }

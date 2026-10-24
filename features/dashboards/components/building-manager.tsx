@@ -236,6 +236,7 @@ export function BuildingManagerDashboard({
                   {data.council.disputes.length > 0 && (
                     <MoreLink href={root + '/disputes'}>Disputes</MoreLink>
                   )}
+                  <MoreLink href={root + '/counsel'}>External counsel</MoreLink>
                 </div>
               </>
             )}
@@ -254,11 +255,11 @@ export function BuildingManagerDashboard({
               </div>
             </dl>
 
-            {c.invite && (
-              <div style={{ marginTop: 14 }}>
-                <MoreLink href={root + '/members'}>Invite people</MoreLink>
-              </div>
-            )}
+            <div className="action-line" style={{ marginTop: 14 }}>
+              <MoreLink href={root + '/residents'}>Resident roster</MoreLink>
+              <MoreLink href={root + '/bulletin'}>Bulletin</MoreLink>
+              {c.invite && <MoreLink href={root + '/members'}>Invite people</MoreLink>}
+            </div>
           </div>
         </Section>
       </div>
