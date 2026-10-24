@@ -218,3 +218,69 @@ export async function getAllRegionsAction() {
     return { ok: false, error: errorMessage(e) };
   }
 }
+
+export async function getBuildingTransferCandidatesAction() {
+  try {
+    const user = await requireUser();
+    const { data, error } = await user.client.rpc('get_building_transfer_candidates');
+    checkDb(error);
+    return { ok: true, candidates: data || [] };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+export async function getFirmTransferDestinationsAction() {
+  try {
+    const user = await requireUser();
+    const { data, error } = await user.client.rpc('get_firm_transfer_destinations');
+    checkDb(error);
+    return { ok: true, firms: data || [] };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+export async function getFirmManagersAction(raw: unknown) {
+  try {
+    const user = await requireUser();
+    const { firmId } = z
+      .object({
+        firmId: z.string().uuid(),
+      })
+      .parse(raw);
+
+    const { data, error } = await user.client.rpc('get_firm_managers', {
+      p_firm_id: firmId,
+    });
+    checkDb(error);
+    return { ok: true, managers: data || [] };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+export async function transferBuildingFirmAction(raw: unknown) {
+  try {
+    const user = await requireUser();
+    const { buildingId, targetFirmOrgId, targetManagerUserId } = z
+      .object({
+        buildingId: z.string().uuid(),
+        targetFirmOrgId: z.string().uuid(),
+        targetManagerUserId: z.string().uuid().nullable().optional(),
+      })
+      .parse(raw);
+
+    const { data, error } = await user.client.rpc('transfer_building_firm', {
+      p_building_id: buildingId,
+      p_target_firm_org_id: targetFirmOrgId,
+      p_target_manager_user_id: targetManagerUserId ?? null,
+    });
+
+    checkDb(error);
+    return { ok: true, result: data };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
