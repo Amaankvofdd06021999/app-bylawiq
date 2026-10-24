@@ -253,7 +253,8 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
   const { data: existingRows, error: eErr } = await db
     .from('legal_sources')
     .select('id,kb_id,content_sha256')
-    .not('kb_id', 'is', null);
+    .not('kb_id', 'is', null)
+    .limit(10000);
   if (eErr) throw new Error(`could not read legal_sources: ${eErr.message}`);
   const existing = new Map(
     z
@@ -281,29 +282,43 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
   let e = 0;
   let superseded = 0;
   for (const item of changed) {
-    const { data: source, error: sErr } = await db
-      .from('legal_sources')
-      .upsert(
-        {
-          jurisdiction_id: jurisdiction.id,
-          type: sourceType(item),
-          title: item.title,
-          citation: item.citation ?? item.id,
-          url: item.source_url,
-          in_force_from: item.in_force_from,
-          in_force_to: item.in_force_to,
-          verified_at: item.retrieved_at,
-          kb_id: item.id,
-          kb_version: kbVersion,
-          supersedes_kb_id: item.supersedes,
-          content_sha256: hashes.get(item.id) ?? null,
-        },
-        { onConflict: 'kb_id' },
-      )
-      .select('id')
-      .single();
-    if (sErr || !source)
-      throw new Error(`upsert legal_sources for ${item.id} failed: ${sErr?.message ?? 'no row'}`);
+    const rowData = {
+      jurisdiction_id: jurisdiction.id,
+      type: sourceType(item),
+      title: item.title,
+      citation: item.citation ?? item.id,
+      url: item.source_url,
+      in_force_from: item.in_force_from,
+      in_force_to: item.in_force_to,
+      verified_at: item.retrieved_at,
+      kb_id: item.id,
+      kb_version: kbVersion,
+      supersedes_kb_id: item.supersedes,
+      content_sha256: hashes.get(item.id) ?? null,
+    };
+
+    const existingRow = existing.get(item.id);
+    let source: { id: string } | null = null;
+    if (existingRow) {
+      const { data, error: uErr } = await db
+        .from('legal_sources')
+        .update(rowData)
+        .eq('id', existingRow.id)
+        .select('id')
+        .single();
+      if (uErr || !data)
+        throw new Error(`update legal_sources for ${item.id} failed: ${uErr?.message ?? 'no row'}`);
+      source = data;
+    } else {
+      const { data, error: iErr } = await db
+        .from('legal_sources')
+        .insert(rowData)
+        .select('id')
+        .single();
+      if (iErr || !data)
+        throw new Error(`insert legal_sources for ${item.id} failed: ${iErr?.message ?? 'no row'}`);
+      source = data;
+    }
     if (item.in_force_to) superseded++;
 
     // Replace the chunks wholesale: a section's text changed, so chunk boundaries may have moved and

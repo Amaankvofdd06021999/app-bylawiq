@@ -8,3 +8,4 @@ playwright-report/
 .vercel/
 .supabase/
 .DS_Store
+kb/.embeddings-cache.json
