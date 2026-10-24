@@ -30,6 +30,7 @@ const adminSubPages = [
   ['/admin/buildings', 'Buildings'],
   ['/admin/chat-analytics', 'AI analytics'],
   ['/admin/platform', 'System console'],
+  ['/admin/onboarding', 'Onboard firm'],
   ['/admin/team', 'Team'],
 ] as const;
 /** The platform admin works outside any building, so there is no building sidebar: a slim top bar with the
