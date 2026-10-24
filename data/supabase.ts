@@ -122,8 +122,18 @@ export function supabaseSource(): DataSource {
       };
     },
 
-    async layers() {
-      return ['building', 'legal', 'firm'] as Layer[];
+    async layers(buildingId) {
+      signedIn();
+      const user = await requireUser();
+      const { data: member } = await user.client
+        .from('building_members')
+        .select('role')
+        .eq('building_id', buildingId)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      const isResident = member?.role === 'owner_resident';
+      return (isResident ? ['building', 'legal'] : ['building', 'legal', 'firm']) as Layer[];
     },
 
     async firmLinkStatus(buildingId) {
