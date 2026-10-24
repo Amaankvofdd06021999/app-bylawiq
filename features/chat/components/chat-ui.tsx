@@ -753,12 +753,28 @@ export function Conversation({
                         href={
                           root +
                           '/notices' +
-                          (data?.data?.answer?.nextSteps?.[0]?.text
+                          (data?.data?.answer
                             ? '?' +
                               new URLSearchParams({
                                 draft: '1',
                                 kind: 's135_notice',
-                                draftTitle: 'Notice: ' + data.data.answer.nextSteps[0].text.slice(0, 60),
+                                draftTitle: data.data.answer.nextSteps?.[0]?.text
+                                  ? 'Notice: ' + data.data.answer.nextSteps[0].text.slice(0, 60)
+                                  : 'Notice under s. 135',
+                                ...(data.data.answer.answer?.length || data.data.answer.nextSteps?.length
+                                  ? {
+                                      draftBody: [
+                                        data.data.answer.answer.map((a) => a.text).join('\n\n'),
+                                        ...(data.data.answer.nextSteps.length
+                                          ? [
+                                              '',
+                                              '### Required Steps & Procedural Compliance',
+                                              ...data.data.answer.nextSteps.map((s) => '- ' + s.text),
+                                            ]
+                                          : []),
+                                      ].join('\n'),
+                                    }
+                                  : {}),
                               }).toString()
                             : '')
                         }
