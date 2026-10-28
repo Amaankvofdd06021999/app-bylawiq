@@ -706,4 +706,29 @@ describe('Postgres scope and permissions', () => {
 
     expect(new Date(after).getTime()).toBeGreaterThanOrEqual(new Date(before).getTime());
   });
+  it('exercises the 15-minute staleness lease against PostgreSQL timestamps', async () => {
+    await admin();
+    const docId = '94000000-0000-4000-8000-000000000002';
+    await sql(
+      `insert into public.documents(id, building_id, title, uploaded_by, status, updated_at) values ('${docId}', '${ba}', 'Stale Document', '${a}', 'scanning', now() - interval '20 minutes')`,
+    );
+
+    // Query exactly as the retry route does
+    await identity(a);
+    const doc = (
+      await db.query<{ id: string; building_id: string; status: string; updated_at: string }>(
+        `select id, building_id, status, updated_at from public.documents where id = '${docId}'`,
+      )
+    ).rows[0];
+
+    const STALE_THRESHOLD_MS = 15 * 60 * 1000;
+    const isStale =
+      doc.status === 'scanning' &&
+      doc.updated_at &&
+      Date.now() - new Date(doc.updated_at).getTime() > STALE_THRESHOLD_MS;
+
+    expect(isStale).toBe(true);
+    const canRetry = ['failed', 'uploaded'].includes(doc.status) || isStale;
+    expect(canRetry).toBe(true);
+  });
 });
