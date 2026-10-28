@@ -26,7 +26,29 @@ function failureMessage(e: unknown): string {
 const DEFAULT_INGEST_FAILURE_MESSAGE =
   'Indexing could not complete. Retry the upload or contact your administrator.';
 
+const ALLOWED_USER_MESSAGES = new Set([
+  'This file did not pass the malware scan.',
+  'The file scanner is temporarily unavailable. Retry in a few moments.',
+  'The file scanner is temporarily unavailable.',
+  'The uploaded file is unavailable.',
+  'This file appears to be a scanned PDF or image without a readable text layer. BylawIQ requires documents with searchable text.',
+  'No readable text was found.',
+  'Split this document into smaller files.',
+  'Ingestion authorization has expired.',
+  'This document has been archived.',
+  'Document unavailable.',
+  'This document could not be read as text.',
+  'PDF font encoding unsupported',
+]);
+
 export function sanitizeFailureMessage(error?: unknown): string {
+  // If error is an AppError shape with code and HTTP status, its message is user-authored
+  const isAppError =
+    typeof error === 'object' &&
+    error !== null &&
+    typeof (error as { code?: unknown }).code === 'string' &&
+    typeof (error as { status?: unknown }).status === 'number';
+
   const raw =
     typeof error === 'string'
       ? error
@@ -37,27 +59,20 @@ export function sanitizeFailureMessage(error?: unknown): string {
         : undefined;
 
   if (!raw || typeof raw !== 'string') return DEFAULT_INGEST_FAILURE_MESSAGE;
-  const trimmed = raw.trim();
-  if (trimmed.length === 0 || trimmed.length > 250) return DEFAULT_INGEST_FAILURE_MESSAGE;
+  let trimmed = raw.trim();
 
-  // Technical markers indicating raw database, network, internal IDs, stack traces, or framework errors
-  const technicalPatterns = [
-    /Document ingestion failed/i,
-    /NonRetriableError/i,
-    /\b(postgres|supabase|pg_|sql|database|table|column|relation)\b/i,
-    /\b(econnrefused|econnreset|etimedout|enotfound|ehostunreach)\b/i,
-    /\b(fetch failed|socket hang up|network error|http \d{3})\b/i,
-    /\b(syntaxerror|typeerror|referenceerror|rangeerror)\b/i,
-    /\b(object\.<anonymous>|at\s+\S+\s+\()/,
-    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
-    /\{.*\:.*\}/,
-  ];
-
-  if (technicalPatterns.some((pattern) => pattern.test(trimmed))) {
-    return DEFAULT_INGEST_FAILURE_MESSAGE;
+  // Strip standard wrapper prefixes if present
+  if (trimmed.startsWith('NonRetriableError:')) {
+    trimmed = trimmed.replace(/^NonRetriableError:\s*/, '');
   }
 
-  return trimmed;
+  // Allow explicitly verified user-facing messages or verified AppError objects
+  if (ALLOWED_USER_MESSAGES.has(trimmed) || (isAppError && trimmed.length > 0 && trimmed.length <= 250)) {
+    return trimmed;
+  }
+
+  // Any other error (unhandled exceptions, database errors, parser bugs, network drops) falls back safely
+  return DEFAULT_INGEST_FAILURE_MESSAGE;
 }
 
 const eventSchema = z.object({ documentId: z.uuid(), buildingId: z.uuid(), actorId: z.uuid() });

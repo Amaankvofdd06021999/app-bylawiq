@@ -93,6 +93,18 @@ describe('handleIngestFailure', () => {
     expect(res.message).toBe('Indexing could not complete. Retry the upload or contact your administrator.');
   });
 
+  it('sanitizes unexpected errors like Failed to parse input that are not in the allowlist', async () => {
+    docState = {
+      status: 'scanning',
+      error_message: null,
+    };
+
+    const res = await handleIngestFailure(eventPayload, new Error('Failed to parse input'), mockDb);
+
+    expect(res.updated).toBe(true);
+    expect(res.message).toBe('Indexing could not complete. Retry the upload or contact your administrator.');
+  });
+
   it('sanitizes internal Document ingestion failed messages to avoid leaking UUIDs', async () => {
     docState = {
       status: 'scanning',

@@ -6,6 +6,7 @@ const DOC_ID = '93000000-0000-4000-8000-00000000000b';
 
 const state = vi.hoisted(() => ({
   docStatus: 'failed',
+  updatedAt: new Date().toISOString() as string | null,
   calls: [] as string[],
 }));
 
@@ -21,6 +22,7 @@ vi.mock('@/lib/auth/guards', () => ({
                 id: DOC_ID,
                 building_id: BUILDING,
                 status: state.docStatus,
+                updated_at: state.updatedAt,
               },
               error: null,
             }),
@@ -54,6 +56,7 @@ function request(documentId: string) {
 beforeEach(() => {
   state.calls = [];
   state.docStatus = 'failed';
+  state.updatedAt = new Date().toISOString();
 });
 
 describe('POST /api/upload/retry', () => {
@@ -64,11 +67,20 @@ describe('POST /api/upload/retry', () => {
     expect(state.calls).toEqual(['inngest.send']);
   });
 
-  it('blocks retry for documents in scanning status to prevent duplicate runs', async () => {
+  it('blocks retry for documents actively scanning to prevent duplicate runs', async () => {
     state.docStatus = 'scanning';
+    state.updatedAt = new Date().toISOString(); // active right now
     const res = await POST(request(DOC_ID));
     expect(res.status).toBe(400);
     expect(state.calls).toEqual([]);
+  });
+
+  it('allows retry for stranded documents stuck in scanning for more than 15 minutes', async () => {
+    state.docStatus = 'scanning';
+    state.updatedAt = new Date(Date.now() - 20 * 60 * 1000).toISOString(); // 20 mins ago
+    const res = await POST(request(DOC_ID));
+    expect(res.status).toBe(200);
+    expect(state.calls).toEqual(['inngest.send']);
   });
 
   it('allows retry for uploaded documents', async () => {

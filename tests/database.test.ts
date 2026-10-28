@@ -683,9 +683,9 @@ describe('Postgres scope and permissions', () => {
     await identity(b);
     expect((await db.query('select id from public.legal_sources_quarantine_log')).rows).toHaveLength(0);
   });
-  it('allows querying documents table for retry route without missing column errors', async () => {
+  it('allows querying documents table for retry route including updated_at without missing column errors', async () => {
     await identity(a);
-    const res = await db.query(`select id, building_id, status from public.documents limit 1`);
+    const res = await db.query(`select id, building_id, status, updated_at from public.documents limit 1`);
     expect(res).toBeDefined();
   });
 });
