@@ -23,6 +23,43 @@ function failureMessage(e: unknown): string {
     : 'Indexing could not complete. Retry the upload or contact your administrator.';
 }
 
+const DEFAULT_INGEST_FAILURE_MESSAGE =
+  'Indexing could not complete. Retry the upload or contact your administrator.';
+
+export function sanitizeFailureMessage(error?: unknown): string {
+  const raw =
+    typeof error === 'string'
+      ? error
+      : typeof error === 'object' && error !== null
+        ? (error as { message?: string }).message ||
+          (error as { cause?: { message?: string } }).cause?.message ||
+          undefined
+        : undefined;
+
+  if (!raw || typeof raw !== 'string') return DEFAULT_INGEST_FAILURE_MESSAGE;
+  const trimmed = raw.trim();
+  if (trimmed.length === 0 || trimmed.length > 250) return DEFAULT_INGEST_FAILURE_MESSAGE;
+
+  // Technical markers indicating raw database, network, internal IDs, stack traces, or framework errors
+  const technicalPatterns = [
+    /Document ingestion failed/i,
+    /NonRetriableError/i,
+    /\b(postgres|supabase|pg_|sql|database|table|column|relation)\b/i,
+    /\b(econnrefused|econnreset|etimedout|enotfound|ehostunreach)\b/i,
+    /\b(fetch failed|socket hang up|network error|http \d{3})\b/i,
+    /\b(syntaxerror|typeerror|referenceerror|rangeerror)\b/i,
+    /\b(object\.<anonymous>|at\s+\S+\s+\()/,
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    /\{.*\:.*\}/,
+  ];
+
+  if (technicalPatterns.some((pattern) => pattern.test(trimmed))) {
+    return DEFAULT_INGEST_FAILURE_MESSAGE;
+  }
+
+  return trimmed;
+}
+
 const eventSchema = z.object({ documentId: z.uuid(), buildingId: z.uuid(), actorId: z.uuid() });
 export async function handleIngestFailure(
   eventData: unknown,
@@ -43,24 +80,7 @@ export async function handleIngestFailure(
     return { updated: false, message: current.error_message };
   }
 
-  const rawMsg =
-    typeof error === 'string'
-      ? error
-      : typeof error === 'object' && error !== null
-        ? (error as { message?: string }).message ||
-          (error as { cause?: { message?: string } }).cause?.message ||
-          undefined
-        : undefined;
-
-  let specificMessage =
-    'Indexing could not complete after multiple retry attempts. You can retry the upload.';
-  if (rawMsg && typeof rawMsg === 'string' && rawMsg.length > 0) {
-    if (rawMsg.startsWith('Document ingestion failed:') || rawMsg.startsWith('NonRetriableError:')) {
-      specificMessage = 'Indexing could not complete. Retry the upload or contact your administrator.';
-    } else {
-      specificMessage = rawMsg;
-    }
-  }
+  const specificMessage = sanitizeFailureMessage(error);
 
   await dbClient
     .from('documents')

@@ -10,21 +10,14 @@ export async function POST(req: Request) {
     const v = z.object({ documentId: z.uuid() }).parse(await req.json());
     const { data, error } = await user.client
       .from('documents')
-      .select('id,building_id,status,updated_at,created_at')
+      .select('id,building_id,status')
       .eq('id', v.documentId)
       .maybeSingle();
     checkDb(error);
     if (!data) throw new AppError('not_found', 'This document is unavailable.', 404);
     await requirePermission(user, 'vault.upload', data.building_id);
 
-    const STALE_THRESHOLD_MS = 15 * 60 * 1000;
-    const lastActive = data.updated_at || (data as { created_at?: string }).created_at;
-    const isStale =
-      data.status === 'scanning' &&
-      lastActive &&
-      Date.now() - new Date(lastActive).getTime() > STALE_THRESHOLD_MS;
-
-    if (!['failed', 'uploaded'].includes(data.status) && !isStale)
+    if (!['failed', 'uploaded'].includes(data.status))
       throw new AppError('already_processing', 'This document is already processing.');
     await inngest.send({
       name: 'document/ingest',

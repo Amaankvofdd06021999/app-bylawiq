@@ -59,7 +59,7 @@ describe('handleIngestFailure', () => {
     expect(updateCalls).toHaveLength(0);
   });
 
-  it('transitions a scanning document to failed on retry exhaustion with a clear message', async () => {
+  it('sanitizes unexpected database errors rather than showing raw system strings to users', async () => {
     docState = {
       status: 'scanning',
       error_message: null,
@@ -67,32 +67,30 @@ describe('handleIngestFailure', () => {
 
     const res = await handleIngestFailure(
       eventPayload,
-      new Error('Scanner service connection refused'),
+      new Error('PostgresError: column documents.updated_at does not exist at pg_client.ts:42'),
       mockDb,
     );
 
     expect(res.updated).toBe(true);
-    expect(res.message).toBe('Scanner service connection refused');
-    expect(updateCalls).toEqual([{ status: 'failed', error_message: 'Scanner service connection refused' }]);
+    expect(res.message).toBe('Indexing could not complete. Retry the upload or contact your administrator.');
+    expect(updateCalls).toEqual([
+      {
+        status: 'failed',
+        error_message: 'Indexing could not complete. Retry the upload or contact your administrator.',
+      },
+    ]);
   });
 
-  it('handles wrapped Inngest failure event shapes seamlessly', async () => {
+  it('sanitizes raw network and socket exceptions', async () => {
     docState = {
       status: 'scanning',
       error_message: null,
     };
 
-    const wrappedEvent = {
-      event: {
-        data: eventPayload,
-      },
-    };
-
-    const res = await handleIngestFailure(wrappedEvent, new Error('Network timeout'), mockDb);
+    const res = await handleIngestFailure(eventPayload, new Error('fetch failed: ECONNRESET'), mockDb);
 
     expect(res.updated).toBe(true);
-    expect(res.message).toBe('Network timeout');
-    expect(updateCalls).toHaveLength(1);
+    expect(res.message).toBe('Indexing could not complete. Retry the upload or contact your administrator.');
   });
 
   it('sanitizes internal Document ingestion failed messages to avoid leaking UUIDs', async () => {
@@ -115,7 +113,7 @@ describe('handleIngestFailure', () => {
     );
   });
 
-  it('unpacks nested error.cause.message when error wraps the real cause', async () => {
+  it('unpacks nested error.cause.message when error wraps a valid user explanation', async () => {
     docState = {
       status: 'scanning',
       error_message: null,
@@ -141,8 +139,6 @@ describe('handleIngestFailure', () => {
     const res = await handleIngestFailure(eventPayload, {}, mockDb);
 
     expect(res.updated).toBe(true);
-    expect(res.message).toBe(
-      'Indexing could not complete after multiple retry attempts. You can retry the upload.',
-    );
+    expect(res.message).toBe('Indexing could not complete. Retry the upload or contact your administrator.');
   });
 });
