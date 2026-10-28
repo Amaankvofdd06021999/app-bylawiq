@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     checkDb(error);
     if (!data) throw new AppError('not_found', 'This document is unavailable.', 404);
     await requirePermission(user, 'vault.upload', data.building_id);
-    if (!['failed', 'uploaded', 'scanning'].includes(data.status))
+    if (!['failed', 'uploaded'].includes(data.status))
       throw new AppError('already_processing', 'This document is already processing.');
     await inngest.send({
       name: 'document/ingest',

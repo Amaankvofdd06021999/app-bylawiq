@@ -24,6 +24,46 @@ function failureMessage(e: unknown): string {
 }
 
 const eventSchema = z.object({ documentId: z.uuid(), buildingId: z.uuid(), actorId: z.uuid() });
+export async function handleIngestFailure(
+  eventData: unknown,
+  error: unknown,
+  dbClient = adminDb(),
+): Promise<{ updated: boolean; message?: string }> {
+  const raw = (eventData as { event?: { data?: unknown } })?.event?.data ?? eventData;
+  const v = eventSchema.safeParse(raw);
+  if (!v.success) return { updated: false };
+  const { data: current } = await dbClient
+    .from('documents')
+    .select('status,error_message')
+    .eq('id', v.data.documentId)
+    .maybeSingle();
+
+  // If a step already recorded a specific failure message, preserve it
+  if (current?.status === 'failed' && current?.error_message) {
+    return { updated: false, message: current.error_message };
+  }
+
+  const specificMessage =
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string' &&
+    error.message.length > 0
+      ? error.message
+      : 'File scanning timed out after 3 retry attempts. You can retry the upload.';
+
+  await dbClient
+    .from('documents')
+    .update({
+      status: 'failed',
+      error_message: specificMessage,
+    })
+    .eq('id', v.data.documentId)
+    .is('deleted_at', null);
+
+  return { updated: true, message: specificMessage };
+}
+
 export const ingestDocument = inngest.createFunction(
   {
     id: 'ingest-document',
@@ -31,19 +71,7 @@ export const ingestDocument = inngest.createFunction(
     concurrency: { limit: 1, key: 'event.data.documentId' },
     onFailure: async ({ event, error }) => {
       try {
-        const raw = (event.data as { event?: { data?: unknown } })?.event?.data ?? event.data;
-        const v = eventSchema.safeParse(raw);
-        if (v.success) {
-          const db = adminDb();
-          await db
-            .from('documents')
-            .update({
-              status: 'failed',
-              error_message: failureMessage(error),
-            })
-            .eq('id', v.data.documentId)
-            .is('deleted_at', null);
-        }
+        await handleIngestFailure(event.data, error);
       } catch (err) {
         console.error('Failed to record document failure on Inngest exhaustion:', err);
       }

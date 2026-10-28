@@ -60,11 +60,11 @@ describe('POST /api/upload/retry', () => {
     expect(state.calls).toEqual(['inngest.send']);
   });
 
-  it('allows retry for documents stuck in scanning status after outage', async () => {
+  it('blocks retry for documents actively scanning to prevent duplicate runs', async () => {
     state.docStatus = 'scanning';
     const res = await POST(request(DOC_ID));
-    expect(res.status).toBe(200);
-    expect(state.calls).toEqual(['inngest.send']);
+    expect(res.status).toBe(400);
+    expect(state.calls).toEqual([]);
   });
 
   it('allows retry for uploaded documents', async () => {
