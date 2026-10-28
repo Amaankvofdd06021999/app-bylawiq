@@ -25,7 +25,30 @@ function failureMessage(e: unknown): string {
 
 const eventSchema = z.object({ documentId: z.uuid(), buildingId: z.uuid(), actorId: z.uuid() });
 export const ingestDocument = inngest.createFunction(
-  { id: 'ingest-document', retries: 3, concurrency: { limit: 1, key: 'event.data.documentId' } },
+  {
+    id: 'ingest-document',
+    retries: 3,
+    concurrency: { limit: 1, key: 'event.data.documentId' },
+    onFailure: async ({ event, error }) => {
+      try {
+        const raw = (event.data as { event?: { data?: unknown } })?.event?.data ?? event.data;
+        const v = eventSchema.safeParse(raw);
+        if (v.success) {
+          const db = adminDb();
+          await db
+            .from('documents')
+            .update({
+              status: 'failed',
+              error_message: failureMessage(error),
+            })
+            .eq('id', v.data.documentId)
+            .is('deleted_at', null);
+        }
+      } catch (err) {
+        console.error('Failed to record document failure on Inngest exhaustion:', err);
+      }
+    },
+  },
   { event: 'document/ingest' },
   async ({ event, step }) => {
     const v = eventSchema.parse(event.data);

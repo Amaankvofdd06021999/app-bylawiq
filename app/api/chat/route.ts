@@ -103,7 +103,7 @@ export async function POST(req: Request) {
       const outcome = await work;
       // Deduct wallet credits after chat completes ONLY if a verified grounded answer was produced (residents only)
       if (chat.building_id && outcome?.grounded) {
-        await deductChatCredits(user, chat.id, chat.building_id, outcome.tokens);
+        await deductChatCredits(user, chat.id, chat.building_id, outcome.tokens, v.message.parts[0].text);
       }
     });
     return replayStream(user, runId, req.signal);
@@ -114,7 +114,13 @@ export async function POST(req: Request) {
 
 // Deduct credits from resident wallet after chat completes
 // Cost: 1 credit per 1000 tokens (approximately $0.01 per 1000 tokens)
-async function deductChatCredits(user: SessionUser, chatId: string, buildingId: string, tokens?: number) {
+async function deductChatCredits(
+  user: SessionUser,
+  chatId: string,
+  buildingId: string,
+  tokens?: number,
+  promptText?: string,
+) {
   try {
     // Check if user is a resident (has owner_resident role)
     const { data: member, error: memberError } = await user.client
@@ -132,7 +138,8 @@ async function deductChatCredits(user: SessionUser, chatId: string, buildingId: 
       return;
     }
 
-    const tokenCount = tokens && tokens > 0 ? tokens : Math.max(500, Math.ceil((prompt.length + 1500) / 4));
+    const tokenCount =
+      tokens && tokens > 0 ? tokens : Math.max(500, Math.ceil(((promptText?.length ?? 100) + 1500) / 4));
     // Cost: 1 credit per 1000 tokens, minimum 1 credit per question
     const creditsCost = Math.max(1, Math.ceil(tokenCount / 1000));
 

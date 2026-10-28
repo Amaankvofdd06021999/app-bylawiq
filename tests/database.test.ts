@@ -679,4 +679,8 @@ describe('Postgres scope and permissions', () => {
     await identity(assistant);
     expect((await db.query(`select id from public.buildings where id='${ba}'`)).rows).toHaveLength(0);
   });
+  it('hides the legal sources quarantine log from regular building managers', async () => {
+    await identity(b);
+    expect((await db.query('select id from public.legal_sources_quarantine_log')).rows).toHaveLength(0);
+  });
 });

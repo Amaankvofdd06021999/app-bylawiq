@@ -13,15 +13,23 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   // Payments are off for this release. Refuse before any secret is read or event is processed (lib/launch-scope.ts).
   if (!launchFeatureEnabled('payments')) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  const webhookSecret = secret('STRIPE_WEBHOOK_SECRET');
-  const stripe = new Stripe(secret('STRIPE_SECRET_KEY'));
-  const body = await request.text();
   const signature = request.headers.get('stripe-signature');
-
   if (!signature) {
     logger.error({ context: 'stripe_webhook', error: 'Missing stripe-signature header' });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
+
+  let webhookSecret: string;
+  let stripe: Stripe;
+  try {
+    webhookSecret = secret('STRIPE_WEBHOOK_SECRET');
+    stripe = new Stripe(secret('STRIPE_SECRET_KEY'));
+  } catch (err) {
+    logger.error({ context: 'stripe_webhook', error: errorMessage(err) });
+    return NextResponse.json({ error: 'Webhook handler not configured' }, { status: 503 });
+  }
+
+  const body = await request.text();
 
   let event: Stripe.Event;
   try {

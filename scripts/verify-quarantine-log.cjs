@@ -15,9 +15,13 @@ for (const l of lines) {
 (async () => {
   const c = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
   await c.connect();
-  const { rows } = await c.query(
-    'select count(*), quarantined_status, reason from public.legal_sources_quarantine_log group by quarantined_status, reason;',
+  const { rows: pols } = await c.query(
+    "select policyname, qual from pg_policies where tablename = 'legal_sources_quarantine_log';",
   );
-  console.log('Quarantine log snapshot:', rows);
+  console.log('Quarantine log policies:', pols);
+  const { rows: constrs } = await c.query(
+    "select conname, contype from pg_constraint where conrelid = 'public.legal_sources_quarantine_log'::regclass;",
+  );
+  console.log('Constraints:', constrs);
   await c.end();
 })();
