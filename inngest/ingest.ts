@@ -43,14 +43,24 @@ export async function handleIngestFailure(
     return { updated: false, message: current.error_message };
   }
 
-  const specificMessage =
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof error.message === 'string' &&
-    error.message.length > 0
-      ? error.message
-      : 'File scanning timed out after 3 retry attempts. You can retry the upload.';
+  const rawMsg =
+    typeof error === 'string'
+      ? error
+      : typeof error === 'object' && error !== null
+        ? (error as { message?: string }).message ||
+          (error as { cause?: { message?: string } }).cause?.message ||
+          undefined
+        : undefined;
+
+  let specificMessage =
+    'Indexing could not complete after multiple retry attempts. You can retry the upload.';
+  if (rawMsg && typeof rawMsg === 'string' && rawMsg.length > 0) {
+    if (rawMsg.startsWith('Document ingestion failed:') || rawMsg.startsWith('NonRetriableError:')) {
+      specificMessage = 'Indexing could not complete. Retry the upload or contact your administrator.';
+    } else {
+      specificMessage = rawMsg;
+    }
+  }
 
   await dbClient
     .from('documents')

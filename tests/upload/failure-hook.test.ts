@@ -94,4 +94,55 @@ describe('handleIngestFailure', () => {
     expect(res.message).toBe('Network timeout');
     expect(updateCalls).toHaveLength(1);
   });
+
+  it('sanitizes internal Document ingestion failed messages to avoid leaking UUIDs', async () => {
+    docState = {
+      status: 'scanning',
+      error_message: null,
+    };
+
+    const res = await handleIngestFailure(
+      eventPayload,
+      new Error(`Document ingestion failed: ${DOC_ID}`),
+      mockDb,
+    );
+
+    expect(res.updated).toBe(true);
+    expect(res.message).toBe('Indexing could not complete. Retry the upload or contact your administrator.');
+    expect(res.message).not.toContain(DOC_ID);
+    expect(updateCalls[0].error_message).toBe(
+      'Indexing could not complete. Retry the upload or contact your administrator.',
+    );
+  });
+
+  it('unpacks nested error.cause.message when error wraps the real cause', async () => {
+    docState = {
+      status: 'scanning',
+      error_message: null,
+    };
+
+    const nestedError = {
+      name: 'InngestError',
+      cause: { message: 'PDF font encoding unsupported' },
+    };
+
+    const res = await handleIngestFailure(eventPayload, nestedError, mockDb);
+
+    expect(res.updated).toBe(true);
+    expect(res.message).toBe('PDF font encoding unsupported');
+  });
+
+  it('provides a general fallback when error has no message', async () => {
+    docState = {
+      status: 'scanning',
+      error_message: null,
+    };
+
+    const res = await handleIngestFailure(eventPayload, {}, mockDb);
+
+    expect(res.updated).toBe(true);
+    expect(res.message).toBe(
+      'Indexing could not complete after multiple retry attempts. You can retry the upload.',
+    );
+  });
 });
