@@ -27,18 +27,30 @@ const DEFAULT_INGEST_FAILURE_MESSAGE =
   'Indexing could not complete. Retry the upload or contact your administrator.';
 
 const ALLOWED_USER_MESSAGES = new Set([
+  // Malware scanner verdicts (lib/security/file-scan.ts)
   'This file did not pass the malware scan.',
-  'The file scanner is temporarily unavailable. Retry in a few moments.',
-  'The file scanner is temporarily unavailable.',
-  'The uploaded file is unavailable.',
-  'This file appears to be a scanned PDF or image without a readable text layer. BylawIQ requires documents with searchable text.',
+  'The malware scanner must be connected before this file can be processed.',
+  'The malware scanner did not respond. Try again later.',
+  'The malware scanner returned an unreadable result. Try again later.',
+
+  // Text layer checks (lib/ai/text-layer.ts)
+  'This PDF has no readable text, so it looks like a scanned document. Scanned PDFs cannot be read yet. Upload a searchable PDF, or a DOCX, TXT or Markdown file.',
+
+  // PDF parser errors (lib/ai/pdf-text.ts)
+  'This PDF could not be read. If it is a scanned document, scanned PDFs cannot be read yet. Upload a searchable PDF, or a DOCX, TXT or Markdown file.',
+
+  // Embedding service errors (lib/ai/embeddings.ts)
+  'Search indexing is temporarily unavailable.',
+  'The embedding service returned an incomplete batch.',
+  'Embeddings service error - search may be unavailable',
+
+  // Ingestion lifecycle boundaries (inngest/ingest.ts)
   'No readable text was found.',
   'Split this document into smaller files.',
+  'The uploaded file is unavailable.',
   'Ingestion authorization has expired.',
   'This document has been archived.',
   'Document unavailable.',
-  'This document could not be read as text.',
-  'PDF font encoding unsupported',
 ]);
 
 export function sanitizeFailureMessage(error?: unknown): string {
@@ -90,8 +102,17 @@ export async function handleIngestFailure(
     .eq('id', v.data.documentId)
     .maybeSingle();
 
-  // If a step already recorded a specific failure message, preserve it
-  if (current?.status === 'failed' && current?.error_message) {
+  // If an error message is already recorded on the document (e.g. from an in-flight scanner step or prior failure),
+  // preserve it and ensure status is marked 'failed'
+  if (current?.error_message) {
+    if (current.status !== 'failed') {
+      await dbClient
+        .from('documents')
+        .update({ status: 'failed' })
+        .eq('id', v.data.documentId)
+        .is('deleted_at', null);
+      return { updated: true, message: current.error_message };
+    }
     return { updated: false, message: current.error_message };
   }
 

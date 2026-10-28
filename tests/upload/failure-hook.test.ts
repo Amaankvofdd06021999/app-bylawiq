@@ -125,6 +125,27 @@ describe('handleIngestFailure', () => {
     );
   });
 
+  it('preserves an in-flight scanner failure message recorded while scanning and marks status failed', async () => {
+    docState = {
+      status: 'scanning',
+      error_message: 'The malware scanner did not respond. Try again later.',
+    };
+
+    const res = await handleIngestFailure(
+      eventPayload,
+      new Error('InngestExecutionError: step failed after 3 retries'),
+      mockDb,
+    );
+
+    expect(res.updated).toBe(true);
+    expect(res.message).toBe('The malware scanner did not respond. Try again later.');
+    expect(updateCalls).toEqual([
+      {
+        status: 'failed',
+      },
+    ]);
+  });
+
   it('unpacks nested error.cause.message when error wraps a valid user explanation', async () => {
     docState = {
       status: 'scanning',
@@ -133,13 +154,13 @@ describe('handleIngestFailure', () => {
 
     const nestedError = {
       name: 'InngestError',
-      cause: { message: 'PDF font encoding unsupported' },
+      cause: { message: 'The malware scanner returned an unreadable result. Try again later.' },
     };
 
     const res = await handleIngestFailure(eventPayload, nestedError, mockDb);
 
     expect(res.updated).toBe(true);
-    expect(res.message).toBe('PDF font encoding unsupported');
+    expect(res.message).toBe('The malware scanner returned an unreadable result. Try again later.');
   });
 
   it('provides a general fallback when error has no message', async () => {

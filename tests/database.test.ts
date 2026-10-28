@@ -688,4 +688,22 @@ describe('Postgres scope and permissions', () => {
     const res = await db.query(`select id, building_id, status, updated_at from public.documents limit 1`);
     expect(res).toBeDefined();
   });
+  it('advances documents.updated_at automatically on row updates via trigger', async () => {
+    await admin();
+    const docId = '94000000-0000-4000-8000-000000000001';
+    await sql(
+      `insert into public.documents(id, building_id, title, uploaded_by, status) values ('${docId}', '${ba}', 'Test Document', '${a}', 'uploaded')`,
+    );
+    const before = (
+      await db.query<{ updated_at: string }>(`select updated_at from public.documents where id = '${docId}'`)
+    ).rows[0].updated_at;
+
+    await sql(`update public.documents set status = 'scanning' where id = '${docId}'`);
+
+    const after = (
+      await db.query<{ updated_at: string }>(`select updated_at from public.documents where id = '${docId}'`)
+    ).rows[0].updated_at;
+
+    expect(new Date(after).getTime()).toBeGreaterThanOrEqual(new Date(before).getTime());
+  });
 });
