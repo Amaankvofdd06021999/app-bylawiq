@@ -70,7 +70,12 @@ export async function retrieve(
   }
   const [vector] = await embeddings([query], 'query');
   const textQuery =
-    queryVariants && queryVariants.length ? [query, ...queryVariants.slice(0, 2)].join(' ') : query;
+    queryVariants && queryVariants.length
+      ? [query, ...queryVariants.slice(0, 2)]
+          .map((q) => q.trim())
+          .filter(Boolean)
+          .join(' or ')
+      : query;
   const scope =
     chat.scope === 'general'
       ? []

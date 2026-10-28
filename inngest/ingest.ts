@@ -132,7 +132,7 @@ export const ingestDocument = inngest.createFunction(
           const message = failureMessage(e);
           // Transient scanner outages or network issues should be retried by Inngest, not marked permanently failed
           if (e instanceof AppError && e.code === 'scanner_unavailable') {
-            await status('processing', message);
+            await status('scanning', message);
             throw e;
           }
           await status('failed', message);

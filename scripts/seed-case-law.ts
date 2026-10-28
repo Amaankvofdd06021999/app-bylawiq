@@ -9,7 +9,10 @@ for (const line of envContent.split('\n')) {
   if (!trimmed || trimmed.startsWith('#')) continue;
   const idx = trimmed.indexOf('=');
   if (idx > 0) {
-    env[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim().replace(/^['"]|['"]$/g, '');
+    env[trimmed.slice(0, idx).trim()] = trimmed
+      .slice(idx + 1)
+      .trim()
+      .replace(/^['"]|['"]$/g, '');
   }
 }
 
@@ -310,7 +313,8 @@ async function main() {
           citation: item.citation,
           url: item.url,
           in_force_from: item.in_force_from,
-          verified_at: new Date().toISOString(),
+          status: 'draft',
+          verified_at: null,
           corpus_version: 1,
           kb_id: item.kb_id,
           kb_version: 'v1',

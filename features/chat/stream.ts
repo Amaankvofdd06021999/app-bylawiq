@@ -154,7 +154,8 @@ export async function generateAnswer(
       }
       const answer = await generated.output;
       const usage = await generated.usage;
-      actualTokens = usage?.totalTokens ?? 850;
+      const fallbackTokens = Math.max(1, Math.ceil((question.length + JSON.stringify(answer).length) / 4));
+      actualTokens = usage?.totalTokens ?? fallbackTokens;
       await progress('Verifying citations and source quotations…');
 
       if (!validateCitations(answer, result.sources)) {

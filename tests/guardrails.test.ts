@@ -91,6 +91,15 @@ describe('structural chunks', () => {
     expect(chunks[0].content).toContain('3 dogs or cats');
     expect(chunks[0].content).toContain('12 hours notice');
   });
+  it('does not split on capitalized counting prose or calendar years', () => {
+    const chunks = structuralChunks(
+      'Section 1 General\n2 Dogs are prohibited in any strata lot.\n2024 Budget was approved by majority vote.\n12 Hours notice must be given.',
+    );
+    expect(chunks.length).toBe(1);
+    expect(chunks[0].sectionRef).toBe('1');
+    expect(chunks[0].content).toContain('2 Dogs are prohibited');
+    expect(chunks[0].content).toContain('2024 Budget was approved');
+  });
 });
 describe('website source protection', () => {
   for (const url of [

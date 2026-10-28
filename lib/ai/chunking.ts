@@ -16,7 +16,17 @@ export function structuralChunks(text: string): Section[] {
     const ref = match?.[2];
     const hasDelimiter = Boolean(match?.[3]);
     const title = match?.[4]?.trim() ?? '';
-    const isValidHeading = Boolean(match && (hasPrefix || (title ? !/^[a-z]/.test(title) : hasDelimiter)));
+    const isYear = !hasPrefix && !hasDelimiter && /^(?:19|20)\d{2}$/.test(ref ?? '');
+    const isCountingProse =
+      !hasPrefix &&
+      !hasDelimiter &&
+      (/^[a-z]/.test(title) ||
+        /^(?:dogs|cats|hours|days|weeks|months|years|dollars|percent|units|lots|vehicles|bicycles|occupants)\b/i.test(
+          title,
+        ));
+    const isValidHeading = Boolean(
+      match && !isYear && !isCountingProse && (hasPrefix || (title ? true : hasDelimiter)),
+    );
     if (isValidHeading && ref && current.content.trim()) {
       sections.push({ ...current, content: current.content.trim() });
       current = { heading: line.trim(), sectionRef: ref, content: '', page };

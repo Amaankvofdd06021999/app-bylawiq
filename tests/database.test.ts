@@ -264,6 +264,16 @@ describe('Postgres scope and permissions', () => {
       const r = await search(null);
       expect(r.rows[0].kb_version).toBe('0.7.0');
     });
+    it('refuses to return unapproved draft legislation even if verified_at is set', async () => {
+      await admin();
+      await sql(`insert into public.legal_sources(id,jurisdiction_id,type,title,citation,kb_id,kb_version,in_force_from,in_force_to,verified_at,status) values
+       ('70000000-0000-4000-8000-000000000012','70000000-0000-4000-8000-000000000001','statute','Fines unapproved draft','TEST s 132 draft','test.s132.draft','0.7.0','2026-01-01',null,now(),'draft');
+      insert into public.legal_chunks(source_id,content,section_ref,embedding) values
+       ('70000000-0000-4000-8000-000000000012','testfine the maximum fine is one thousand dollars','Section 132','${embedding}');`);
+      await identity(a);
+      const r = await search(null);
+      expect(r.rows.map((x) => x.citation)).not.toContain('TEST s 132 draft');
+    });
     it('refuses to load the same kb item twice', async () => {
       await admin();
       await expect(
