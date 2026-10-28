@@ -17,13 +17,20 @@ export function structuralChunks(text: string): Section[] {
     const hasDelimiter = Boolean(match?.[3]);
     const title = match?.[4]?.trim() ?? '';
     const isYear = !hasPrefix && !hasDelimiter && /^(?:19|20)\d{2}$/.test(ref ?? '');
+    const hasPredicateVerb =
+      !hasPrefix &&
+      !hasDelimiter &&
+      /\b(?:are|is|were|was|must|shall|can|cannot|could)\s+(?:prohibited|banned|restricted|required|given|approved|permitted|allowed|notify|pay|comply)\b/i.test(
+        title,
+      );
     const isCountingProse =
       !hasPrefix &&
       !hasDelimiter &&
       (/^[a-z]/.test(title) ||
         /^(?:dogs|cats|hours|days|weeks|months|years|dollars|percent|units|lots|vehicles|bicycles|occupants)\b/i.test(
           title,
-        ));
+        ) ||
+        hasPredicateVerb);
     const isValidHeading = Boolean(
       match && !isYear && !isCountingProse && (hasPrefix || (title ? true : hasDelimiter)),
     );

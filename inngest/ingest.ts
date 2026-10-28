@@ -226,6 +226,10 @@ export const ingestDocument = inngest.createFunction(
       checkDb(readError);
       if (current?.status === 'failed')
         throw new NonRetriableError('Indexing stopped: the failure is recorded on the document.');
+      if (current?.status === 'scanning' || (e instanceof AppError && e.code === 'scanner_unavailable')) {
+        // Transient scanner outages are retried by Inngest; preserve 'scanning' status in Postgres
+        throw e;
+      }
       await status('failed', failureMessage(e));
       throw new Error('Document ingestion failed: ' + v.documentId);
     }

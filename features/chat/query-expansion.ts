@@ -13,6 +13,7 @@ export interface QueryExpansion {
   original: string;
   variants: string[];
   extractedRefs: string[]; // Section numbers, case citations, etc.
+  tokens?: number;
 }
 
 export async function expandQuery(
@@ -38,7 +39,7 @@ Example with refs:
 User: "what does section 3.2 say"
 Output: {"variants": ["section 3.2", "bylaw 3.2"], "refs": ["3.2", "section 3.2"]}`;
 
-    const { text } = await generateText({
+    const { text, usage } = await generateText({
       model: MODELS.classify,
       system: systemPrompt,
       prompt: `Expand this query:\n"${originalQuery}"${buildingName ? `\n\nBuilding: ${buildingName}` : ''}`,
@@ -50,6 +51,9 @@ Output: {"variants": ["section 3.2", "bylaw 3.2"], "refs": ["3.2", "section 3.2"
       original: originalQuery,
       variants: Array.isArray(parsed.variants) ? parsed.variants : [originalQuery],
       extractedRefs: Array.isArray(parsed.refs) ? parsed.refs : [],
+      tokens:
+        usage?.totalTokens ??
+        Math.max(1, Math.ceil((systemPrompt.length + originalQuery.length + text.length) / 4)),
     };
   } catch (error) {
     console.error('Query expansion failed:', error);
@@ -58,6 +62,7 @@ Output: {"variants": ["section 3.2", "bylaw 3.2"], "refs": ["3.2", "section 3.2"
       original: originalQuery,
       variants: [originalQuery],
       extractedRefs: [],
+      tokens: 0,
     };
   }
 }
@@ -75,6 +80,7 @@ export interface IntentClassification {
   intent: Intent;
   confidence: number; // 0.0-1.0
   reason?: string;
+  tokens?: number;
 }
 
 export async function classifyIntent(query: string): Promise<IntentClassification> {
@@ -89,7 +95,7 @@ Intent types:
 
 Respond with JSON only: {"intent": "...", "confidence": 0.9, "reason": "..."}`;
 
-    const { text } = await generateText({
+    const { text, usage } = await generateText({
       model: MODELS.classify,
       system: systemPrompt,
       prompt: `Classify: "${query}"`,
@@ -101,6 +107,8 @@ Respond with JSON only: {"intent": "...", "confidence": 0.9, "reason": "..."}`;
       intent: parsed.intent || 'legal_question',
       confidence: Number(parsed.confidence) || 0.8,
       reason: parsed.reason,
+      tokens:
+        usage?.totalTokens ?? Math.max(1, Math.ceil((systemPrompt.length + query.length + text.length) / 4)),
     };
   } catch (error) {
     console.error('Intent classification failed:', error);
@@ -108,6 +116,7 @@ Respond with JSON only: {"intent": "...", "confidence": 0.9, "reason": "..."}`;
       intent: 'legal_question',
       confidence: 0.5,
       reason: 'Classification unavailable',
+      tokens: 0,
     };
   }
 }

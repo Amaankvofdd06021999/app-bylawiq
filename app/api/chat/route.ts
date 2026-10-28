@@ -132,7 +132,7 @@ async function deductChatCredits(user: SessionUser, chatId: string, buildingId: 
       return;
     }
 
-    const tokenCount = tokens && tokens > 0 ? tokens : 1000;
+    const tokenCount = tokens && tokens > 0 ? tokens : Math.max(500, Math.ceil((prompt.length + 1500) / 4));
     // Cost: 1 credit per 1000 tokens, minimum 1 credit per question
     const creditsCost = Math.max(1, Math.ceil(tokenCount / 1000));
 

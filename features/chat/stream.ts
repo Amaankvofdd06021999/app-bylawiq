@@ -62,9 +62,11 @@ export async function generateAnswer(
     // Step 1: Query expansion (fast model)
     await progress('Expanding query for better retrieval…');
     const expanded = await expandQuery(user, question);
+    actualTokens += expanded.tokens ?? 0;
 
     // Step 2: Intent classification
     const intent = await classifyIntent(question);
+    actualTokens += intent.tokens ?? 0;
     if (intent.intent === 'out_of_scope') {
       const declineMsg = `I can only help with questions about building bylaws and strata property law. Your question appears to be outside my scope. ${DISCLAIMER}`;
       parts.push({ type: 'text', text: declineMsg });
@@ -83,8 +85,8 @@ export async function generateAnswer(
           answer: declineMsg,
           sources: [],
           gateResult: { passed: false, issues: ['out_of_scope'] },
-          tokens: 0,
-          cost: 0,
+          tokens: actualTokens,
+          cost: Math.max(0, Math.ceil(actualTokens / 1000)),
         });
       }
 
@@ -155,7 +157,7 @@ export async function generateAnswer(
       const answer = await generated.output;
       const usage = await generated.usage;
       const fallbackTokens = Math.max(1, Math.ceil((question.length + JSON.stringify(answer).length) / 4));
-      actualTokens = usage?.totalTokens ?? fallbackTokens;
+      actualTokens += usage?.totalTokens ?? fallbackTokens;
       await progress('Verifying citations and source quotations…');
 
       if (!validateCitations(answer, result.sources)) {

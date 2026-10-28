@@ -100,6 +100,17 @@ describe('structural chunks', () => {
     expect(chunks[0].content).toContain('2 Dogs are prohibited');
     expect(chunks[0].content).toContain('2024 Budget was approved');
   });
+  it('does not treat narrative sentences with predicate verbs as headings', () => {
+    const chunks = structuralChunks(
+      'Section 1 Rules\n2 Pets are prohibited in common areas.\n3 Owners must notify council.\n5 Smoking is banned in hallways.\n10 Rentals are restricted.',
+    );
+    expect(chunks.length).toBe(1);
+    expect(chunks[0].sectionRef).toBe('1');
+    expect(chunks[0].content).toContain('2 Pets are prohibited');
+    expect(chunks[0].content).toContain('3 Owners must notify');
+    expect(chunks[0].content).toContain('5 Smoking is banned');
+    expect(chunks[0].content).toContain('10 Rentals are restricted');
+  });
 });
 describe('website source protection', () => {
   for (const url of [
