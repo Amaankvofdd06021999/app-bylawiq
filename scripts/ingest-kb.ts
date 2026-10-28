@@ -181,7 +181,9 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
   const cache = loadCache();
   const missing = texts.filter((t) => !cache[t]);
   if (missing.length < texts.length) {
-    console.log(`  Loaded ${texts.length - missing.length}/${texts.length} chunk embeddings from local cache.`);
+    console.log(
+      `  Loaded ${texts.length - missing.length}/${texts.length} chunk embeddings from local cache.`,
+    );
   }
 
   const BATCH_SIZE = 20;
@@ -205,7 +207,9 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
         attempts++;
         const retryAfter = Number(response.headers.get('retry-after') || 30);
         const waitMs = Math.max(retryAfter * 1000, 30000);
-        process.stdout.write(`\n  Rate limited (429). Pausing for ${waitMs / 1000}s (attempt ${attempts}/10)... `);
+        process.stdout.write(
+          `\n  Rate limited (429). Pausing for ${waitMs / 1000}s (attempt ${attempts}/10)... `,
+        );
         await new Promise((r) => setTimeout(r, waitMs));
         continue;
       }
@@ -213,7 +217,6 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
     }
     if (!response || !response.ok)
       throw new Error(`embedding request failed: HTTP ${response?.status}. Nothing further was written.`);
-
 
     const body = z
       .object({
@@ -224,7 +227,7 @@ async function embed(texts: string[], apiKey: string): Promise<number[][]> {
       .parse(await response.json());
     if (body.data.length !== batch.length)
       throw new Error('the embedding service returned an incomplete batch. Nothing further was written.');
-    
+
     for (const d of body.data) {
       cache[batch[d.index]] = d.embedding;
     }
@@ -284,6 +287,7 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
   let e = 0;
   let superseded = 0;
   for (const item of changed) {
+    const isApproved = item.status === 'approved' || item.status === 'reviewed';
     const rowData = {
       jurisdiction_id: jurisdiction.id,
       type: sourceType(item),
@@ -292,7 +296,8 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
       url: item.source_url,
       in_force_from: item.in_force_from,
       in_force_to: item.in_force_to,
-      verified_at: item.retrieved_at,
+      status: item.status,
+      verified_at: isApproved ? (item.retrieved_at ?? new Date().toISOString()) : null,
       kb_id: item.id,
       kb_version: kbVersion,
       supersedes_kb_id: item.supersedes,
@@ -312,11 +317,7 @@ async function apply(items: Item[], kbVersion: string): Promise<void> {
         throw new Error(`update legal_sources for ${item.id} failed: ${uErr?.message ?? 'no row'}`);
       source = data;
     } else {
-      const { data, error: iErr } = await db
-        .from('legal_sources')
-        .insert(rowData)
-        .select('id')
-        .single();
+      const { data, error: iErr } = await db.from('legal_sources').insert(rowData).select('id').single();
       if (iErr || !data)
         throw new Error(`insert legal_sources for ${item.id} failed: ${iErr?.message ?? 'no row'}`);
       source = data;
@@ -388,7 +389,8 @@ async function main(): Promise<void> {
     console.log('\nDry run. Nothing was written. Pass --apply to load.');
     return;
   }
-  if (!manifest.production) {
+  const hasDrafts = !manifest.production || inScope.some((i) => i.status === 'draft');
+  if (hasDrafts) {
     if (!allowDraft) {
       throw new Error(
         'this build includes unapproved items. Use pnpm --dir kb build:prod, or pass --allow-draft for a non-production database.',

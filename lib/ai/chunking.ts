@@ -10,14 +10,19 @@ export function structuralChunks(text: string): Section[] {
     if (raw.includes('\f')) page++;
     const line = raw.replaceAll('\f', '');
     const match = line.match(
-      /^\s*(?:(?:Section|Bylaw|Rule|Part)\s+)?(\d+(?:\.\d+)*(?:\([a-z0-9]+\))?)\s*[.\-–—:]?\s+(.{0,140})$/i,
+      /^\s*(?:(Section|Bylaw|Rule|Part)\s+)?(\d+(?:\.\d+)*(?:\([a-z0-9]+\))?)\s*([.\-–—:])?\s*(.{0,140})$/i,
     );
-    if (match && current.content.trim()) {
+    const hasPrefix = Boolean(match?.[1]);
+    const ref = match?.[2];
+    const hasDelimiter = Boolean(match?.[3]);
+    const title = match?.[4]?.trim() ?? '';
+    const isValidHeading = Boolean(match && (hasPrefix || (title ? !/^[a-z]/.test(title) : hasDelimiter)));
+    if (isValidHeading && ref && current.content.trim()) {
       sections.push({ ...current, content: current.content.trim() });
-      current = { heading: line.trim(), sectionRef: match[1], content: '', page };
-    } else if (match) {
+      current = { heading: line.trim(), sectionRef: ref, content: '', page };
+    } else if (isValidHeading && ref) {
       current.heading = line.trim();
-      current.sectionRef = match[1];
+      current.sectionRef = ref;
       current.page = page;
     }
     current.content += line + '\n';

@@ -100,9 +100,11 @@ export async function POST(req: Request) {
     const runId = run.data.id;
     const work = generateAnswer(user, chat, runId, v.message.parts[0].text, priorMessages, v.layers);
     after(async () => {
-      await work;
-      // Deduct wallet credits after chat completes (residents only)
-      if (chat.building_id) await deductChatCredits(user, chat.id, chat.building_id);
+      const outcome = await work;
+      // Deduct wallet credits after chat completes ONLY if a verified grounded answer was produced (residents only)
+      if (chat.building_id && outcome?.grounded) {
+        await deductChatCredits(user, chat.id, chat.building_id, outcome.tokens);
+      }
     });
     return replayStream(user, runId, req.signal);
   } catch (e) {
@@ -112,7 +114,7 @@ export async function POST(req: Request) {
 
 // Deduct credits from resident wallet after chat completes
 // Cost: 1 credit per 1000 tokens (approximately $0.01 per 1000 tokens)
-async function deductChatCredits(user: SessionUser, chatId: string, buildingId: string) {
+async function deductChatCredits(user: SessionUser, chatId: string, buildingId: string, tokens?: number) {
   try {
     // Check if user is a resident (has owner_resident role)
     const { data: member, error: memberError } = await user.client
@@ -130,28 +132,9 @@ async function deductChatCredits(user: SessionUser, chatId: string, buildingId: 
       return;
     }
 
-    // Fetch messages from this chat to estimate tokens
-    const { data: messages, error: messagesError } = await user.client
-      .from('messages')
-      .select('parts')
-      .eq('chat_id', chatId)
-      .order('created_at');
-
-    checkDb(messagesError);
-
-    // Estimate token usage: ~4 chars per token average
-    let estimatedTokens = 0;
-    (messages || []).forEach((msg) => {
-      const parts = (msg.parts ?? []) as Array<{ type?: string; text?: string }>;
-      parts.forEach((p) => {
-        if (p.type === 'text' && p.text) {
-          estimatedTokens += Math.ceil(p.text.length / 4);
-        }
-      });
-    });
-
+    const tokenCount = tokens && tokens > 0 ? tokens : 850;
     // Cost: 1 credit per 1000 tokens, minimum 1 credit per question
-    const creditsCost = Math.max(1, Math.ceil(estimatedTokens / 1000));
+    const creditsCost = Math.max(1, Math.ceil(tokenCount / 1000));
 
     // Deduct from wallet via RPC
     const { data: result, error: deductError } = await user.client.rpc('deduct_wallet_credits', {
@@ -159,7 +142,7 @@ async function deductChatCredits(user: SessionUser, chatId: string, buildingId: 
       p_building_id: buildingId,
       p_amount: creditsCost,
       p_reason: 'ask_question',
-      p_metadata: { chatId, estimatedTokens },
+      p_metadata: { chatId, tokens: tokenCount },
     });
 
     if (deductError) {

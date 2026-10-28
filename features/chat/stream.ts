@@ -41,6 +41,7 @@ export async function generateAnswer(
     if (!data || data.cancel_requested) abort.abort();
   }, 1500);
   const timeout = setTimeout(() => abort.abort(), 240000);
+  let actualTokens = 0;
   async function emit(event: UIMessageChunk) {
     const { error } = await user.client.from('stream_events').insert({ run_id: runId, event });
     checkDb(error);
@@ -60,8 +61,7 @@ export async function generateAnswer(
 
     // Step 1: Query expansion (fast model)
     await progress('Expanding query for better retrieval…');
-    const expanded = await expandQuery(user, question, chat.building_id ? undefined : 'portfolio');
-    const expandedQueries = [question, ...expanded.variants];
+    const expanded = await expandQuery(user, question);
 
     // Step 2: Intent classification
     const intent = await classifyIntent(question);
@@ -104,12 +104,15 @@ export async function generateAnswer(
           })
         ).error,
       );
-      return publication;
+      for (const event of publication) await emit(event);
+      await emit({ type: 'finish', finishReason: 'stop' });
+      completed = true;
+      return { ok: true, grounded: false, tokens: 0 };
     }
 
-    // Step 3: Retrieve with expanded queries
+    // Step 3: Retrieve with expanded query variants
     await progress('Searching the selected sources…');
-    const result = await retrieve(user, chat, expandedQueries[0], layers); // Use primary query, but expansion helped ranking
+    const result = await retrieve(user, chat, question, layers, expanded.variants);
     if (abort.signal.aborted) throw new AppError('cancelled', 'Generation stopped.');
     // Financial context informs the model but cannot be cited. Without a citable source there is no grounded answer.
     if (!result.sources.some(isCitableSource)) {
@@ -150,6 +153,8 @@ export async function generateAnswer(
         if (abort.signal.aborted) break;
       }
       const answer = await generated.output;
+      const usage = await generated.usage;
+      actualTokens = usage?.totalTokens ?? 850;
       await progress('Verifying citations and source quotations…');
 
       if (!validateCitations(answer, result.sources)) {
@@ -249,8 +254,8 @@ export async function generateAnswer(
         answer: answerText,
         sources: result.sources,
         gateResult: { passed: true, issues: [] },
-        tokens: 850, // estimate for Sonnet
-        cost: 1, // $2 = ~1 credit
+        tokens: actualTokens,
+        cost: Math.max(1, Math.ceil(actualTokens / 1000)),
       });
     }
 
@@ -315,6 +320,7 @@ export async function generateAnswer(
     for (const event of publication) await emit(event);
     await emit({ type: 'finish', finishReason: 'stop' });
     completed = true;
+    return { ok: true, grounded: Boolean(grounded), tokens: actualTokens };
   } catch (e) {
     if (!abort.signal.aborted) {
       // Logged without the question or the answer: only the error class and IDs.
@@ -337,6 +343,7 @@ export async function generateAnswer(
     } catch {
       /* Membership may have been revoked. No further writes are permitted. */
     }
+    return { ok: false, grounded: false, tokens: 0 };
   } finally {
     clearInterval(cancellation);
     clearTimeout(timeout);

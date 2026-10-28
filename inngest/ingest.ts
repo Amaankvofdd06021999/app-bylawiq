@@ -85,7 +85,19 @@ export const ingestDocument = inngest.createFunction(
           await status('parsing');
           if (document.source_url) {
             const { scrapePage } = await import('@/lib/security/web-source');
-            return scrapePage(document.source_url);
+            const text = await scrapePage(document.source_url);
+            await status('scanning');
+            await assertFileClean(Buffer.from(text, 'utf8'), scanConfigFrom());
+            checkDb(
+              (
+                await db
+                  .from('documents')
+                  .update({ scan_cleared_at: new Date().toISOString() })
+                  .eq('id', document.id)
+                  .is('deleted_at', null)
+              ).error,
+            );
+            return text;
           }
           if (!document.storage_path) throw new AppError('file_missing', 'The uploaded file is unavailable.');
           const { data, error } = await db.storage.from('vault').download(document.storage_path);
@@ -117,9 +129,12 @@ export const ingestDocument = inngest.createFunction(
           assertTextLayer(text);
           return text;
         } catch (e) {
-          // Recorded as failed here, and not retried: a rejected or unreadable file will not succeed on retry. The user can
-          // fix it and retry from the document list (the retry route accepts 'failed').
           const message = failureMessage(e);
+          // Transient scanner outages or network issues should be retried by Inngest, not marked permanently failed
+          if (e instanceof AppError && e.code === 'scanner_unavailable') {
+            await status('processing', message);
+            throw e;
+          }
           await status('failed', message);
           throw new NonRetriableError(message);
         }

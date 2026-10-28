@@ -18,6 +18,7 @@ export async function retrieve(
   chat: z.infer<typeof chatSchema>,
   query: string,
   layers?: string[],
+  queryVariants?: string[],
 ) {
   let kb: string | null = null;
   let includeLegal = true;
@@ -68,6 +69,8 @@ export async function retrieve(
       );
   }
   const [vector] = await embeddings([query], 'query');
+  const textQuery =
+    queryVariants && queryVariants.length ? [query, ...queryVariants.slice(0, 2)].join(' ') : query;
   const scope =
     chat.scope === 'general'
       ? []
@@ -95,7 +98,7 @@ export async function retrieve(
     if (includeBuilding) {
       const { data, error } = await user.client.rpc('hybrid_search_building', {
         p_building_id: building,
-        p_query_text: query,
+        p_query_text: textQuery,
         p_query_embedding: JSON.stringify(vector),
         p_kb: kb,
         p_as_of: chat.as_of,
@@ -133,7 +136,7 @@ export async function retrieve(
   }
   if (includeLegal) {
     const { data, error } = await user.client.rpc('hybrid_search_legal', {
-      p_query_text: query,
+      p_query_text: textQuery,
       p_query_embedding: JSON.stringify(vector),
       p_jurisdictions: [...new Set(jurisdictions)],
       p_as_of: chat.as_of,
@@ -265,10 +268,7 @@ export async function retrieve(
       }
 
       // 2. Strata corporation orgs for buildings in scope
-      const { data: buildingOrgs } = await user.client
-        .from('buildings')
-        .select('org_id')
-        .in('id', scope);
+      const { data: buildingOrgs } = await user.client.from('buildings').select('org_id').in('id', scope);
       for (const b of buildingOrgs || []) {
         if (b.org_id) firmOrgIds.add(b.org_id);
       }
@@ -381,7 +381,22 @@ export async function retrieve(
       /* Supporting model outage: preserve deterministic retrieval ranks. */
     }
   }
-  const sources = ranked.slice(0, topK).map((s, i) => ({ ...s, id: i + 1 }));
+  // Ensure citable sources (building, legal, staff) are never starved out by non-citable context (firm, financial).
+  // If citable sources were found, reserve up to topK - 1 slots for citable sources.
+  const isCitable = (c: Omit<Source, 'id'>) =>
+    c.kind === 'building' || c.kind === 'legal' || c.kind === 'staff';
+  const citableRanked = ranked.filter(isCitable);
+  const nonCitableRanked = ranked.filter((c) => !isCitable(c));
+  let finalSources: Omit<Source, 'id'>[];
+  if (citableRanked.length > 0) {
+    const auxSlots = Math.min(nonCitableRanked.length, 1);
+    const citableSlots = topK - auxSlots;
+    finalSources = [...citableRanked.slice(0, citableSlots), ...nonCitableRanked.slice(0, auxSlots)];
+  } else {
+    finalSources = ranked.slice(0, topK);
+  }
+
+  const sources = finalSources.map((s, i) => ({ ...s, id: i + 1 }));
   const legalKbVersions = [
     ...new Set(
       sources.map((s) => legalKbVersionByChunk.get(s.chunkId)).filter((v): v is string => Boolean(v)),

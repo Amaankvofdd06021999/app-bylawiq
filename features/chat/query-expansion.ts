@@ -64,8 +64,8 @@ Output: {"variants": ["section 3.2", "bylaw 3.2"], "refs": ["3.2", "section 3.2"
 
 /**
  * Intent classification for routing
- * Legal question → full Sonnet reasoning
- * Factual lookup → faster Haiku
+ * Legal question → full answer reasoning model
+ * Factual lookup → fast routing model
  * Out of scope → decline with explanation
  */
 

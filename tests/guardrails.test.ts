@@ -82,6 +82,15 @@ describe('structural chunks', () => {
   });
   it('does not discard an unheaded introduction', () =>
     expect(structuralChunks('An unheaded paragraph of source text.')[0].content).toContain('unheaded'));
+  it('does not split on lowercase prose with numbers', () => {
+    const chunks = structuralChunks(
+      'Section 1 Pets\nAn owner may have pets subject to restrictions.\n3 dogs or cats are allowed per lot.\n12 hours notice is required.',
+    );
+    expect(chunks.length).toBe(1);
+    expect(chunks[0].sectionRef).toBe('1');
+    expect(chunks[0].content).toContain('3 dogs or cats');
+    expect(chunks[0].content).toContain('12 hours notice');
+  });
 });
 describe('website source protection', () => {
   for (const url of [
