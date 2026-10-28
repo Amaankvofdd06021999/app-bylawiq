@@ -731,4 +731,23 @@ describe('Postgres scope and permissions', () => {
     const canRetry = ['failed', 'uploaded'].includes(doc.status) || isStale;
     expect(canRetry).toBe(true);
   });
+  it('prevents authenticated users from inserting an explicit updated_at', async () => {
+    await identity(a);
+    const docId = '95000000-0000-4000-8000-000000000001';
+    await expect(
+      sql(
+        `insert into public.documents(id, building_id, title, uploaded_by, status, updated_at) values ('${docId}', '${ba}', 'Tampered Timestamp', '${a}', 'uploaded', now() - interval '1 hour')`,
+      ),
+    ).rejects.toThrow();
+
+    // But inserting without updated_at succeeds and defaults to now()
+    const validDocId = '95000000-0000-4000-8000-000000000002';
+    await sql(
+      `insert into public.documents(id, building_id, title, uploaded_by, status) values ('${validDocId}', '${ba}', 'Valid Document', '${a}', 'uploaded')`,
+    );
+    const res = await db.query<{ updated_at: string }>(
+      `select updated_at from public.documents where id = '${validDocId}'`,
+    );
+    expect(res.rows[0].updated_at).toBeDefined();
+  });
 });
